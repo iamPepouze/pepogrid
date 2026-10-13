@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  # Called by deploy.yml so main is built with exactly the checks PRs must pass.
+  workflow_call:
+    inputs:
+      upload-pages:
+        description: Upload dist as the GitHub Pages artifact
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# A new push to a PR supersedes its running check; a deploy's check is never cancelled.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # The job name "check" is the required status check in the main ruleset.
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - if: inputs.upload-pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
