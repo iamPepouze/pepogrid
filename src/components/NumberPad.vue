@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onBeforeUnmount } from 'vue'
-import { useGame, vibrate } from '../composables/useGame'
+import { useGameStore, vibrate } from '../stores/game'
 
 const LONG_PRESS_MS = 450
 
-const { notesMode, input, toggleNote } = useGame()
+const game = useGameStore()
 
 let timer: number | undefined
 let longPressed = false
@@ -15,7 +15,7 @@ function startPress(d: number) {
   cancelPress()
   timer = window.setTimeout(() => {
     longPressed = true
-    toggleNote(d)
+    game.toggleNote(d)
     vibrate(15)
   }, LONG_PRESS_MS)
 }
@@ -30,14 +30,14 @@ function onClick(d: number) {
     longPressed = false
     return
   }
-  input(d)
+  game.input(d)
 }
 
 onBeforeUnmount(cancelPress)
 </script>
 
 <template>
-  <div class="pad" :class="{ notes: notesMode }" role="group" aria-label="Number pad">
+  <div class="pad" :class="{ notes: game.notesMode }" role="group" aria-label="Number pad">
     <button
       v-for="d in 9"
       :key="d"

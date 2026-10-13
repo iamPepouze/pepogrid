@@ -13,10 +13,10 @@
     <title>PepoGrid</title>
     <script>
       // Apply the saved theme before first paint to avoid a flash.
-      // Keep in sync with src/composables/useTheme.ts.
+      // Keep in sync with src/stores/settings.ts and src/composables/useTheme.ts.
       ;(function () {
         try {
-          var mode = localStorage.getItem('pepogrid:theme')
+          var mode = (JSON.parse(localStorage.getItem('pepogrid.settings')) || {}).theme
           if (mode === 'light' || mode === 'dark') document.documentElement.dataset.theme = mode
           var dark = mode === 'dark' || (mode !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
           if (dark) document.querySelector('meta[name="theme-color"]').setAttribute('content', '#1e1e1e')

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Monitor, Moon, Settings, Sun } from '@lucide/vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { THEME_MODES, useTheme, type ThemeMode } from '../composables/useTheme'
+import { THEME_MODES, useSettingsStore, type ThemeMode } from '../stores/settings'
 
-const { mode } = useTheme()
+const settings = useSettingsStore()
 
 const LABELS: Record<ThemeMode, string> = { system: 'System', light: 'Light', dark: 'Dark' }
 const ICONS = { system: Monitor, light: Sun, dark: Moon }
@@ -50,8 +50,8 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
     <div v-if="open" class="popover" role="dialog" aria-label="Settings">
       <fieldset>
         <legend>Theme</legend>
-        <label v-for="m in THEME_MODES" :key="m" class="option" :class="{ checked: mode === m }">
-          <input v-model="mode" type="radio" name="theme" :value="m" />
+        <label v-for="m in THEME_MODES" :key="m" class="option" :class="{ checked: settings.theme === m }">
+          <input v-model="settings.theme" type="radio" name="theme" :value="m" />
           <component :is="ICONS[m]" class="icon" aria-hidden="true" />
           <span>{{ LABELS[m] }}</span>
         </label>

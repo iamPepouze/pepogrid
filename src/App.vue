@@ -4,24 +4,28 @@ import GameControls from './components/GameControls.vue'
 import NumberPad from './components/NumberPad.vue'
 import SettingsMenu from './components/SettingsMenu.vue'
 import SudokuBoard from './components/SudokuBoard.vue'
-import { useGame } from './composables/useGame'
 import { useInstall } from './composables/useInstall'
+import { useTheme } from './composables/useTheme'
 import { DIFFICULTIES, type Difficulty } from './lib/sudoku'
+import { useGameStore } from './stores/game'
 
-const game = useGame()
-const { state, hasProgress } = game
+const game = useGameStore()
+// First visit, or a save that's missing or corrupt: start a game.
+if (!game.isValid()) game.newGame('easy', { recordAbandoned: false })
+
+useTheme()
 const { canInstall, install } = useInstall()
 
 const LABELS: Record<Difficulty, string> = { easy: 'Easy', medium: 'Medium', hard: 'Hard' }
 
 const time = computed(() => {
-  const m = Math.floor(state.elapsed / 60)
-  const s = state.elapsed % 60
+  const m = Math.floor(game.elapsed / 60)
+  const s = game.elapsed % 60
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 })
 
 function startGame(difficulty: Difficulty) {
-  const unfinished = hasProgress.value && !state.completed
+  const unfinished = game.hasProgress && !game.completed
   if (unfinished && !window.confirm(`Start a new ${LABELS[difficulty]} game? Your current progress will be lost.`)) {
     return
   }
@@ -142,8 +146,8 @@ onBeforeUnmount(() => {
           v-for="d in DIFFICULTIES"
           :key="d"
           type="button"
-          :class="{ current: state.difficulty === d }"
-          :aria-current="state.difficulty === d"
+          :class="{ current: game.difficulty === d }"
+          :aria-current="game.difficulty === d"
           @click="startGame(d)"
         >
           {{ LABELS[d] }}
@@ -154,15 +158,15 @@ onBeforeUnmount(() => {
     <main ref="gameEl" class="game">
       <div class="status-area">
         <div class="status">
-          <span>Mistakes: <strong>{{ state.mistakes }}</strong></span>
+          <span>Mistakes: <strong>{{ game.mistakes }}</strong></span>
           <span class="timer" aria-label="Elapsed time">{{ time }}</span>
         </div>
-        <div v-if="state.completed" class="win" role="status">
+        <div v-if="game.completed" class="win" role="status">
           <p>
-            <strong>Solved!</strong> {{ LABELS[state.difficulty] }} in {{ time }} with {{ state.mistakes }}
-            {{ state.mistakes === 1 ? 'mistake' : 'mistakes' }}.
+            <strong>Solved!</strong> {{ LABELS[game.difficulty] }} in {{ time }} with {{ game.mistakes }}
+            {{ game.mistakes === 1 ? 'mistake' : 'mistakes' }}.
           </p>
-          <button type="button" @click="startGame(state.difficulty)">Play again</button>
+          <button type="button" @click="startGame(game.difficulty)">Play again</button>
         </div>
       </div>
 
@@ -170,7 +174,7 @@ onBeforeUnmount(() => {
         <SudokuBoard />
       </div>
 
-      <GameControls class="controls-area" @new-game="startGame(state.difficulty)" />
+      <GameControls class="controls-area" @new-game="startGame(game.difficulty)" />
       <NumberPad class="pad-area" />
 
       <p class="hints">

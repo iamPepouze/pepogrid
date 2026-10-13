@@ -1,33 +1,33 @@
 <script setup lang="ts">
 import { Eraser, Pencil, Plus, Undo2 } from '@lucide/vue'
-import { useGame } from '../composables/useGame'
+import { useGameStore } from '../stores/game'
 
-const { state, notesMode, undo, erase, toggleNotesMode } = useGame()
+const game = useGameStore()
 
 defineEmits<{ newGame: [] }>()
 </script>
 
 <template>
   <div class="controls">
-    <button type="button" class="control" :disabled="!state.history.length || state.completed" @click="undo">
+    <button type="button" class="control" :disabled="!game.history.length || game.completed" @click="game.undo">
       <Undo2 class="icon" aria-hidden="true" />
       <span>Undo</span>
     </button>
-    <button type="button" class="control" :disabled="state.completed" @click="erase">
+    <button type="button" class="control" :disabled="game.completed" @click="game.erase">
       <Eraser class="icon" aria-hidden="true" />
       <span>Erase</span>
     </button>
     <button
       type="button"
       class="control"
-      :class="{ active: notesMode }"
-      :aria-pressed="notesMode"
-      :disabled="state.completed"
-      @click="toggleNotesMode"
+      :class="{ active: game.notesMode }"
+      :aria-pressed="game.notesMode"
+      :disabled="game.completed"
+      @click="game.toggleNotesMode"
     >
       <Pencil class="icon" aria-hidden="true" />
       <span>Notes</span>
-      <span class="badge" aria-hidden="true">{{ notesMode ? 'ON' : 'OFF' }}</span>
+      <span class="badge" aria-hidden="true">{{ game.notesMode ? 'ON' : 'OFF' }}</span>
     </button>
     <button type="button" class="control" @click="$emit('newGame')">
       <Plus class="icon" aria-hidden="true" />

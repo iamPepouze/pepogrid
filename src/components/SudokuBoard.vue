@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { useGame } from '../composables/useGame'
 import { bit, colOf, rowOf } from '../lib/sudoku'
+import { useGameStore } from '../stores/game'
 
-const { state, selected, conflicts, peers, isGiven, isWrong, select } = useGame()
+const game = useGameStore()
+const { isGiven, isWrong } = game
 
 const cells = [...Array(81).keys()]
 
@@ -11,10 +12,10 @@ function cellClass(i: number) {
   const r = rowOf(i)
   return {
     given: isGiven(i),
-    peer: peers.value.has(i),
-    conflict: conflicts.value.has(i),
+    peer: game.peers.has(i),
+    conflict: game.conflicts.has(i),
     wrong: isWrong(i),
-    selected: selected.value === i,
+    selected: game.selected === i,
     'box-right': c % 3 === 2 && c !== 8,
     'box-bottom': r % 3 === 2 && r !== 8,
     'last-col': c === 8,
@@ -24,7 +25,7 @@ function cellClass(i: number) {
 
 function cellLabel(i: number) {
   const where = `Row ${rowOf(i) + 1}, column ${colOf(i) + 1}`
-  const v = state.values[i]
+  const v = game.values[i]
   if (v) return `${where}: ${v}${isGiven(i) ? ' (given)' : ''}${isWrong(i) ? ', incorrect' : ''}`
   return `${where}: empty`
 }
@@ -39,11 +40,11 @@ function cellLabel(i: number) {
       class="cell"
       :class="cellClass(i)"
       :aria-label="cellLabel(i)"
-      @click="select(i)"
+      @click="game.select(i)"
     >
-      <span v-if="state.values[i]" class="value">{{ state.values[i] }}</span>
-      <span v-else-if="state.notes[i]" class="notes" aria-hidden="true">
-        <span v-for="d in 9" :key="d" class="note">{{ state.notes[i] & bit(d) ? d : '' }}</span>
+      <span v-if="game.values[i]" class="value">{{ game.values[i] }}</span>
+      <span v-else-if="game.notes[i]" class="notes" aria-hidden="true">
+        <span v-for="d in 9" :key="d" class="note">{{ game.notes[i] & bit(d) ? d : '' }}</span>
       </span>
     </button>
   </div>
