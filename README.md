@@ -76,9 +76,9 @@ npm run build      # type-check and build to dist/ (includes the service worker)
 npm run preview    # serve the production build to test the PWA locally
 ```
 
-If a script fails with "'vitest' is not recognized" (or `vue-tsc`, `eslint`), `node_modules` is incomplete: run `npm ci` to reinstall it from the lockfile.
+If a script fails because `vitest`, `vue-tsc` or `eslint` is "not recognized" or "not found", `node_modules` is likely incomplete: run `npm ci` to reinstall it from the lockfile.
 
-Changes reach `main` through pull requests, which must pass the `check` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) (lint, test, build); see [docs/agents/ci.md](docs/agents/ci.md). Every push to `main` reruns `check` and deploys the build to GitHub Pages ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)).
+Changes reach `main` through pull requests, which must pass the `check` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) (`npm run lint`, `npm test`, `npm run build`, plus actionlint on the workflows); see [docs/agents/ci.md](docs/agents/ci.md). Every push to `main` reruns `check` and deploys the build to GitHub Pages ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)).
 
 The app icon source is [public/favicon.svg](public/favicon.svg). Android's cropped (maskable) icon has its own source, [icons/maskable.svg](icons/maskable.svg), with a smaller grid that stays inside Android's safe zone. The PNG icons in `public/` are rendered from these two files.
 
