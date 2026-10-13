@@ -2,7 +2,7 @@
 
 *Your grid, your chill.*
 
-A Sudoku web app built with Vue 3, TypeScript and Vite.
+A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and Vite. It installs to the home screen and plays offline.
 
 ## Features
 
@@ -10,10 +10,13 @@ A Sudoku web app built with Vue 3, TypeScript and Vite.
   - **Easy:** 36–40 givens, solvable with naked and hidden singles only.
   - **Medium:** about 27–31 givens, needs locked candidates or naked/hidden pairs.
   - **Hard:** about 22–26 givens, needs techniques beyond those.
-- **Notes (pencil marks).** Use the *Notes* button or press `N` to toggle notes mode, or press `Shift` + digit to add a single note. Placing a number clears that digit from the notes in its row, column and box.
+- **Notes (pencil marks).** Use the *Notes* button or press `N` to toggle notes mode. To add a single note, press `Shift` + digit, or long-press a number pad button on touch screens. Placing a number clears that digit from the notes in its row, column and box.
 - **Error checking.** Digits that don't match the solution are shown in red. Cells that clash in a row, column or box are tinted red. A mistake counter tracks wrong entries.
 - **Timer, Undo, Erase.** The timer pauses while the tab is hidden.
 - **Auto-save.** Progress is kept in the browser's local storage.
+- **Mobile-first layout.** On phones, a compact header sits above the board, with controls and the number pad at the bottom. In landscape and on wide screens, the board sits beside the controls. Keyboard hints show only on devices with a mouse.
+- **Haptics.** The phone gives a short vibration on a mistake (Android only; iOS doesn't support web vibration).
+- **Installable PWA.** Works offline. An *Install* button appears in the header when the browser supports it (Chrome, Edge, Android). On iOS, use Share → Add to Home Screen. Updates download in the background and apply the next time the app is launched.
 
 ## Keyboard
 
@@ -32,5 +35,8 @@ A Sudoku web app built with Vue 3, TypeScript and Vite.
 npm install
 npm run dev        # start the dev server
 npm test           # run the generator tests
-npm run build      # type-check and build to dist/
+npm run build      # type-check and build to dist/ (includes the service worker)
+npm run preview    # serve the production build to test the PWA locally
 ```
+
+The app icon source is [public/favicon.svg](public/favicon.svg). The PNG icons in `public/` are rendered from it.

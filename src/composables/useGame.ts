@@ -95,6 +95,15 @@ const hasProgress = computed(
   () => state.values.some((v, i) => v !== state.puzzle[i]) || state.notes.some((n) => n !== 0),
 )
 
+/** Haptic feedback; a no-op where unsupported (e.g. iOS). */
+export function vibrate(ms: number) {
+  try {
+    navigator.vibrate?.(ms)
+  } catch {
+    // Ignore: vibration is best-effort.
+  }
+}
+
 function pushHistory() {
   state.history.push({ values: state.values.slice(), notes: state.notes.slice() })
   if (state.history.length > HISTORY_LIMIT) state.history.shift()
@@ -125,7 +134,10 @@ function setValue(d: number) {
   state.values[i] = d
   state.notes[i] = 0
   for (const p of PEERS[i]) state.notes[p] &= ~bit(d)
-  if (d !== state.solution[i]) state.mistakes++
+  if (d !== state.solution[i]) {
+    state.mistakes++
+    vibrate(80)
+  }
   if (state.values.every((v, k) => v === state.solution[k])) {
     state.completed = true
     selected.value = null

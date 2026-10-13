@@ -53,7 +53,9 @@ function cellLabel(i: number) {
 .board {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
-  width: var(--board-size);
+  /* Fills the largest square that fits the surrounding size container. */
+  --size: min(100cqw, 100cqh, 640px);
+  width: var(--size);
   aspect-ratio: 1;
   border: 3px solid var(--line-thick);
   background: var(--cell);
@@ -118,7 +120,7 @@ function cellLabel(i: number) {
 }
 
 .value {
-  font-size: calc(var(--board-size) / 9 * 0.6);
+  font-size: calc(var(--size) / 9 * 0.6);
   line-height: 1;
 }
 
@@ -144,7 +146,7 @@ function cellLabel(i: number) {
   align-items: center;
   justify-content: center;
   color: var(--note);
-  font-size: calc(var(--board-size) / 9 * 0.26);
+  font-size: calc(var(--size) / 9 * 0.26);
   line-height: 1;
 }
 </style>

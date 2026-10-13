@@ -19,8 +19,6 @@
   --button-bg: #ffffff;
   --button-border: #d0d5dd;
 
-  --board-size: min(calc(100vw - 32px), 480px);
-
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
   background: var(--page);
@@ -36,6 +34,12 @@
 body {
   margin: 0;
   background: var(--page);
+  overscroll-behavior: none;
+}
+
+button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:focus-visible {

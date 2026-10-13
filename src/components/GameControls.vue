@@ -31,22 +31,18 @@ defineEmits<{ newGame: [] }>()
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  width: var(--board-size);
 }
 
 .control {
-  padding: 10px 4px;
+  min-height: 44px;
+  padding: 8px 4px;
   border: 1px solid var(--button-border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--button-bg);
   color: var(--text);
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   cursor: pointer;
-}
-
-.control:hover:not(:disabled) {
-  background: var(--peer);
 }
 
 .control:disabled {
@@ -58,5 +54,11 @@ defineEmits<{ newGame: [] }>()
   border-color: var(--accent);
   background: var(--accent);
   color: #fff;
+}
+
+@media (hover: hover) {
+  .control:hover:not(:disabled, .active) {
+    background: var(--peer);
+  }
 }
 </style>
