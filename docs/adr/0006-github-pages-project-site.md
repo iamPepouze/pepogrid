@@ -4,4 +4,4 @@ PepoGrid is served from https://iampepouze.github.io/pepogrid/, built and deploy
 
 ## Consequences
 
-Saved games, results and settings live in `localStorage`, and the service worker is registered for scope `/pepogrid/`; both are tied to the `iampepouze.github.io` origin. Moving to a custom domain later would start every player from an empty history unless a migration is built first.
+The persisted stores (`pepogrid.settings`, `pepogrid.game`, `pepogrid.results`) live in `localStorage`, which is tied to the `iampepouze.github.io` origin, and the service worker is registered for scope `/pepogrid/`. Any move to another origin (a custom domain) or path (renaming the repo) would start every player from an empty history and an uninstalled app unless a migration is built first.
