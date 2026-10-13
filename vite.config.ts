@@ -3,6 +3,8 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // Served as a GitHub Pages project site (docs/adr/0006-github-pages-project-site.md).
+  base: '/pepogrid/',
   plugins: [
     vue(),
     VitePWA({
@@ -16,8 +18,8 @@ export default defineConfig({
         short_name: 'PepoGrid',
         description: 'Your grid, your chill.',
         lang: 'en',
-        start_url: '/',
-        scope: '/',
+        start_url: '/pepogrid/',
+        scope: '/pepogrid/',
         display: 'standalone',
         theme_color: '#1565c0',
         background_color: '#f5f7fa',
