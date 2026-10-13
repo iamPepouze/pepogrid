@@ -74,3 +74,11 @@ npm run preview    # serve the production build to test the PWA locally
 ```
 
 The app icon source is [public/favicon.svg](public/favicon.svg). Android's cropped (maskable) icon has its own source, [icons/maskable.svg](icons/maskable.svg), with a smaller grid that stays inside Android's safe zone. The PNG icons in `public/` are rendered from these two files.
+
+## License
+
+Copyright (c) 2026 Pepouze ([github.com/iamPepouze](https://github.com/iamPepouze)).
+
+PepoGrid is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE): you may use, modify and share it for any noncommercial purpose, keeping the copyright notice. Commercial use of any kind, including selling it or running it with ads, is not permitted.
+
+The skills in [.claude/skills/](.claude/skills/) are by Matt Pocock and remain under the [MIT License](.claude/skills/LICENSE).

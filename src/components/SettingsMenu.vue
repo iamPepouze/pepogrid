@@ -7,6 +7,7 @@ const settings = useSettingsStore()
 
 const LABELS: Record<ThemeMode, string> = { system: 'System', light: 'Light', dark: 'Dark' }
 const ICONS = { system: Monitor, light: Sun, dark: Moon }
+const LICENSE_URL = 'https://github.com/iamPepouze/pepogrid/blob/main/LICENSE'
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
@@ -63,6 +64,10 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
           <input v-model="settings.highlightMatching" type="checkbox" role="switch" class="switch" />
         </label>
       </fieldset>
+      <p class="credit">
+        © 2026 Pepouze ·
+        <a :href="LICENSE_URL" target="_blank" rel="noopener">License</a>
+      </p>
     </div>
   </div>
 </template>
@@ -124,6 +129,24 @@ fieldset + fieldset {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--button-border);
+}
+
+.credit {
+  margin: 10px 0 0;
+  padding: 10px 4px 0;
+  border-top: 1px solid var(--button-border);
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.credit a {
+  color: inherit;
+}
+
+.credit a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .switch-row {

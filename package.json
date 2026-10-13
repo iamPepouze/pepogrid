@@ -2,6 +2,8 @@
   "name": "pepogrid",
   "private": true,
   "version": "1.0.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "author": "Pepouze (https://github.com/iamPepouze)",
   "type": "module",
   "scripts": {
     "dev": "vite",
