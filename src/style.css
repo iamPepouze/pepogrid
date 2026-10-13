@@ -1,0 +1,44 @@
+:root {
+  /* Classic sudoku palette */
+  --cell: #ffffff;
+  --line-thin: #bdbdbd;
+  --line-thick: #000000;
+  --given-digit: #000000;
+  --user-digit: #1565c0;
+  --wrong-digit: #d32f2f;
+  --note: #616161;
+  --selected: #bbdefb;
+  --peer: #e8f1fb;
+  --conflict: #ffcdd2;
+
+  /* Chrome */
+  --page: #f5f7fa;
+  --text: #1a1a1a;
+  --muted: #5f6368;
+  --accent: #1565c0;
+  --button-bg: #ffffff;
+  --button-border: #d0d5dd;
+
+  --board-size: min(calc(100vw - 32px), 480px);
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--page);
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
