@@ -1,0 +1,7 @@
+node_modules
+dist
+*.local
+.vite
+
+# Third-party rating tools and bank-building work files (scripts/bank)
+tools/
