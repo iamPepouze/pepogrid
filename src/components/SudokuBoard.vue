@@ -1,11 +1,19 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { bit, colOf, rowOf } from '../lib/sudoku'
 import { useGameStore } from '../stores/game'
+import { useSettingsStore } from '../stores/settings'
 
 const game = useGameStore()
+const settings = useSettingsStore()
 const { isGiven, isWrong } = game
 
 const cells = [...Array(81).keys()]
+
+/** Digit of the selected cell, highlighted across the grid; 0 for none. */
+const matchDigit = computed(() =>
+  settings.highlightMatching && game.selected !== null ? game.values[game.selected] : 0,
+)
 
 function cellClass(i: number) {
   const c = colOf(i)
@@ -13,6 +21,7 @@ function cellClass(i: number) {
   return {
     given: isGiven(i),
     peer: game.peers.has(i),
+    same: matchDigit.value !== 0 && game.values[i] === matchDigit.value,
     conflict: game.conflicts.has(i),
     wrong: isWrong(i),
     selected: game.selected === i,
@@ -44,7 +53,7 @@ function cellLabel(i: number) {
     >
       <span v-if="game.values[i]" class="value">{{ game.values[i] }}</span>
       <span v-else-if="game.notes[i]" class="notes" aria-hidden="true">
-        <span v-for="d in 9" :key="d" class="note">{{ game.notes[i] & bit(d) ? d : '' }}</span>
+        <span v-for="d in 9" :key="d" class="note" :class="{ match: d === matchDigit }">{{ game.notes[i] & bit(d) ? d : '' }}</span>
       </span>
     </button>
   </div>
@@ -104,6 +113,10 @@ function cellLabel(i: number) {
   background: var(--peer);
 }
 
+.cell.same {
+  background: var(--same-digit);
+}
+
 .cell.conflict {
   background: var(--conflict);
 }
@@ -149,5 +162,9 @@ function cellLabel(i: number) {
   color: var(--note);
   font-size: calc(var(--size) / 9 * 0.26);
   line-height: 1;
+}
+.note.match {
+  color: var(--user-digit);
+  font-weight: 700;
 }
 </style>

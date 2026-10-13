@@ -56,13 +56,21 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
           <span>{{ LABELS[m] }}</span>
         </label>
       </fieldset>
+      <fieldset>
+        <legend>Board</legend>
+        <label class="switch-row">
+          <span>Highlight matching numbers</span>
+          <input v-model="settings.highlightMatching" type="checkbox" role="switch" class="switch" />
+        </label>
+      </fieldset>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* No positioning here: the popover anchors to the header (App.vue) so it stays on screen. */
 .settings {
-  position: relative;
+  display: contents;
 }
 
 .trigger {
@@ -95,7 +103,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
   top: calc(100% + 6px);
   right: 0;
   z-index: 10;
-  min-width: 170px;
+  width: min(260px, 100%);
   padding: 10px;
   border: 1px solid var(--button-border);
   border-radius: 12px;
@@ -110,6 +118,64 @@ fieldset {
   margin: 0;
   padding: 0;
   border: 0;
+}
+
+fieldset + fieldset {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--button-border);
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 4px 0 10px;
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* A checkbox drawn as an on/off switch. */
+.switch {
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 38px;
+  height: 22px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--button-border);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  transition: transform 0.15s;
+}
+
+.switch:checked {
+  background: var(--accent);
+}
+
+.switch:checked::after {
+  transform: translateX(16px);
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 legend {

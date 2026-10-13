@@ -16,6 +16,7 @@ A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and
 - **Auto-save.** The game in progress, including the selected cell, notes mode and undo history, is saved after every change. A browser refresh resumes exactly where you were.
 - **Results history.** Solved games are recorded, and so are games abandoned by starting a new one after any progress. Each record has the difficulty, outcome, start/end time, time played, mistakes, progress % and the puzzle, solution and final board. The 1000 most recent are kept.
 - **Mobile-first layout.** On phones, a compact header sits above the board, with controls and the number pad at the bottom. In landscape and on wide screens, the board sits beside the controls. Keyboard hints show only on devices with a mouse.
+- **Matching numbers.** Selecting a filled cell tints the other cells with the same digit and emphasizes that digit in notes. This can be turned off in the gear menu (*Highlight matching numbers*).
 - **Light, dark or system theme.** Choose it from the gear menu in the header. *System* (the default) follows the device setting. The choice is saved, and the title/status bar color follows the theme.
 - **Haptics.** The phone gives a short vibration on a mistake (Android only; iOS doesn't support web vibration).
 - **Installable PWA.** Works offline. An *Install* button appears in the header when the browser supports it (Chrome, Edge, Android). On iOS, use Share → Add to Home Screen. Updates download in the background and apply the next time the app is launched.
@@ -37,7 +38,7 @@ State lives in [Pinia](https://pinia.vuejs.org/) stores, saved to `localStorage`
 
 | Key | Store | Contents |
 | --- | --- | --- |
-| `pepogrid.settings` | [settings](src/stores/settings.ts) | Preferences (theme) |
+| `pepogrid.settings` | [settings](src/stores/settings.ts) | Preferences (theme, matching-number highlight) |
 | `pepogrid.game` | [game](src/stores/game.ts) | The game in progress |
 | `pepogrid.results` | [results](src/stores/results.ts) | Finished and abandoned games, newest last |
 

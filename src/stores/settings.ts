@@ -10,13 +10,16 @@ export const useSettingsStore = defineStore(
   'settings',
   () => {
     const theme = ref<ThemeMode>('system')
+    /** Tint cells sharing the selected cell's digit and emphasize matching notes. */
+    const highlightMatching = ref(true)
 
-    return { theme }
+    return { theme, highlightMatching }
   },
   {
     persist: {
       afterHydrate: ({ store }) => {
         if (!THEME_MODES.includes(store.theme)) store.theme = 'system'
+        if (typeof store.highlightMatching !== 'boolean') store.highlightMatching = true
       },
     },
   },
