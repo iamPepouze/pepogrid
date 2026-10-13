@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import GameControls from './components/GameControls.vue'
 import NumberPad from './components/NumberPad.vue'
+import SettingsMenu from './components/SettingsMenu.vue'
 import SudokuBoard from './components/SudokuBoard.vue'
 import { useGame } from './composables/useGame'
 import { useInstall } from './composables/useInstall'
@@ -35,6 +36,7 @@ const ARROWS: Record<string, [number, number]> = {
 }
 
 function onKeydown(e: KeyboardEvent) {
+  if (e.target instanceof Element && e.target.closest('[data-own-keys]')) return
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'z') {
     e.preventDefault()
     game.undo()
@@ -134,6 +136,7 @@ onBeforeUnmount(() => {
         <p class="tagline">Your grid, your chill.</p>
       </div>
       <button v-if="canInstall" type="button" class="install" @click="install">Install</button>
+      <SettingsMenu />
       <nav class="difficulty" aria-label="Difficulty">
         <button
           v-for="d in DIFFICULTIES"
@@ -256,7 +259,7 @@ onBeforeUnmount(() => {
 
 .difficulty button.current {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .game {
@@ -324,7 +327,7 @@ onBeforeUnmount(() => {
   border: 0;
   border-radius: 8px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font: inherit;
   cursor: pointer;
 }

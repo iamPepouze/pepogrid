@@ -76,7 +76,7 @@ defineEmits<{ newGame: [] }>()
 .control.active {
   border-color: var(--accent);
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .badge {
@@ -86,7 +86,7 @@ defineEmits<{ newGame: [] }>()
   padding: 0 3px;
   border: 1px solid var(--button-border);
   border-radius: 999px;
-  background: #eceff1;
+  background: var(--badge-bg);
   color: var(--muted);
   font-size: 0.5rem;
   font-weight: 700;
@@ -96,7 +96,7 @@ defineEmits<{ newGame: [] }>()
 
 .control.active .badge {
   border-color: var(--accent);
-  background: #fff;
+  background: var(--on-accent);
   color: var(--accent);
 }
 

@@ -15,6 +15,7 @@ A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and
 - **Timer, Undo, Erase.** The timer pauses while the tab is hidden.
 - **Auto-save.** Progress is kept in the browser's local storage.
 - **Mobile-first layout.** On phones, a compact header sits above the board, with controls and the number pad at the bottom. In landscape and on wide screens, the board sits beside the controls. Keyboard hints show only on devices with a mouse.
+- **Light, dark or system theme.** Choose it from the gear menu in the header. *System* (the default) follows the device setting. The choice is saved, and the title/status bar color follows the theme.
 - **Haptics.** The phone gives a short vibration on a mistake (Android only; iOS doesn't support web vibration).
 - **Installable PWA.** Works offline. An *Install* button appears in the header when the browser supports it (Chrome, Edge, Android). On iOS, use Share → Add to Home Screen. Updates download in the background and apply the next time the app is launched.
 
