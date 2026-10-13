@@ -28,6 +28,7 @@ const isRating = (r: Rating | null): r is Rating =>
   !!r && typeof r.se === 'number' && typeof r.hodokuScore === 'number' && HODOKU_LEVELS.includes(r.hodokuLevel) && typeof r.hardest === 'string'
 
 const emptyBankUsage = (): Record<Difficulty, number[]> => ({ easy: [], medium: [], hard: [], expert: [], master: [] })
+const emptyFamilyPlays = (): Record<Difficulty, Record<string, number>> => ({ easy: {}, medium: {}, hard: {}, expert: {}, master: {} })
 
 /**
  * The game in progress, persisted as `pepogrid.game` so a refresh resumes exactly
@@ -58,6 +59,8 @@ export const useGameStore = defineStore(
     const rating = ref<Rating | null>(null)
     /** Bank indexes already played per tier, to avoid repeats. */
     const bankUsed = ref<Record<Difficulty, number[]>>(emptyBankUsage())
+    /** When each technique family was last played, per tier (for rotation). */
+    const familyPlayed = ref<Record<Difficulty, Record<string, number>>>(emptyFamilyPlays())
     /** True while a new puzzle is being loaded (not persisted). */
     const loading = ref(false)
 
@@ -106,9 +109,13 @@ export const useGameStore = defineStore(
       if (loading.value) return
       loading.value = true
       try {
-        const pick = await pickFromBank(level, bankUsed.value[level] ?? [])
+        const pick = await pickFromBank(level, bankUsed.value[level] ?? [], familyPlayed.value[level] ?? {})
         if (recordAbandoned && isValid() && !completed.value && hasProgress.value) recordResult('abandoned')
         bankUsed.value[level] = pick.restarted ? [pick.index] : [...(bankUsed.value[level] ?? []), pick.index]
+        // Strictly increasing, so two games in the same millisecond still order correctly.
+        const plays = familyPlayed.value[level] ?? {}
+        const stamp = Math.max(Date.now(), ...Object.values(plays).map((t) => t + 1))
+        familyPlayed.value[level] = { ...plays, [pick.family]: stamp }
         start(level, pick.puzzle, pick.solution, pick.rating)
       } finally {
         loading.value = false
@@ -238,6 +245,7 @@ export const useGameStore = defineStore(
       notesMode,
       rating,
       bankUsed,
+      familyPlayed,
       loading,
       conflicts,
       peers,

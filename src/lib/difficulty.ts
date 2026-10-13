@@ -27,18 +27,19 @@ export interface Tier {
   /** Inclusive SE range. */
   se: [number, number]
   hodoku: HodokuLevel
-  /** Generated live in the app, or picked from the pre-rated bank. */
-  source: 'live' | 'bank'
   /** Whether the ratings are shown to the player. */
   showRating: boolean
+  /** Rotate new games across technique families (see familyOf). */
+  rotate: boolean
 }
 
 export const TIERS: Record<Difficulty, Tier> = {
-  easy: { label: 'Easy', se: [1.0, 1.5], hodoku: 'easy', source: 'live', showRating: false },
-  medium: { label: 'Medium', se: [1.6, 2.6], hodoku: 'medium', source: 'live', showRating: false },
-  hard: { label: 'Hard', se: [2.7, 4.2], hodoku: 'hard', source: 'live', showRating: false },
-  expert: { label: 'Expert', se: [4.3, 6.5], hodoku: 'unfair', source: 'bank', showRating: true },
-  master: { label: 'Master', se: [6.6, 8.0], hodoku: 'extreme', source: 'bank', showRating: true },
+  // Easy is all hidden singles, so there is nothing to rotate.
+  easy: { label: 'Easy', se: [1.0, 1.5], hodoku: 'easy', showRating: false, rotate: false },
+  medium: { label: 'Medium', se: [1.6, 2.6], hodoku: 'medium', showRating: false, rotate: true },
+  hard: { label: 'Hard', se: [2.7, 4.2], hodoku: 'hard', showRating: false, rotate: true },
+  expert: { label: 'Expert', se: [4.3, 6.5], hodoku: 'unfair', showRating: true, rotate: true },
+  master: { label: 'Master', se: [6.6, 8.0], hodoku: 'extreme', showRating: true, rotate: true },
 }
 
 export const LABELS: Record<Difficulty, string> = Object.fromEntries(
@@ -59,4 +60,28 @@ export function tierOf(rating: Pick<Rating, 'se' | 'hodokuLevel'>): Difficulty |
   const se = Math.round(rating.se * 10) / 10
   const tier = DIFFICULTIES.find((d) => se >= TIERS[d].se[0] && se <= TIERS[d].se[1])
   return tier && TIERS[tier].hodoku === rating.hodokuLevel ? tier : null
+}
+
+/**
+ * Technique family of a puzzle's hardest step (SE technique names), used to
+ * rotate what consecutive games of a tier hinge on.
+ */
+export function familyOf(tier: Difficulty, hardest: string): string {
+  let family: string
+  if (hardest === 'Hidden Single') family = 'Singles'
+  else if (hardest === 'Naked Single') family = 'Naked Single'
+  else if (hardest.startsWith('Direct Hidden')) family = 'Hidden subsets'
+  else if (/Pointing|Claiming/.test(hardest)) family = 'Intersections'
+  else if (/^(X-Wing|Swordfish|Jellyfish)$/.test(hardest)) family = 'Fish'
+  else if (/^(Naked|Hidden) (Pair|Triplet|Quad)$/.test(hardest)) family = 'Subsets'
+  else if (hardest.endsWith('Wing')) family = 'Wings'
+  else if (/^Unique (Rectangle|Loop)/.test(hardest)) family = 'Uniqueness'
+  else if (hardest.startsWith('BUG')) family = 'BUG'
+  else if (hardest.endsWith('Exclusion')) family = 'Exclusion'
+  else if (hardest.includes('Forcing')) family = 'Forcing chains'
+  else if (/Cycle|Turbot/.test(hardest)) family = 'Cycles'
+  else family = 'Other'
+  // Expert has only a handful of these, so they rotate as one family.
+  if (tier === 'expert' && ['Wings', 'Subsets', 'Fish'].includes(family)) return 'Wings & subsets'
+  return family
 }

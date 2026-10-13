@@ -11,6 +11,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { DIFFICULTIES, TIERS, tierOf, type Difficulty } from '../../src/lib/difficulty'
+import { rateSE } from '../../src/lib/rater'
 import { PARALLELISM, ROOT, WORK, hodoku, serate } from './tools'
 
 const run = promisify(execFile)
@@ -28,7 +29,34 @@ const bank: Record<Difficulty, BankEntry[]> = existsSync(PROGRESS)
   : { easy: [], medium: [], hard: [], expert: [], master: [] }
 const seen = new Set(Object.values(bank).flatMap((entries) => entries.map((e) => e[0])))
 
+/**
+ * Maximum share of a tier one hardest technique may take, to keep the mix
+ * varied. Without it, Hard is about 95% XY-Wing.
+ */
+const CAPS: Partial<Record<Difficulty, Record<string, number>>> = {
+  hard: { 'XY-Wing': 0.5 },
+}
+
+const capOf = (tier: Difficulty, technique: string) => Math.round((CAPS[tier]?.[technique] ?? 1) * perTier)
+const countOf = (tier: Difficulty, technique: string) => bank[tier].filter((e) => e[3] === technique).length
+const atCap = (tier: Difficulty, technique: string) => countOf(tier, technique) >= capOf(tier, technique)
+
+// Trim entries over a cap (e.g. after the cap was introduced), keeping the earliest.
+for (const tier of DIFFICULTIES) {
+  const kept: Record<string, number> = {}
+  bank[tier] = bank[tier].filter((e) => (kept[e[3]] = (kept[e[3]] ?? 0) + 1) <= capOf(tier, e[3]))
+}
+
 const missing = (tier: Difficulty) => Math.max(0, perTier - bank[tier].length)
+
+/** Drops candidates whose hardest technique is already at its cap (SE is emulated exactly up to 4.2). */
+function underCap(tier: Difficulty, puzzles: string[]): string[] {
+  if (!CAPS[tier]) return puzzles
+  return puzzles.filter((p) => {
+    const { hardest } = rateSE([...p].map(Number))
+    return !hardest || !atCap(tier, hardest)
+  })
+}
 
 /** Runs candidate generators for `tier` in parallel processes. */
 async function candidates(tier: Difficulty, count: number): Promise<string[]> {
@@ -57,7 +85,7 @@ async function rateAndFile(puzzles: string[], tag: string) {
     if (!s || !h) continue
     const tier = tierOf({ se: s.se, hodokuLevel: h.level }) ?? 'none'
     counts[tier] = (counts[tier] ?? 0) + 1
-    if (tier !== 'none' && tiers.includes(tier) && missing(tier) > 0) {
+    if (tier !== 'none' && tiers.includes(tier) && missing(tier) > 0 && !atCap(tier, s.hardest)) {
       bank[tier].push([p, s.se, h.score, s.hardest])
       seen.add(p)
     }
@@ -68,7 +96,7 @@ async function rateAndFile(puzzles: string[], tag: string) {
 
 for (const tier of tiers.filter((t) => TIERS[t].se[0] <= 4.2)) {
   while (missing(tier) > 0) {
-    const batch = await candidates(tier, Math.ceil(missing(tier) * 1.2) + PARALLELISM)
+    const batch = underCap(tier, await candidates(tier, Math.ceil(missing(tier) * 1.2) + PARALLELISM))
     const counts = await rateAndFile(batch, tier)
     console.log(`${tier}: ${bank[tier].length}/${perTier}  (batch ${batch.length}: ${JSON.stringify(counts)})`)
   }

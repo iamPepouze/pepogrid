@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import sample from './__fixtures__/rated-sample.json'
 import { loadBank, pickFromBank } from './bank'
-import { DIFFICULTIES, TIERS, tierOf, type HodokuLevel } from './difficulty'
+import { DIFFICULTIES, TIERS, familyOf, tierOf, type HodokuLevel } from './difficulty'
 import { PEERS, UNITS } from './grid'
 import { rateHodoku, rateSE } from './rater'
 import { countSolutions, randomSolution, solve } from './sudoku'
@@ -110,5 +110,50 @@ describe.each(DIFFICULTIES)('bank: %s', (tier) => {
     expect(pick.rating.hodokuLevel).toBe(TIERS[tier].hodoku)
     const again = await pickFromBank(tier, bank.map((_, i) => i))
     expect(again.restarted).toBe(true)
+  })
+})
+
+describe('technique families', () => {
+  it('maps every bank technique to a known family', async () => {
+    for (const tier of DIFFICULTIES) {
+      for (const [, , , hardest] of await loadBank(tier)) expect(familyOf(tier, hardest), `${tier}: ${hardest}`).not.toBe('Other')
+    }
+  })
+
+  it('groups techniques as agreed', () => {
+    expect(familyOf('medium', 'Direct Hidden Triplet')).toBe('Hidden subsets')
+    expect(familyOf('medium', 'Direct Pointing')).toBe('Intersections')
+    expect(familyOf('hard', 'XY-Wing')).toBe('Wings')
+    expect(familyOf('hard', 'Swordfish')).toBe('Fish')
+    expect(familyOf('hard', 'Hidden Pair')).toBe('Subsets')
+    expect(familyOf('expert', 'Unique Loop 6 type 1')).toBe('Uniqueness')
+    expect(familyOf('expert', 'XYZ-Wing')).toBe('Wings & subsets')
+    expect(familyOf('expert', 'Naked Quad')).toBe('Wings & subsets')
+    expect(familyOf('master', 'Forcing X-Chain')).toBe('Forcing chains')
+    expect(familyOf('master', 'Turbot Fish')).toBe('Cycles')
+    expect(familyOf('master', 'Aligned Triplet Exclusion')).toBe('Exclusion')
+  })
+})
+
+describe('family rotation', () => {
+  const families = async (tier: (typeof DIFFICULTIES)[number]) => [...new Set((await loadBank(tier)).map((e) => familyOf(tier, e[3])))]
+
+  it('picks from the family played least recently', async () => {
+    const all = await families('master')
+    expect(all.length).toBeGreaterThan(1)
+    const [stale, ...recent] = all
+    const played = Object.fromEntries([[stale, 1], ...recent.map((f, k) => [f, 100 + k])])
+    for (let n = 0; n < 10; n++) expect((await pickFromBank('master', [], played)).family).toBe(stale)
+  })
+
+  it('skips a family with no unused puzzles left', async () => {
+    const bank = await loadBank('hard')
+    const fish = bank.flatMap((e, i) => (familyOf('hard', e[3]) === 'Fish' ? [i] : []))
+    const pick = await pickFromBank('hard', fish, { Fish: 0, Wings: 5, Subsets: 5 })
+    expect(pick.family).not.toBe('Fish')
+  })
+
+  it('does not rotate Easy', () => {
+    expect(TIERS.easy.rotate).toBe(false)
   })
 })

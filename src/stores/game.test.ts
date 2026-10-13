@@ -105,6 +105,16 @@ describe('game store bank usage', () => {
     expect(new Set(game.bankUsed.master).size).toBe(2)
   })
 
+  it('rotates through every family before repeating one', async () => {
+    const game = useGameStore()
+    const seen: string[] = []
+    for (let n = 0; n < 3; n++) {
+      await game.newGame('hard', { recordAbandoned: false })
+      seen.push(Object.entries(game.familyPlayed.hard).sort((a, b) => b[1] - a[1])[0][0])
+    }
+    expect(new Set(seen).size).toBe(3)
+  })
+
   it('ignores a second start while one is loading', async () => {
     const game = useGameStore()
     const first = game.newGame('hard', { recordAbandoned: false })
