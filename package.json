@@ -27,5 +27,8 @@
     "vite-plugin-pwa": "^2.0.0",
     "vitest": "^5.0.4",
     "vue-tsc": "^3.3.13"
+  },
+  "allowScripts": {
+    "esbuild": false
   }
 }
