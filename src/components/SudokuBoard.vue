@@ -53,8 +53,8 @@ function cellLabel(i: number) {
 .board {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
-  /* Fills the largest square that fits the surrounding size container. */
-  --size: min(100cqw, 100cqh, 640px);
+  /* Set by the layout (App.vue). */
+  --size: var(--board-size, 100%);
   width: var(--size);
   aspect-ratio: 1;
   border: 3px solid var(--line-thick);

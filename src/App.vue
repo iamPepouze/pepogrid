@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import GameControls from './components/GameControls.vue'
 import NumberPad from './components/NumberPad.vue'
 import SudokuBoard from './components/SudokuBoard.vue'
@@ -64,26 +64,71 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
-let timer: number | undefined
+/* Must match the side-by-side media query in the styles below. */
+const SIDE_BY_SIDE = window.matchMedia('(orientation: landscape) and (min-width: 600px)')
+const MIN_BOARD = 200
 
-// The timer only runs while the tab is visible.
+const appEl = ref<HTMLElement | null>(null)
+const headerEl = ref<HTMLElement | null>(null)
+const gameEl = ref<HTMLElement | null>(null)
+const boardAreaEl = ref<HTMLElement | null>(null)
+
+/**
+ * Stacked layout: sizes the board to the largest square that leaves room for
+ * everything else, and exposes it as --board-size so the column matches it.
+ * The side-by-side layout sizes the board in CSS instead.
+ */
+function fitBoard() {
+  const app = appEl.value
+  const header = headerEl.value
+  const main = gameEl.value
+  const area = boardAreaEl.value
+  if (!app || !header || !main || !area) return
+  if (SIDE_BY_SIDE.matches) {
+    app.style.removeProperty('--board-size')
+    return
+  }
+  const cs = getComputedStyle(app)
+  const width = app.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+  const height = app.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
+  // Other items can rewrap at the new width, so settle over a couple of passes.
+  for (let pass = 0; pass < 3; pass++) {
+    const others = header.offsetHeight + parseFloat(cs.rowGap) + main.offsetHeight - area.offsetHeight
+    const size = Math.floor(Math.max(MIN_BOARD, Math.min(width, height - others)))
+    const value = `${size}px`
+    if (app.style.getPropertyValue('--board-size') === value) break
+    app.style.setProperty('--board-size', value)
+  }
+}
+
+let timer: number | undefined
+let resizeObserver: ResizeObserver | undefined
+
 onMounted(() => {
   window.addEventListener('keydown', onKeydown)
+  // The timer only runs while the tab is visible.
   timer = window.setInterval(() => {
     if (document.visibilityState === 'visible') game.tick()
   }, 1000)
+
+  // Refit when the window resizes or content changes height (win banner, install button).
+  resizeObserver = new ResizeObserver(fitBoard)
+  for (const el of [appEl.value, headerEl.value, gameEl.value]) if (el) resizeObserver.observe(el)
+  SIDE_BY_SIDE.addEventListener('change', fitBoard)
+  fitBoard()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
   window.clearInterval(timer)
+  resizeObserver?.disconnect()
+  SIDE_BY_SIDE.removeEventListener('change', fitBoard)
 })
 </script>
 
-
 <template>
-  <div class="app">
-    <header class="topbar">
+  <div ref="appEl" class="app">
+    <header ref="headerEl" class="topbar">
       <div class="brand">
         <h1>PepoGrid</h1>
         <p class="tagline">Your grid, your chill.</p>
@@ -103,7 +148,7 @@ onBeforeUnmount(() => {
       </nav>
     </header>
 
-    <main class="game">
+    <main ref="gameEl" class="game">
       <div class="status-area">
         <div class="status">
           <span>Mistakes: <strong>{{ state.mistakes }}</strong></span>
@@ -118,7 +163,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div class="board-area">
+      <div ref="boardAreaEl" class="board-area">
         <SudokuBoard />
       </div>
 
@@ -134,16 +179,23 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* Mobile first: compact header, board fills the free space, pad at the bottom. */
+/*
+ * Stacked layout (default): one column, as wide as the board, with the board
+ * sized by fitBoard() to fill the free height and controls right below it.
+ */
 .app {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 10px;
   height: 100dvh;
-  max-width: 560px;
-  margin: 0 auto;
   padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
     max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+}
+
+.app > * {
+  flex-shrink: 0;
+  width: var(--board-size, 100%);
 }
 
 .topbar {
@@ -208,12 +260,8 @@ onBeforeUnmount(() => {
 }
 
 .game {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
-  grid-template-areas: 'status' 'board' 'controls' 'pad' 'hints';
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
@@ -226,12 +274,9 @@ onBeforeUnmount(() => {
 
 .board-area {
   grid-area: board;
-  container-type: size;
   display: flex;
-  /* Keep the board under the status line; spare space sits above the controls. */
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  min-height: 0;
 }
 
 .controls-area {
@@ -321,10 +366,19 @@ kbd {
 /* Landscape and wide screens: board on the left, everything else beside it. */
 @media (orientation: landscape) and (min-width: 600px) {
   .app {
+    align-items: stretch;
     max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .app > * {
+    width: auto;
   }
 
   .game {
+    flex: 1;
+    min-height: 0;
+    display: grid;
     grid-template-columns: minmax(0, 1fr) clamp(240px, 32vw, 340px);
     grid-template-rows: 1fr auto auto auto auto 1fr;
     grid-template-areas:
@@ -339,7 +393,10 @@ kbd {
   }
 
   .board-area {
-    align-items: center;
+    /* The board fills the largest square of its cell. */
+    container-type: size;
+    min-height: 0;
+    --board-size: min(100cqw, 100cqh, 640px);
   }
 }
 
