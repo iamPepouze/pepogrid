@@ -4,6 +4,8 @@
 
 A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and Vite. It installs to the home screen and plays offline.
 
+**Play it at [iampepouze.github.io/pepogrid](https://iampepouze.github.io/pepogrid/).**
+
 ## Features
 
 - **Five difficulty tiers** with ratings from two community-standard tools: [Sudoku Explainer](https://github.com/SudokuMonster/SukakuExplainer) 1.2.1 (SE) and [HoDoKu](https://hodoku.sourceforge.net/). SE decides the tier, and HoDoKu's level must match it, or the puzzle isn't used.
@@ -67,11 +69,13 @@ Candidates are pre-filtered by a built-in rater ([src/lib/rater.ts](src/lib/rate
 
 ```sh
 npm install
-npm run dev        # start the dev server
+npm run dev        # start the dev server at http://localhost:5173/pepogrid/
 npm test           # run the generator tests
 npm run build      # type-check and build to dist/ (includes the service worker)
 npm run preview    # serve the production build to test the PWA locally
 ```
+
+Every push to `main` is tested, built and deployed to GitHub Pages by [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
 
 The app icon source is [public/favicon.svg](public/favicon.svg). Android's cropped (maskable) icon has its own source, [icons/maskable.svg](icons/maskable.svg), with a smaller grid that stays inside Android's safe zone. The PNG icons in `public/` are rendered from these two files.
 
