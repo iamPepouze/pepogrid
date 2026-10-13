@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { Difficulty } from '../lib/sudoku'
+import type { Difficulty, HodokuLevel } from '../lib/difficulty'
 
 const MAX_RESULTS = 1000
 
@@ -22,6 +22,12 @@ export interface GameResult {
   puzzle: string
   solution: string
   finalBoard: string
+  /** Sudoku Explainer 1.2.1 rating. */
+  se: number
+  hodokuScore: number
+  hodokuLevel: HodokuLevel
+  /** Technique behind the SE rating. */
+  hardest: string
 }
 
 export const gridToString = (grid: readonly number[]) => grid.join('')

@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { DIFFICULTIES, PEERS, bit, colOf, generate, rowOf, type Difficulty } from '../lib/sudoku'
+import { pickFromBank } from '../lib/bank'
+import { DIFFICULTIES, HODOKU_LEVELS, type Difficulty, type Rating } from '../lib/difficulty'
+import { PEERS, bit, colOf, rowOf } from '../lib/sudoku'
 import { gridToString, useResultsStore, type Outcome } from './results'
 
 const HISTORY_LIMIT = 100
@@ -21,6 +23,11 @@ export function vibrate(ms: number) {
 
 const isGrid = (value: unknown): value is number[] =>
   Array.isArray(value) && value.length === 81 && value.every((v) => Number.isInteger(v))
+
+const isRating = (r: Rating | null): r is Rating =>
+  !!r && typeof r.se === 'number' && typeof r.hodokuScore === 'number' && HODOKU_LEVELS.includes(r.hodokuLevel) && typeof r.hardest === 'string'
+
+const emptyBankUsage = (): Record<Difficulty, number[]> => ({ easy: [], medium: [], hard: [], expert: [], master: [] })
 
 /**
  * The game in progress, persisted as `pepogrid.game` so a refresh resumes exactly
@@ -47,6 +54,12 @@ export const useGameStore = defineStore(
     const history = ref<Snapshot[]>([])
     const selected = ref<number | null>(null)
     const notesMode = ref(false)
+    /** SE and HoDoKu ratings of the puzzle (from the bank). */
+    const rating = ref<Rating | null>(null)
+    /** Bank indexes already played per tier, to avoid repeats. */
+    const bankUsed = ref<Record<Difficulty, number[]>>(emptyBankUsage())
+    /** True while a new puzzle is being loaded (not persisted). */
+    const loading = ref(false)
 
     const isGiven = (i: number) => puzzle.value[i] !== 0
     const isWrong = (i: number) => !isGiven(i) && values.value[i] !== 0 && values.value[i] !== solution.value[i]
@@ -81,19 +94,33 @@ export const useGameStore = defineStore(
         puzzle: gridToString(puzzle.value),
         solution: gridToString(solution.value),
         finalBoard: gridToString(values.value),
+        se: rating.value!.se,
+        hodokuScore: rating.value!.hodokuScore,
+        hodokuLevel: rating.value!.hodokuLevel,
+        hardest: rating.value!.hardest,
       })
     }
 
     /** Starts a new puzzle; an unfinished game with progress is recorded as abandoned. */
-    function newGame(level: Difficulty, { recordAbandoned = true } = {}) {
-      if (recordAbandoned && puzzle.value.length && !completed.value && hasProgress.value) {
-        recordResult('abandoned')
+    async function newGame(level: Difficulty, { recordAbandoned = true } = {}) {
+      if (loading.value) return
+      loading.value = true
+      try {
+        const pick = await pickFromBank(level, bankUsed.value[level] ?? [])
+        if (recordAbandoned && isValid() && !completed.value && hasProgress.value) recordResult('abandoned')
+        bankUsed.value[level] = pick.restarted ? [pick.index] : [...(bankUsed.value[level] ?? []), pick.index]
+        start(level, pick.puzzle, pick.solution, pick.rating)
+      } finally {
+        loading.value = false
       }
-      const generated = generate(level)
+    }
+
+    function start(level: Difficulty, givens: number[], answer: number[], puzzleRating: Rating) {
       difficulty.value = level
-      puzzle.value = generated.puzzle
-      solution.value = generated.solution
-      values.value = generated.puzzle.slice()
+      puzzle.value = givens
+      solution.value = answer
+      rating.value = puzzleRating
+      values.value = givens.slice()
       notes.value = new Array(81).fill(0)
       mistakes.value = 0
       elapsed.value = 0
@@ -112,7 +139,7 @@ export const useGameStore = defineStore(
     /** The selected cell if the player may edit it, otherwise null. */
     function editableCell(): number | null {
       const i = selected.value
-      if (i === null || completed.value || isGiven(i)) return null
+      if (i === null || loading.value || completed.value || isGiven(i)) return null
       return i
     }
 
@@ -191,6 +218,7 @@ export const useGameStore = defineStore(
         Number.isInteger(elapsed.value) &&
         typeof completed.value === 'boolean' &&
         Array.isArray(history.value) &&
+        isRating(rating.value) &&
         (selected.value === null || (Number.isInteger(selected.value) && selected.value >= 0 && selected.value < 81))
       )
     }
@@ -208,6 +236,9 @@ export const useGameStore = defineStore(
       history,
       selected,
       notesMode,
+      rating,
+      bankUsed,
+      loading,
       conflicts,
       peers,
       hasProgress,
@@ -225,5 +256,5 @@ export const useGameStore = defineStore(
       isValid,
     }
   },
-  { persist: true },
+  { persist: { omit: ['loading'] } },
 )

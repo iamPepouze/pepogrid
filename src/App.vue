@@ -1,22 +1,33 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import DifficultyMenu from './components/DifficultyMenu.vue'
 import GameControls from './components/GameControls.vue'
 import NumberPad from './components/NumberPad.vue'
 import SettingsMenu from './components/SettingsMenu.vue'
 import SudokuBoard from './components/SudokuBoard.vue'
 import { useInstall } from './composables/useInstall'
 import { useTheme } from './composables/useTheme'
-import { DIFFICULTIES, type Difficulty } from './lib/sudoku'
+import { HODOKU_LABELS, LABELS, TIERS, type Difficulty } from './lib/difficulty'
 import { useGameStore } from './stores/game'
 
 const game = useGameStore()
 // First visit, or a save that's missing or corrupt: start a game.
-if (!game.isValid()) game.newGame('easy', { recordAbandoned: false })
+if (!game.isValid()) loadGame('easy', { recordAbandoned: false })
 
 useTheme()
 const { canInstall, install } = useInstall()
 
-const LABELS: Record<Difficulty, string> = { easy: 'Easy', medium: 'Medium', hard: 'Hard' }
+/** Ratings of the current puzzle, shown only for the tiers that display them. */
+const shownRating = computed(() => (TIERS[game.difficulty].showRating ? game.rating : null))
+
+async function loadGame(difficulty: Difficulty, options?: { recordAbandoned?: boolean }) {
+  try {
+    await game.newGame(difficulty, options)
+  } catch (error) {
+    console.error(error)
+    window.alert(`Couldn't load a ${LABELS[difficulty]} puzzle. Check your connection and try again.`)
+  }
+}
 
 const time = computed(() => {
   const m = Math.floor(game.elapsed / 60)
@@ -29,7 +40,7 @@ function startGame(difficulty: Difficulty) {
   if (unfinished && !window.confirm(`Start a new ${LABELS[difficulty]} game? Your current progress will be lost.`)) {
     return
   }
-  game.newGame(difficulty)
+  loadGame(difficulty)
 }
 
 const ARROWS: Record<string, [number, number]> = {
@@ -141,30 +152,24 @@ onBeforeUnmount(() => {
       </div>
       <button v-if="canInstall" type="button" class="install" @click="install">Install</button>
       <SettingsMenu />
-      <nav class="difficulty" aria-label="Difficulty">
-        <button
-          v-for="d in DIFFICULTIES"
-          :key="d"
-          type="button"
-          :class="{ current: game.difficulty === d }"
-          :aria-current="game.difficulty === d"
-          @click="startGame(d)"
-        >
-          {{ LABELS[d] }}
-        </button>
-      </nav>
+      <DifficultyMenu :current="game.difficulty" :disabled="game.loading" @select="startGame" />
     </header>
 
     <main ref="gameEl" class="game">
       <div class="status-area">
         <div class="status">
           <span>Mistakes: <strong>{{ game.mistakes }}</strong></span>
+          <span v-if="shownRating" class="rating" title="Sudoku Explainer rating">SE {{ shownRating.se.toFixed(1) }}</span>
           <span class="timer" aria-label="Elapsed time">{{ time }}</span>
         </div>
         <div v-if="game.completed" class="win" role="status">
           <p>
             <strong>Solved!</strong> {{ LABELS[game.difficulty] }} in {{ time }} with {{ game.mistakes }}
             {{ game.mistakes === 1 ? 'mistake' : 'mistakes' }}.
+            <span v-if="shownRating" class="win-rating">
+              SE {{ shownRating.se.toFixed(1) }} · HoDoKu {{ shownRating.hodokuScore }}
+              ({{ HODOKU_LABELS[shownRating.hodokuLevel] }}) · hardest: {{ shownRating.hardest }}
+            </span>
           </p>
           <button type="button" @click="startGame(game.difficulty)">Play again</button>
         </div>
@@ -241,32 +246,6 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
-.difficulty {
-  display: flex;
-  gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--button-border);
-  border-radius: 10px;
-  background: var(--button-bg);
-}
-
-.difficulty button {
-  min-height: 34px;
-  padding: 4px 10px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.difficulty button.current {
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
 .game {
   display: flex;
   flex-direction: column;
@@ -303,6 +282,18 @@ onBeforeUnmount(() => {
 
 .status strong {
   color: var(--text);
+}
+
+.rating {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.win-rating {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .timer {
@@ -360,10 +351,6 @@ kbd {
 @media (hover: hover) and (pointer: fine) {
   .hints {
     display: block;
-  }
-
-  .difficulty button:hover:not(.current) {
-    background: var(--peer);
   }
 
   .install:hover {
