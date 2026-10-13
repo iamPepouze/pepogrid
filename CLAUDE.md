@@ -16,6 +16,6 @@ Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root, created when fir
 
 ## Workflow
 
-- **After grilling**: once the frontier is empty, recap the settled decisions and hand back. The user picks the next step, `/to-spec` or `/implement`.
-- **`/implement`**: commit before calling `/code-review` (it reviews commits, not the working tree). Reference the spec issue in the commit and PR with `Closes #N`.
-- **Merging**: `main` takes changes only through a squash-merged PR with a green `check`. See `docs/agents/ci.md`.
+- **After grilling**: when a grilling session ends, stop at the recap of settled decisions: no plan approval, no implementation. The user picks the next step, `/to-spec` or `/implement`.
+- **`/implement`**: commit before calling `/code-review`, since it reviews commits, not the working tree (this overrides the vendored skill's order). Reference the spec issue with `Closes #N`.
+- **Merging or waiting on CI**: `main` only accepts PRs with a green `check`. See `docs/agents/ci.md`.
