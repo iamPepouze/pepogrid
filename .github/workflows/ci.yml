@@ -30,7 +30,10 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - name: Lint workflows
+        run: docker run --rm -v "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.12 -color
       - run: npm ci
+      - run: npm run lint
       - run: npm test
       - run: npm run build
       - if: inputs.upload-pages
