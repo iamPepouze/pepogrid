@@ -30,7 +30,10 @@ function findJava(): string {
   if (home && existsSync(join(home, 'bin', 'java'))) return join(home, 'bin', 'java')
   const msDir = 'C:/Program Files/Microsoft'
   if (existsSync(msDir)) {
-    const jdk = readdirSync(msDir).find((d) => d.startsWith('jdk-'))
+    // Newest first, so an upgraded JDK wins over older ones left installed.
+    const jdk = readdirSync(msDir)
+      .filter((d) => d.startsWith('jdk-'))
+      .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))[0]
     if (jdk) return join(msDir, jdk, 'bin', 'java.exe')
   }
   return 'java'
