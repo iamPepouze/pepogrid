@@ -13,6 +13,8 @@ let longPressed = false
 function startPress(d: number) {
   longPressed = false
   cancelPress()
+  // Some browsers still send pointer events to a disabled button.
+  if (game.completeDigits.has(d)) return
   timer = window.setTimeout(() => {
     longPressed = true
     game.toggleNote(d)
@@ -43,6 +45,7 @@ onBeforeUnmount(cancelPress)
       :key="d"
       type="button"
       class="digit"
+      :disabled="game.completeDigits.has(d)"
       @pointerdown="startPress(d)"
       @pointerup="cancelPress"
       @pointerleave="cancelPress"
@@ -74,9 +77,19 @@ onBeforeUnmount(cancelPress)
   font-weight: 500;
   cursor: pointer;
   -webkit-touch-callout: none;
+  transition:
+    opacity 0.8s ease,
+    color 0.8s ease;
 }
 
-.digit:active {
+/* A complete digit: every cell that needs it holds it. */
+.digit:disabled {
+  opacity: 0.35;
+  color: var(--note);
+  cursor: default;
+}
+
+.digit:active:not(:disabled) {
   background: var(--selected);
 }
 
@@ -86,8 +99,14 @@ onBeforeUnmount(cancelPress)
 }
 
 @media (hover: hover) {
-  .digit:hover {
+  .digit:hover:not(:disabled) {
     background: var(--peer);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .digit {
+    transition: none;
   }
 }
 

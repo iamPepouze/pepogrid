@@ -21,6 +21,12 @@ export function vibrate(ms: number) {
   }
 }
 
+/** A digit that a placement just made complete, and the cell it was placed in. */
+export interface NewlyComplete {
+  digit: number
+  cell: number
+}
+
 const isGrid = (value: unknown): value is number[] =>
   Array.isArray(value) && value.length === 81 && value.every((v) => Number.isInteger(v))
 
@@ -63,6 +69,11 @@ export const useGameStore = defineStore(
     const familyPlayed = ref<Record<Difficulty, Record<string, number>>>(emptyFamilyPlays())
     /** True while a new puzzle is being loaded (not persisted). */
     const loading = ref(false)
+    /**
+     * Set to a fresh object each time a placement makes a digit complete, to trigger
+     * its animation. Undo never sets it, and it is not persisted, so a resume is silent.
+     */
+    const newlyComplete = ref<NewlyComplete | null>(null)
 
     const isGiven = (i: number) => puzzle.value[i] !== 0
     const isWrong = (i: number) => !isGiven(i) && values.value[i] !== 0 && values.value[i] !== solution.value[i]
@@ -73,6 +84,16 @@ export const useGameStore = defineStore(
       for (let i = 0; i < 81; i++) {
         const v = values.value[i]
         if (v && PEERS[i].some((p) => values.value[p] === v)) set.add(i)
+      }
+      return set
+    })
+
+    /** Digits that sit in every cell where the solution has them; wrong copies don't count. */
+    const completeDigits = computed(() => {
+      const set = new Set<number>()
+      if (!isGrid(solution.value)) return set // no game yet
+      for (let d = 1; d <= 9; d++) {
+        if (solution.value.every((v, i) => v !== d || values.value[i] === d)) set.add(d)
       }
       return set
     })
@@ -136,6 +157,7 @@ export const useGameStore = defineStore(
       history.value = []
       selected.value = null
       notesMode.value = false
+      newlyComplete.value = null
     }
 
     function pushHistory() {
@@ -163,7 +185,7 @@ export const useGameStore = defineStore(
 
     function setValue(d: number) {
       const i = editableCell()
-      if (i === null || values.value[i] === d) return
+      if (i === null || values.value[i] === d || completeDigits.value.has(d)) return
       pushHistory()
       values.value[i] = d
       notes.value[i] = 0
@@ -171,6 +193,11 @@ export const useGameStore = defineStore(
       if (d !== solution.value[i]) {
         mistakes.value++
         vibrate(80)
+      } else if (completeDigits.value.has(d)) {
+        // This placement made the digit complete: every note of it is now wrong,
+        // and its greyed button can no longer toggle one off.
+        for (let k = 0; k < 81; k++) notes.value[k] &= ~bit(d)
+        newlyComplete.value = { digit: d, cell: i }
       }
       if (values.value.every((v, k) => v === solution.value[k])) {
         completed.value = true
@@ -181,7 +208,7 @@ export const useGameStore = defineStore(
 
     function toggleNote(d: number) {
       const i = editableCell()
-      if (i === null || values.value[i] !== 0) return
+      if (i === null || values.value[i] !== 0 || completeDigits.value.has(d)) return
       pushHistory()
       notes.value[i] ^= bit(d)
     }
@@ -247,7 +274,9 @@ export const useGameStore = defineStore(
       bankUsed,
       familyPlayed,
       loading,
+      newlyComplete,
       conflicts,
+      completeDigits,
       peers,
       hasProgress,
       isGiven,
@@ -264,5 +293,5 @@ export const useGameStore = defineStore(
       isValid,
     }
   },
-  { persist: { omit: ['loading'] } },
+  { persist: { omit: ['loading', 'newlyComplete'] } },
 )

@@ -1,16 +1,25 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { PEERS, bit } from '../lib/sudoku'
 import { useGameStore } from './game'
 import { useResultsStore } from './results'
 
-/** Index of the first empty (non-given) cell. */
-const firstEmpty = (game: ReturnType<typeof useGameStore>) => game.puzzle.findIndex((v) => v === 0)
+type Game = ReturnType<typeof useGameStore>
 
-function solve(game: ReturnType<typeof useGameStore>) {
-  game.puzzle.forEach((v, i) => {
-    if (v) return
+/** Index of the first empty (non-given) cell. */
+const firstEmpty = (game: Game) => game.puzzle.findIndex((v) => v === 0)
+
+/** Selects each cell in turn and enters digit `d`. */
+function place(game: Game, cells: number[], d: number) {
+  for (const i of cells) {
     game.select(i)
-    game.input(game.solution[i])
+    game.input(d)
+  }
+}
+
+function solve(game: Game) {
+  game.puzzle.forEach((v, i) => {
+    if (!v) place(game, [i], game.solution[i])
   })
 }
 
@@ -89,6 +98,109 @@ describe('game store results', () => {
     solve(game)
     await game.newGame('easy')
     expect(results.results).toHaveLength(1)
+  })
+})
+
+/** Non-given cells whose solution is digit `d`: the ones the player must fill with it. */
+const emptyCellsOf = (game: Game, d: number) =>
+  game.solution.flatMap((v, i) => (v === d && game.puzzle[i] === 0 ? [i] : []))
+
+describe('complete digits', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('completes a digit once all nine of its solution cells hold it', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const d = game.solution[firstEmpty(game)]
+    const cells = emptyCellsOf(game, d)
+    place(game, cells.slice(0, -1), d)
+    expect(game.completeDigits.has(d)).toBe(false)
+    place(game, cells.slice(-1), d)
+    expect(game.completeDigits.has(d)).toBe(true)
+  })
+
+  it('ignores wrong copies: they neither complete a digit nor undo it', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const d = game.solution[firstEmpty(game)]
+    const cells = emptyCellsOf(game, d)
+    const other = game.puzzle.findIndex((v, i) => v === 0 && game.solution[i] !== d)
+    place(game, [other], d) // wrong copy
+    place(game, cells.slice(0, -1), d)
+    expect(game.completeDigits.has(d)).toBe(false)
+    place(game, cells.slice(-1), d)
+    expect(game.completeDigits.has(d)).toBe(true)
+  })
+
+  it('stops being complete after erase or undo', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const d = game.solution[firstEmpty(game)]
+    const cells = emptyCellsOf(game, d)
+    place(game, cells, d)
+    game.erase()
+    expect(game.completeDigits.has(d)).toBe(false)
+    game.undo()
+    expect(game.completeDigits.has(d)).toBe(true)
+    game.undo()
+    expect(game.completeDigits.has(d)).toBe(false)
+  })
+
+  it('ignores input of a complete digit, as a value or a note', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const d = game.solution[firstEmpty(game)]
+    place(game, emptyCellsOf(game, d), d)
+    const other = game.puzzle.findIndex((v, i) => v === 0 && game.values[i] === 0)
+    game.select(other)
+    game.input(d)
+    expect(game.values[other]).toBe(0)
+    expect(game.mistakes).toBe(0)
+    game.toggleNote(d) // Shift + digit, or long-press
+    expect(game.notes[other]).toBe(0)
+    game.toggleNotesMode()
+    game.input(d)
+    expect(game.notes[other]).toBe(0)
+  })
+
+  it('clears stray notes of a digit once it is complete, and undo restores them', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const d = game.solution[firstEmpty(game)]
+    const cells = emptyCellsOf(game, d)
+    const last = cells[cells.length - 1]
+    place(game, cells.slice(0, -1), d)
+    // A note out of reach of the last placement's own peer clearing.
+    const stray = game.values.findIndex((v, i) => v === 0 && i !== last && !PEERS[last].includes(i))
+    game.select(stray)
+    game.toggleNote(d)
+    place(game, [last], d)
+    expect(game.notes[stray] & bit(d)).toBe(0)
+    game.undo()
+    expect(game.notes[stray] & bit(d)).not.toBe(0)
+  })
+
+  it('signals a newly complete digit only when a placement completes it', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const d = game.solution[firstEmpty(game)]
+    const cells = emptyCellsOf(game, d)
+    place(game, cells.slice(0, -1), d)
+    expect(game.newlyComplete).toBeNull()
+    place(game, cells.slice(-1), d)
+    const signal = game.newlyComplete
+    expect(signal?.digit).toBe(d)
+
+    game.erase()
+    game.undo() // complete again, but not by a placement
+    expect(game.newlyComplete).toBe(signal)
+
+    game.erase()
+    game.input(d) // placed again: signalled anew
+    expect(game.newlyComplete).not.toBe(signal)
+    expect(game.newlyComplete?.digit).toBe(d)
   })
 })
 

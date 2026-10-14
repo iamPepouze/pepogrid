@@ -66,6 +66,10 @@ _Avoid_: Score, history entry
 **Matching-number highlight**:
 An optional tint on every cell holding the digit of the selected cell.
 
+**Complete digit**:
+A digit that sits in all nine cells where the solution has it; a wrong extra copy elsewhere does not change this. Not to be confused with a solved game.
+_Avoid_: Finished digit, used-up digit
+
 ## Difficulty
 
 **Difficulty**:
