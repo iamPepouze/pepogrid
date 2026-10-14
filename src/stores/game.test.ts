@@ -92,6 +92,99 @@ describe('game store results', () => {
   })
 })
 
+/** Empty cells whose solution is digit `d`. */
+const cellsOf = (game: ReturnType<typeof useGameStore>, d: number) =>
+  game.solution.flatMap((v, i) => (v === d && game.puzzle[i] === 0 ? [i] : []))
+
+function place(game: ReturnType<typeof useGameStore>, cells: number[], d: number) {
+  for (const i of cells) {
+    game.select(i)
+    game.input(d)
+  }
+}
+
+describe('complete digits', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('completes a digit once all nine of its solution cells hold it', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const d = game.solution[firstEmpty(game)]
+    const cells = cellsOf(game, d)
+    place(game, cells.slice(0, -1), d)
+    expect(game.completeDigits.has(d)).toBe(false)
+    place(game, cells.slice(-1), d)
+    expect(game.completeDigits.has(d)).toBe(true)
+  })
+
+  it('ignores wrong copies: they neither complete a digit nor undo it', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const d = game.solution[firstEmpty(game)]
+    const cells = cellsOf(game, d)
+    const other = game.puzzle.findIndex((v, i) => v === 0 && game.solution[i] !== d)
+    place(game, [other], d) // wrong copy
+    place(game, cells.slice(0, -1), d)
+    expect(game.completeDigits.has(d)).toBe(false)
+    place(game, cells.slice(-1), d)
+    expect(game.completeDigits.has(d)).toBe(true)
+  })
+
+  it('stops being complete after erase or undo', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const d = game.solution[firstEmpty(game)]
+    const cells = cellsOf(game, d)
+    place(game, cells, d)
+    game.erase()
+    expect(game.completeDigits.has(d)).toBe(false)
+    game.undo()
+    expect(game.completeDigits.has(d)).toBe(true)
+    game.undo()
+    expect(game.completeDigits.has(d)).toBe(false)
+  })
+
+  it('ignores input of a complete digit, as a value or a note', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const d = game.solution[firstEmpty(game)]
+    place(game, cellsOf(game, d), d)
+    const other = game.puzzle.findIndex((v, i) => v === 0 && game.values[i] === 0)
+    game.select(other)
+    game.input(d)
+    expect(game.values[other]).toBe(0)
+    expect(game.mistakes).toBe(0)
+    game.toggleNote(d) // Shift + digit, or long-press
+    expect(game.notes[other]).toBe(0)
+    game.toggleNotesMode()
+    game.input(d)
+    expect(game.notes[other]).toBe(0)
+  })
+
+  it('signals a completion only when a placement completes the digit', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const d = game.solution[firstEmpty(game)]
+    const cells = cellsOf(game, d)
+    place(game, cells.slice(0, -1), d)
+    expect(game.lastCompletion).toBeNull()
+    place(game, cells.slice(-1), d)
+    const signal = game.lastCompletion
+    expect(signal?.digit).toBe(d)
+
+    game.erase()
+    game.undo() // complete again, but not by a placement
+    expect(game.lastCompletion).toBe(signal)
+
+    game.erase()
+    game.input(d) // placed again: a new completion
+    expect(game.lastCompletion).not.toBe(signal)
+    expect(game.lastCompletion?.digit).toBe(d)
+  })
+})
+
 describe('game store bank usage', () => {
   beforeEach(() => {
     setActivePinia(createPinia())

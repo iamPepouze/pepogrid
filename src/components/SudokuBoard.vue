@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { bit, colOf, rowOf } from '../lib/sudoku'
 import { useGameStore } from '../stores/game'
 import { useSettingsStore } from '../stores/settings'
@@ -15,6 +15,39 @@ const matchDigit = computed(() =>
   settings.highlightMatching && game.selected !== null ? game.values[game.selected] : 0,
 )
 
+/** Delay between the glow reaching one cell and the next, along the wave. */
+const GLOW_STEP_MS = 70
+/** Longest wave delay (about 8√2 steps) plus the 1.2s glow animation. */
+const GLOW_TOTAL_MS = 2100
+
+/** The completion currently glowing across its digit's cells, if any. */
+const glow = ref<{ digit: number; cell: number } | null>(null)
+let glowTimer: number | undefined
+
+watch(
+  () => game.lastCompletion,
+  (completion) => {
+    window.clearTimeout(glowTimer)
+    glow.value = null
+    if (!completion) return
+    // Next frame, so a repeat on the same cells restarts the animation.
+    requestAnimationFrame(() => {
+      glow.value = completion
+      glowTimer = window.setTimeout(() => (glow.value = null), GLOW_TOTAL_MS)
+    })
+  },
+)
+
+onBeforeUnmount(() => window.clearTimeout(glowTimer))
+
+/** Glow delay for cell `i`: a wave spreading out from the placement that completed the digit. */
+function glowDelay(i: number) {
+  if (!glow.value) return undefined
+  const from = glow.value.cell
+  const distance = Math.hypot(rowOf(i) - rowOf(from), colOf(i) - colOf(from))
+  return { '--glow-delay': `${Math.round(distance * GLOW_STEP_MS)}ms` }
+}
+
 function cellClass(i: number) {
   const c = colOf(i)
   const r = rowOf(i)
@@ -25,6 +58,7 @@ function cellClass(i: number) {
     conflict: game.conflicts.has(i),
     wrong: isWrong(i),
     selected: game.selected === i,
+    glow: glow.value !== null && game.values[i] === glow.value.digit,
     'box-right': c % 3 === 2 && c !== 8,
     'box-bottom': r % 3 === 2 && r !== 8,
     'last-col': c === 8,
@@ -48,6 +82,7 @@ function cellLabel(i: number) {
       type="button"
       class="cell"
       :class="cellClass(i)"
+      :style="glowDelay(i)"
       :aria-label="cellLabel(i)"
       @click="game.select(i)"
     >
@@ -131,6 +166,51 @@ function cellLabel(i: number) {
 
 .cell.wrong {
   color: var(--wrong-digit);
+}
+
+.cell.glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  animation: glow 1.2s ease-in-out var(--glow-delay, 0ms);
+}
+
+.cell.glow .value {
+  animation: swell 1.2s ease-in-out var(--glow-delay, 0ms);
+}
+
+/* A soft wash of colour and a gentle swell, played when a digit becomes complete. */
+@keyframes glow {
+  40% {
+    opacity: 0.28;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes swell {
+  40% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell.glow::before,
+  .cell.glow .value {
+    animation: none;
+  }
+}
+
+.value,
+.notes {
+  position: relative;
 }
 
 .value {
