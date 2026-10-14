@@ -198,6 +198,7 @@ export const useGameStore = defineStore(
         // This placement made the digit complete: every note of it is now wrong,
         // and its greyed button can no longer toggle one off.
         for (let k = 0; k < 81; k++) notes.value[k] &= ~bit(d)
+        // From the solution, not the board: a wrong copy elsewhere stays unlit.
         const cells = solution.value.flatMap((v, k) => (v === d ? [k] : []))
         newlyComplete.value = { digit: d, cell: i, cells }
       }
