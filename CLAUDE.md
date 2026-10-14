@@ -18,5 +18,5 @@ Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root, created when fir
 
 - **After grilling**: when a grilling session ends, stop at the recap of settled decisions: no plan approval, no implementation. The user picks the next step, `/to-spec` or `/implement`. In plan mode, end with AskUserQuestion offering those two.
 - **`/implement`**: commit before calling `/code-review`, since it reviews commits, not the working tree (this overrides the vendored skill's order). Reference the spec issue with `Closes #N` when the work comes from one.
-- **`/code-review`**: with no fixed point given, use `main` rather than asking (this overrides the vendored skill). The Spec sub-agent also checks each rationale the spec gives (lines like "X already happens"): a false premise is a finding.
+- **`/code-review`**: with no fixed point given, use `main` rather than asking (this overrides the vendored skill). The Spec sub-agent also checks each rationale the spec gives (lines like "X already happens"): a false premise is a finding. When the diff touches `.claude/skills/` or CLAUDE.md, the `writing-for-agents` skill is a standards source.
 - **Merging or waiting on CI**: `main` only accepts PRs with a green `check`. See `docs/agents/ci.md`.
