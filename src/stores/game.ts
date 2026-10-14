@@ -194,6 +194,9 @@ export const useGameStore = defineStore(
         mistakes.value++
         vibrate(80)
       } else if (completeDigits.value.has(d)) {
+        // This placement made the digit complete: every note of it is now wrong,
+        // and its greyed button can no longer toggle one off.
+        for (let k = 0; k < 81; k++) notes.value[k] &= ~bit(d)
         newlyComplete.value = { digit: d, cell: i }
       }
       if (values.value.every((v, k) => v === solution.value[k])) {

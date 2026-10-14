@@ -15,10 +15,12 @@ const matchDigit = computed(() =>
   settings.highlightMatching && game.selected !== null ? game.values[game.selected] : 0,
 )
 
+/** Length of one cell's glow (the CSS reads it as --glow-duration). */
+const GLOW_MS = 1200
 /** Delay between the glow reaching one cell and the next, along the wave. */
 const GLOW_STEP_MS = 70
-/** Longest wave delay (about 8√2 steps) plus the 1.2s glow animation. */
-const GLOW_TOTAL_MS = 2100
+/** The farthest cell's delay (corner to corner) plus its own glow. */
+const GLOW_TOTAL_MS = Math.ceil(Math.hypot(8, 8) * GLOW_STEP_MS) + GLOW_MS
 
 /** The newly complete digit currently glowing across its cells, if any. */
 const glow = ref<NewlyComplete | null>(null)
@@ -76,7 +78,7 @@ function cellLabel(i: number) {
 </script>
 
 <template>
-  <div class="board" role="grid" aria-label="Sudoku board">
+  <div class="board" role="grid" aria-label="Sudoku board" :style="{ '--glow-duration': `${GLOW_MS}ms` }">
     <button
       v-for="i in cells"
       :key="i"
@@ -176,14 +178,14 @@ function cellLabel(i: number) {
   background: var(--accent);
   opacity: 0;
   pointer-events: none;
-  animation: glow 1.2s ease-in-out var(--glow-delay, 0ms);
+  animation: glow var(--glow-duration) ease-in-out var(--glow-delay, 0ms);
 }
 
 .cell.glow .value {
-  animation: swell 1.2s ease-in-out var(--glow-delay, 0ms);
+  animation: swell var(--glow-duration) ease-in-out var(--glow-delay, 0ms);
 }
 
-/* A soft wash of colour and a gentle swell, played when a digit becomes complete. */
+/* A soft wash of color and a gentle swell, played when a digit becomes complete. */
 @keyframes glow {
   40% {
     opacity: 0.28;
@@ -209,12 +211,8 @@ function cellLabel(i: number) {
   }
 }
 
-.value,
-.notes {
-  position: relative;
-}
-
 .value {
+  position: relative;
   font-size: calc(var(--size) / 9 * 0.6);
   line-height: 1;
 }
@@ -228,6 +226,7 @@ function cellLabel(i: number) {
 }
 
 .notes {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
