@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { bit, colOf, rowOf } from '../lib/sudoku'
-import { useGameStore } from '../stores/game'
+import { useGameStore, type NewlyComplete } from '../stores/game'
 import { useSettingsStore } from '../stores/settings'
 
 const game = useGameStore()
@@ -20,19 +20,19 @@ const GLOW_STEP_MS = 70
 /** Longest wave delay (about 8√2 steps) plus the 1.2s glow animation. */
 const GLOW_TOTAL_MS = 2100
 
-/** The completion currently glowing across its digit's cells, if any. */
-const glow = ref<{ digit: number; cell: number } | null>(null)
+/** The newly complete digit currently glowing across its cells, if any. */
+const glow = ref<NewlyComplete | null>(null)
 let glowTimer: number | undefined
 
 watch(
-  () => game.lastCompletion,
-  (completion) => {
+  () => game.newlyComplete,
+  (complete) => {
     window.clearTimeout(glowTimer)
     glow.value = null
-    if (!completion) return
+    if (!complete) return
     // Next frame, so a repeat on the same cells restarts the animation.
     requestAnimationFrame(() => {
-      glow.value = completion
+      glow.value = complete
       glowTimer = window.setTimeout(() => (glow.value = null), GLOW_TOTAL_MS)
     })
   },
@@ -58,7 +58,8 @@ function cellClass(i: number) {
     conflict: game.conflicts.has(i),
     wrong: isWrong(i),
     selected: game.selected === i,
-    glow: glow.value !== null && game.values[i] === glow.value.digit,
+    // The digit's solution cells only: a wrong copy elsewhere stays unlit.
+    glow: glow.value !== null && game.solution[i] === glow.value.digit,
     'box-right': c % 3 === 2 && c !== 8,
     'box-bottom': r % 3 === 2 && r !== 8,
     'last-col': c === 8,

@@ -21,6 +21,12 @@ export function vibrate(ms: number) {
   }
 }
 
+/** A digit that a placement just made complete, and the cell it was placed in. */
+export interface NewlyComplete {
+  digit: number
+  cell: number
+}
+
 const isGrid = (value: unknown): value is number[] =>
   Array.isArray(value) && value.length === 81 && value.every((v) => Number.isInteger(v))
 
@@ -67,7 +73,7 @@ export const useGameStore = defineStore(
      * Set to a fresh object each time a placement makes a digit complete, to trigger
      * its animation. Undo never sets it, and it is not persisted, so a resume is silent.
      */
-    const lastCompletion = ref<{ digit: number; cell: number } | null>(null)
+    const newlyComplete = ref<NewlyComplete | null>(null)
 
     const isGiven = (i: number) => puzzle.value[i] !== 0
     const isWrong = (i: number) => !isGiven(i) && values.value[i] !== 0 && values.value[i] !== solution.value[i]
@@ -151,7 +157,7 @@ export const useGameStore = defineStore(
       history.value = []
       selected.value = null
       notesMode.value = false
-      lastCompletion.value = null
+      newlyComplete.value = null
     }
 
     function pushHistory() {
@@ -188,7 +194,7 @@ export const useGameStore = defineStore(
         mistakes.value++
         vibrate(80)
       } else if (completeDigits.value.has(d)) {
-        lastCompletion.value = { digit: d, cell: i }
+        newlyComplete.value = { digit: d, cell: i }
       }
       if (values.value.every((v, k) => v === solution.value[k])) {
         completed.value = true
@@ -265,7 +271,7 @@ export const useGameStore = defineStore(
       bankUsed,
       familyPlayed,
       loading,
-      lastCompletion,
+      newlyComplete,
       conflicts,
       completeDigits,
       peers,
@@ -284,5 +290,5 @@ export const useGameStore = defineStore(
       isValid,
     }
   },
-  { persist: { omit: ['loading', 'lastCompletion'] } },
+  { persist: { omit: ['loading', 'newlyComplete'] } },
 )

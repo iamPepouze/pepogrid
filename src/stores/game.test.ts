@@ -163,25 +163,25 @@ describe('complete digits', () => {
     expect(game.notes[other]).toBe(0)
   })
 
-  it('signals a completion only when a placement completes the digit', async () => {
+  it('signals a newly complete digit only when a placement completes it', async () => {
     const game = useGameStore()
     await game.newGame('easy')
     const d = game.solution[firstEmpty(game)]
     const cells = cellsOf(game, d)
     place(game, cells.slice(0, -1), d)
-    expect(game.lastCompletion).toBeNull()
+    expect(game.newlyComplete).toBeNull()
     place(game, cells.slice(-1), d)
-    const signal = game.lastCompletion
+    const signal = game.newlyComplete
     expect(signal?.digit).toBe(d)
 
     game.erase()
     game.undo() // complete again, but not by a placement
-    expect(game.lastCompletion).toBe(signal)
+    expect(game.newlyComplete).toBe(signal)
 
     game.erase()
-    game.input(d) // placed again: a new completion
-    expect(game.lastCompletion).not.toBe(signal)
-    expect(game.lastCompletion?.digit).toBe(d)
+    game.input(d) // placed again: signalled anew
+    expect(game.newlyComplete).not.toBe(signal)
+    expect(game.newlyComplete?.digit).toBe(d)
   })
 })
 
