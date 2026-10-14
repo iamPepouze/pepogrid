@@ -81,6 +81,8 @@ If a script fails because `vitest`, `vue-tsc` or `eslint` is "not recognized" or
 
 Changes reach `main` through pull requests, which must pass the `check` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) (`npm run lint`, `npm test`, `npm run build`, plus actionlint on the workflows); see [docs/agents/ci.md](docs/agents/ci.md). Every push to `main` reruns `check` and deploys the build to GitHub Pages ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)).
 
+Agents see UI changes in a real browser through the [drive-app](.claude/skills/drive-app/SKILL.md) skill: it drives the system Edge with `playwright-core`, so no browser is downloaded.
+
 The app icon source is [public/favicon.svg](public/favicon.svg). Android's cropped (maskable) icon has its own source, [icons/maskable.svg](icons/maskable.svg), with a smaller grid that stays inside Android's safe zone. The PNG icons in `public/` are rendered from these two files.
 
 ## License
