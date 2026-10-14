@@ -60,8 +60,7 @@ function cellClass(i: number) {
     conflict: game.conflicts.has(i),
     wrong: isWrong(i),
     selected: game.selected === i,
-    // The digit's solution cells only: a wrong copy elsewhere stays unlit.
-    glow: glow.value !== null && game.solution[i] === glow.value.digit,
+    glow: glow.value?.cells.includes(i) ?? false,
     'box-right': c % 3 === 2 && c !== 8,
     'box-bottom': r % 3 === 2 && r !== 8,
     'last-col': c === 8,

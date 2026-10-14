@@ -202,6 +202,19 @@ describe('complete digits', () => {
     expect(game.newlyComplete).not.toBe(signal)
     expect(game.newlyComplete?.digit).toBe(d)
   })
+
+  it("names the digit's nine cells to glow, leaving out a wrong copy", async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const d = game.solution[firstEmpty(game)]
+    const wrong = game.puzzle.findIndex((v, i) => v === 0 && game.solution[i] !== d)
+    place(game, [wrong], d)
+    place(game, emptyCellsOf(game, d), d)
+    const cells = game.newlyComplete?.cells ?? []
+    expect(cells).toHaveLength(9)
+    expect(cells).not.toContain(wrong)
+    expect(cells.every((i) => game.solution[i] === d)).toBe(true)
+  })
 })
 
 describe('game store bank usage', () => {

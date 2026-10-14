@@ -21,10 +21,11 @@ export function vibrate(ms: number) {
   }
 }
 
-/** A digit that a placement just made complete, and the cell it was placed in. */
+/** A digit that a placement just made complete, the cell it was placed in, and its nine cells. */
 export interface NewlyComplete {
   digit: number
   cell: number
+  cells: number[]
 }
 
 const isGrid = (value: unknown): value is number[] =>
@@ -197,7 +198,8 @@ export const useGameStore = defineStore(
         // This placement made the digit complete: every note of it is now wrong,
         // and its greyed button can no longer toggle one off.
         for (let k = 0; k < 81; k++) notes.value[k] &= ~bit(d)
-        newlyComplete.value = { digit: d, cell: i }
+        const cells = solution.value.flatMap((v, k) => (v === d ? [k] : []))
+        newlyComplete.value = { digit: d, cell: i, cells }
       }
       if (values.value.every((v, k) => v === solution.value[k])) {
         completed.value = true
