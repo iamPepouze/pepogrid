@@ -70,6 +70,10 @@ An optional tint on every cell holding the digit of the selected cell.
 A digit that sits in all nine cells where the solution has it; a wrong extra copy elsewhere does not change this. Not to be confused with a solved game.
 _Avoid_: Finished digit, used-up digit
 
+**Complete unit**:
+A unit whose nine cells all hold the digits the solution has there; a full unit containing a mistake is not complete. Its cells are locked like givens, and only undo can reopen them.
+_Avoid_: Finished unit, solved unit
+
 ## Difficulty
 
 **Difficulty**:

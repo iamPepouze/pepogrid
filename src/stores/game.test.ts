@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { PEERS, bit } from '../lib/sudoku'
+import { BOXES, COLS, PEERS, ROWS, bit, boxOf, colOf, rowOf } from '../lib/sudoku'
 import { useGameStore } from './game'
 import { useResultsStore } from './results'
 
@@ -105,6 +105,17 @@ describe('game store results', () => {
 const emptyCellsOf = (game: Game, d: number) =>
   game.solution.flatMap((v, i) => (v === d && game.puzzle[i] === 0 ? [i] : []))
 
+/** A digit whose cells each keep, in their row, column and box, an empty cell needing another digit, so placing it completes no unit. */
+function quietDigit(game: Game) {
+  const d = [1, 2, 3, 4, 5, 6, 7, 8, 9].find((d) =>
+    emptyCellsOf(game, d).every((i) =>
+      [ROWS[rowOf(i)], COLS[colOf(i)], BOXES[boxOf(i)]].every((u) => u.some((j) => game.puzzle[j] === 0 && game.solution[j] !== d)),
+    ),
+  )
+  if (!d) throw new Error('no quiet digit in this puzzle')
+  return d
+}
+
 describe('complete digits', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -113,7 +124,7 @@ describe('complete digits', () => {
   it('completes a digit once all nine of its solution cells hold it', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
+    const d = quietDigit(game)
     const cells = emptyCellsOf(game, d)
     place(game, cells.slice(0, -1), d)
     expect(game.completeDigits.has(d)).toBe(false)
@@ -124,7 +135,7 @@ describe('complete digits', () => {
   it('ignores wrong copies: they neither complete a digit nor undo it', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
+    const d = quietDigit(game)
     const cells = emptyCellsOf(game, d)
     const other = game.puzzle.findIndex((v, i) => v === 0 && game.solution[i] !== d)
     place(game, [other], d) // wrong copy
@@ -137,7 +148,7 @@ describe('complete digits', () => {
   it('stops being complete after erase or undo', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
+    const d = quietDigit(game)
     const cells = emptyCellsOf(game, d)
     place(game, cells, d)
     game.erase()
@@ -151,7 +162,7 @@ describe('complete digits', () => {
   it('ignores input of a complete digit, as a value or a note', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
+    const d = quietDigit(game)
     place(game, emptyCellsOf(game, d), d)
     const other = game.puzzle.findIndex((v, i) => v === 0 && game.values[i] === 0)
     game.select(other)
@@ -168,7 +179,7 @@ describe('complete digits', () => {
   it('clears stray notes of a digit once it is complete, and undo restores them', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
+    const d = quietDigit(game)
     const cells = emptyCellsOf(game, d)
     const last = cells[cells.length - 1]
     place(game, cells.slice(0, -1), d)
@@ -185,13 +196,13 @@ describe('complete digits', () => {
   it('signals a newly complete digit only when a placement completes it', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
+    const d = quietDigit(game)
     const cells = emptyCellsOf(game, d)
     place(game, cells.slice(0, -1), d)
     expect(game.newlyComplete).toBeNull()
     place(game, cells.slice(-1), d)
     const signal = game.newlyComplete
-    expect(signal?.digit).toBe(d)
+    expect(signal?.cell).toBe(cells[cells.length - 1])
 
     game.erase()
     game.undo() // complete again, but not by a placement
@@ -200,13 +211,13 @@ describe('complete digits', () => {
     game.erase()
     game.input(d) // placed again: signalled anew
     expect(game.newlyComplete).not.toBe(signal)
-    expect(game.newlyComplete?.digit).toBe(d)
+    expect(game.newlyComplete?.cell).toBe(cells[cells.length - 1])
   })
 
   it("names the digit's nine cells to glow, leaving out a wrong copy", async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
+    const d = quietDigit(game)
     const wrong = game.puzzle.findIndex((v, i) => v === 0 && game.solution[i] !== d)
     place(game, [wrong], d)
     place(game, emptyCellsOf(game, d), d)
@@ -214,6 +225,97 @@ describe('complete digits', () => {
     expect(cells).toHaveLength(9)
     expect(cells).not.toContain(wrong)
     expect(cells.every((i) => game.solution[i] === d)).toBe(true)
+  })
+})
+
+/** Non-given cells of a unit: the ones the player fills. */
+const emptiesOf = (game: Game, unit: readonly number[]) => unit.filter((i) => game.puzzle[i] === 0)
+
+/** A row with two or more empty cells whose columns and boxes each keep an empty cell outside it, so filling it completes only the row. */
+function quietRow(game: Game) {
+  const row = ROWS.find((r) => {
+    const empties = emptiesOf(game, r)
+    return (
+      empties.length >= 2 &&
+      empties.every((i) => [COLS[colOf(i)], BOXES[boxOf(i)]].every((u) => u.some((j) => game.puzzle[j] === 0 && rowOf(j) !== rowOf(i))))
+    )
+  })
+  if (!row) throw new Error('no quiet row in this puzzle')
+  return emptiesOf(game, row)
+}
+
+/** Places the solution's digit in each of `cells`. */
+const fill = (game: Game, cells: number[]) => cells.forEach((i) => place(game, [i], game.solution[i]))
+
+describe('complete units', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('locks a unit once all nine of its cells match the solution', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const empties = quietRow(game)
+    fill(game, empties.slice(0, -1))
+    expect(empties.some(game.isLocked)).toBe(false)
+    fill(game, empties.slice(-1))
+    expect(empties.every(game.isLocked)).toBe(true)
+  })
+
+  it('leaves a full unit with a mistake in it unlocked', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const empties = quietRow(game)
+    const last = empties[empties.length - 1]
+    fill(game, empties.slice(0, -1))
+    place(game, [last], (game.solution[last] % 9) + 1)
+    expect(empties.some(game.isLocked)).toBe(false)
+  })
+
+  it('ignores input and erase on a locked cell, until undo reopens the unit', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const empties = quietRow(game)
+    fill(game, empties)
+    const [first] = empties
+    const digit = game.solution[first]
+    game.select(first)
+    game.erase()
+    game.input((digit % 9) + 1)
+    expect(game.values[first]).toBe(digit)
+    expect(game.mistakes).toBe(0)
+
+    game.undo() // takes back the placement that completed the row
+    expect(empties.some(game.isLocked)).toBe(false)
+    game.select(first)
+    game.erase()
+    expect(game.values[first]).toBe(0)
+  })
+
+  it("signals the unit's nine cells to glow from the placement that completed it", async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const empties = quietRow(game)
+    const last = empties[empties.length - 1]
+    fill(game, empties.slice(0, -1))
+    expect(game.newlyComplete).toBeNull()
+    fill(game, [last])
+    expect(game.newlyComplete?.cell).toBe(last)
+    expect([...(game.newlyComplete?.cells ?? [])].sort((a, b) => a - b)).toEqual(ROWS[rowOf(last)])
+  })
+
+  it('merges every unit and digit one placement completes into one glow', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const empties = emptiesOf(game, game.puzzle.map((_, i) => i))
+    const last = empties[empties.length - 1]
+    fill(game, empties.slice(0, -1))
+    fill(game, [last])
+    // Its row, column and box (21 cells) and the digit's 8 other cells.
+    const cells = game.newlyComplete?.cells ?? []
+    expect(new Set(cells).size).toBe(cells.length)
+    expect(cells).toHaveLength(29)
+    expect(cells).toEqual(expect.arrayContaining([...ROWS[rowOf(last)], ...COLS[colOf(last)], ...BOXES[boxOf(last)]]))
   })
 })
 

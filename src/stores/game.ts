@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { pickFromBank } from '../lib/bank'
 import { DIFFICULTIES, HODOKU_LEVELS, type Difficulty, type Rating } from '../lib/difficulty'
-import { PEERS, bit, colOf, rowOf } from '../lib/sudoku'
+import { BOXES, COLS, PEERS, ROWS, UNITS, bit, boxOf, colOf, rowOf } from '../lib/sudoku'
 import { gridToString, useResultsStore, type Outcome } from './results'
 
 const HISTORY_LIMIT = 100
@@ -21,9 +21,11 @@ export function vibrate(ms: number) {
   }
 }
 
-/** A digit that a placement just made complete, the cell it was placed in, and its nine cells. */
+/**
+ * What a placement just made complete, to glow as one wave: the cell it was placed in,
+ * and every cell of the digit and the units it completed, each listed once.
+ */
 export interface NewlyComplete {
-  digit: number
   cell: number
   cells: number[]
 }
@@ -71,8 +73,8 @@ export const useGameStore = defineStore(
     /** True while a new puzzle is being loaded (not persisted). */
     const loading = ref(false)
     /**
-     * Set to a fresh object each time a placement makes a digit complete, to trigger
-     * its animation. Undo never sets it, and it is not persisted, so a resume is silent.
+     * Set to a fresh object each time a placement makes a digit or a unit complete, to
+     * trigger its animation. Undo never sets it, and it is not persisted, so a resume is silent.
      */
     const newlyComplete = ref<NewlyComplete | null>(null)
 
@@ -98,6 +100,19 @@ export const useGameStore = defineStore(
       }
       return set
     })
+
+    /** Cells in a complete unit: one whose nine cells all match the solution. */
+    const lockedCells = computed(() => {
+      const set = new Set<number>()
+      if (!isGrid(solution.value)) return set // no game yet
+      for (const unit of UNITS) {
+        if (unit.every((i) => values.value[i] === solution.value[i])) unit.forEach((i) => set.add(i))
+      }
+      return set
+    })
+
+    /** True for a cell in a complete unit: like a given, it can no longer be changed except by undo. */
+    const isLocked = (i: number) => lockedCells.value.has(i)
 
     const peers = computed(() => new Set(selected.value === null ? [] : PEERS[selected.value]))
 
@@ -169,7 +184,7 @@ export const useGameStore = defineStore(
     /** The selected cell if the player may edit it, otherwise null. */
     function editableCell(): number | null {
       const i = selected.value
-      if (i === null || loading.value || completed.value || isGiven(i)) return null
+      if (i === null || loading.value || completed.value || isGiven(i) || isLocked(i)) return null
       return i
     }
 
@@ -194,13 +209,20 @@ export const useGameStore = defineStore(
       if (d !== solution.value[i]) {
         mistakes.value++
         vibrate(80)
-      } else if (completeDigits.value.has(d)) {
-        // This placement made the digit complete: every note of it is now wrong,
-        // and its greyed button can no longer toggle one off.
-        for (let k = 0; k < 81; k++) notes.value[k] &= ~bit(d)
-        // From the solution, not the board: a wrong copy elsewhere stays unlit.
-        const cells = solution.value.flatMap((v, k) => (v === d ? [k] : []))
-        newlyComplete.value = { digit: d, cell: i, cells }
+      } else {
+        const cells = new Set<number>()
+        if (completeDigits.value.has(d)) {
+          // This placement made the digit complete: every note of it is now wrong,
+          // and its greyed button can no longer toggle one off.
+          for (let k = 0; k < 81; k++) notes.value[k] &= ~bit(d)
+          // From the solution, not the board: a wrong copy elsewhere stays unlit.
+          solution.value.forEach((v, k) => v === d && cells.add(k))
+        }
+        // The cell was editable, so none of its units was complete before.
+        for (const unit of [ROWS[rowOf(i)], COLS[colOf(i)], BOXES[boxOf(i)]]) {
+          if (unit.every((k) => values.value[k] === solution.value[k])) unit.forEach((k) => cells.add(k))
+        }
+        if (cells.size) newlyComplete.value = { cell: i, cells: [...cells] }
       }
       if (values.value.every((v, k) => v === solution.value[k])) {
         completed.value = true
@@ -283,6 +305,7 @@ export const useGameStore = defineStore(
       peers,
       hasProgress,
       isGiven,
+      isLocked,
       isWrong,
       newGame,
       select,
