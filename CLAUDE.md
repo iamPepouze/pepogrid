@@ -16,7 +16,7 @@ Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root, created when fir
 
 ## Coding standards
 
-Before writing code in `src/` or `scripts/`, read `CODING_STANDARDS.md`. `/code-review` checks every diff against it.
+Before writing code in `src/` or `scripts/`, read `CODING_STANDARDS.md`.
 
 ## Workflow
 

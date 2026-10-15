@@ -4,15 +4,15 @@ How code in this repo is written. Each rule describes what the code already does
 
 ESLint and `vue-tsc` (strict, no unused locals or parameters) already enforce their own rules, so this file leaves them out.
 
-A change that sets or changes a convention updates this file in the same change.
+A change that sets or changes a convention updates this file in the same change. A review flags a new convention that the diff introduces without an entry here.
 
 ## Everywhere (`src/` and `scripts/`)
 
-- **F1 Formatting.** No semicolons, single quotes, 2-space indent, trailing commas in multi-line lists. Long lines are fine; **prefer** to stay under about 140 characters. No formatter enforces this, so match the surrounding code.
+- **F1 Formatting.** No semicolons, single quotes, 2-space indent, trailing commas in multi-line lists. Long lines are fine. No formatter enforces this, so match the surrounding code.
 - **F2 Doc comments.** Exported functions, types and constants, and any state whose meaning isn't obvious from its name, get a `/** */` comment that says what it is or holds, in one or two sentences ([grid.ts](src/lib/grid.ts), [game.ts](src/stores/game.ts) refs).
 - **F3 Inline comments say why.** An inline comment explains a reason or a gotcha the code can't show ("Some browsers still send pointer events to a disabled button."), never a restatement of the next line.
 - **F4 Named constants.** A tuning number or limit gets a `SCREAMING_CASE` constant at the top of its module (`HISTORY_LIMIT`, `LONG_PRESS_MS`, `MAX_RESULTS`). The grid's own sizes (9, 81) stay literal.
-- **F5 File headers.** A module whose job isn't obvious from its name opens with a `/** */` header saying what it is and how it fits ([sudoku.ts](src/lib/sudoku.ts), [bank.ts](src/lib/bank.ts)). A runnable script's header also gives its usage line ([build-bank.ts](scripts/bank/build-bank.ts)).
+- **F5 File headers.** A module whose job isn't obvious from its name opens with a header comment (`/** */`, or `//` in a plain `.mjs` script) saying what it is and how it fits ([sudoku.ts](src/lib/sudoku.ts), [bank.ts](src/lib/bank.ts)). A runnable script's header also gives its usage line ([build-bank.ts](scripts/bank/build-bank.ts)).
 - **F6 Shell scripts** start with `#!/usr/bin/env bash`, a comment with purpose and usage, and `set -euo pipefail` ([ci-wait.sh](scripts/ci-wait.sh)).
 - **F7 Docs in sync.** A change to user-visible behaviour, keyboard keys, persisted storage or dev commands updates the matching README section (Features, Keyboard, Storage, Development) in the same change.
 
@@ -20,7 +20,7 @@ A change that sets or changes a convention updates this file in the same change.
 
 ### Layering
 
-- **L1 `src/lib` is pure TypeScript.** It imports only from `src/lib` and touches no Vue, Pinia, `window` or `document`, so the bank scripts and the tests can use it directly.
+- **L1 `src/lib` is pure TypeScript.** It imports only from `src/lib` and the bank data in `src/data`, and touches no Vue, Pinia, `window` or `document`, so the bank scripts and the tests can use it directly.
 - **L2 Each layer has one job.** `src/lib` holds Sudoku logic. `src/stores` holds the app state and the actions that change it. `src/composables` wraps browser APIs (theme, install prompt) for components. Components render and forward user input to store actions. Game rules live in the store or `src/lib`, not in a component.
 
 ### Grid model
@@ -38,7 +38,7 @@ A change that sets or changes a convention updates this file in the same change.
 ### Components
 
 - **C1 Shape.** Single-file components use `<script setup lang="ts">`, type-based `defineProps<{ ... }>()` and `defineEmits<{ ... }>()`, and `<style scoped>`. Global styles live only in [style.css](src/style.css).
-- **C2 Theme tokens.** Colours come from the CSS custom properties defined in [style.css](src/style.css) (`var(--accent)`, `var(--text)`, …), so light and dark themes both work. A new colour becomes a new token defined for both themes. The one literal is a colour that stays the same in both themes, such as the switch knob's `#fff` ([SettingsMenu.vue](src/components/SettingsMenu.vue)).
+- **C2 Theme tokens.** Colours come from the CSS custom properties defined in [style.css](src/style.css) (`var(--accent)`, `var(--text)`, …), so light and dark themes both work. A new colour becomes a new token defined for both themes. Literal colours are only for values that stay the same in both themes, such as the switch knob's `#fff` and its shadow ([SettingsMenu.vue](src/components/SettingsMenu.vue)).
 - **C3 Reduced motion.** A keyframe animation, or a transition longer than a quick control feedback (about 0.15s), has a `@media (prefers-reduced-motion: reduce)` override that turns it off ([SudokuBoard.vue](src/components/SudokuBoard.vue) glow, [NumberPad.vue](src/components/NumberPad.vue) fade). Quick hover, chevron and switch transitions don't need one.
 - **C4 Best-effort browser APIs.** Optional browser features fail silently: optional chaining and `try`/`catch` around the call, as in `vibrate` ([game.ts](src/stores/game.ts)). Listeners and timers a component adds are removed in `onBeforeUnmount`.
 
