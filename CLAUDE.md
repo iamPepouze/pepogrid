@@ -14,6 +14,10 @@ The five default labels: needs-triage, needs-info, ready-for-agent, ready-for-hu
 
 Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root, created when first needed. See `docs/agents/domain.md`.
 
+## Coding standards
+
+Before writing code in `src/` or `scripts/`, read `CODING_STANDARDS.md`. `/code-review` checks every diff against it.
+
 ## Workflow
 
 - **After grilling**: when a grilling session ends, stop at the recap of settled decisions: no plan approval, no implementation. The user picks the next step, `/to-spec` or `/implement`. In plan mode, end with AskUserQuestion offering those two.
