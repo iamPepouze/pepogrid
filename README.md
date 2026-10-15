@@ -79,7 +79,7 @@ npm run preview    # serve the production build to test the PWA locally
 
 If a script fails because `vitest`, `vue-tsc` or `eslint` is "not recognized" or "not found", `node_modules` is likely incomplete: run `npm ci` to reinstall it from the lockfile.
 
-Dependency install scripts run only when `allowScripts` in [package.json](package.json) approves them, and [.npmrc](.npmrc) makes an unreviewed one fail the install. This needs npm 11.19 or later, as bundled with Node 24. After adding a dependency that has an install script, run `npm install-scripts approve <pkg>` or `npm install-scripts deny <pkg>` to record a decision.
+Dependency install scripts run only when `allowScripts` in [package.json](package.json) approves them, and [.npmrc](.npmrc) makes an unreviewed one fail the install. Both scripts in the tree are denied: esbuild's only re-fetches or relinks the native binary its optional `@esbuild/<platform>` package already installs, and fsevents (macOS only) rebuilds a binary the package already ships. The policy needs the npm version set in `devEngines`, which recent Node 24 releases bundle; older npm ignores `allowScripts` and runs every script. After adding a dependency that has an install script, run `npm install-scripts approve <pkg>` or `npm install-scripts deny <pkg>` to record a decision.
 
 Changes reach `main` through pull requests, which must pass the `check` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) (`npm run lint`, `npm test`, `npm run build`, plus actionlint on the workflows and shellcheck on `scripts/*.sh`); see [docs/agents/ci.md](docs/agents/ci.md). Every push to `main` reruns `check` and deploys the build to GitHub Pages ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)).
 
