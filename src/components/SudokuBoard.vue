@@ -26,17 +26,24 @@ const GLOW_TOTAL_MS = Math.ceil(Math.hypot(8, 8) * GLOW_STEP_MS) + GLOW_MS
 const glow = ref<NewlyComplete | null>(null)
 /** False for the frame before the glow starts, while the digits it locked keep their old color. */
 const glowStarted = ref(false)
+let glowFrame: number | undefined
 let glowTimer: number | undefined
+
+/** Cancels a glow's queued start and its end, so a stale one can't touch the next glow. */
+function cancelGlow() {
+  window.cancelAnimationFrame(glowFrame ?? 0)
+  window.clearTimeout(glowTimer)
+}
 
 watch(
   () => game.newlyComplete,
   (complete) => {
-    window.clearTimeout(glowTimer)
+    cancelGlow()
     glow.value = complete
     glowStarted.value = false
     if (!complete) return
     // Next frame, so a repeat on the same cells restarts the animation.
-    requestAnimationFrame(() => {
+    glowFrame = window.requestAnimationFrame(() => {
       glowStarted.value = true
       glowTimer = window.setTimeout(() => {
         glow.value = null
@@ -46,7 +53,7 @@ watch(
   },
 )
 
-onBeforeUnmount(() => window.clearTimeout(glowTimer))
+onBeforeUnmount(cancelGlow)
 
 /** Glow delay for cell `i`: a wave spreading out from the placement that completed the digit or units. */
 function glowDelay(i: number) {

@@ -38,7 +38,6 @@ export default defineConfig({
     }),
   ],
   test: {
-    // Seeds Math.random per test; a failure prints the TEST_SEED that replays it.
     setupFiles: ['src/test-setup.ts'],
   },
 })

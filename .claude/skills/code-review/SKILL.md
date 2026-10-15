@@ -35,7 +35,7 @@ Look for the originating spec, in this order:
 
 Search the repo for every file that documents how code should be written. When `CODING_STANDARDS.md` or `CONTRIBUTING.md` exists, it must be on the list.
 
-On top of whatever the repo documents, the Standards axis always carries the **smell baseline** in [SMELLS.md](SMELLS.md): a fixed set of Fowler code smells that applies even when a repo documents nothing, always as judgement calls, and overridden by any documented repo standard.
+On top of whatever the repo documents, the Standards axis always carries the **smell baseline** in [SMELLS.md](SMELLS.md): a fixed set of Fowler code smells that applies even when a repo documents nothing.
 
 ### 4. Spawn both sub-agents in parallel
 

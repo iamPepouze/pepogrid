@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { enableAutoUnmount, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { colOf, rowOf } from '../lib/sudoku'
 import { useGameStore } from '../stores/game'
 import { crossingColumn, fill, quietRow } from '../stores/testing'
@@ -72,7 +72,7 @@ describe('SudokuBoard', () => {
     expect(cell(row[0]).classes()).not.toContain('settling')
   })
 
-  it('stops the wave when an undo breaks the unit', async () => {
+  it('stops the glow when an undo breaks the unit', async () => {
     const game = useGameStore()
     await game.newGame('easy')
     const board = mountBoard()
@@ -87,5 +87,22 @@ describe('SudokuBoard', () => {
     expect(cell(row[0]).classes()).not.toContain('locked')
     expect(cell(row[0]).classes()).not.toContain('settling')
     expect(cell(row[0]).classes()).not.toContain('glow')
+  })
+
+  it('leaves nothing scheduled after an undo in the frame before the glow starts', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const board = mountBoard()
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame'] })
+    try {
+      fill(game, quietRow(game))
+      await board.vm.$nextTick() // the glow's start is now queued for the next frame
+      game.undo()
+      await board.vm.$nextTick()
+      vi.advanceTimersToNextFrame()
+      expect(vi.getTimerCount()).toBe(0)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

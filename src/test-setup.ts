@@ -20,7 +20,8 @@ const unseeded = Math.random
 beforeEach(({ onTestFailed }) => {
   const fixed = import.meta.env.TEST_SEED
   const seed = fixed ? Number(fixed) : Math.floor(unseeded() * 2 ** 32)
-  vi.spyOn(Math, 'random').mockImplementation(mulberry32(seed))
+  const random = vi.spyOn(Math, 'random').mockImplementation(mulberry32(seed))
   onTestFailed(() => console.error(`Replay this test with TEST_SEED=${seed}`))
-  return () => vi.restoreAllMocks()
+  // Only this spy: a test file's own spies keep their lifetime.
+  return () => random.mockRestore()
 })

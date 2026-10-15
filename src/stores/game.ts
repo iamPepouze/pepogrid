@@ -76,7 +76,7 @@ export const useGameStore = defineStore(
     const loading = ref(false)
     /**
      * Set to a fresh object each time a placement makes a digit or a unit complete, to
-     * trigger its animation. Undo clears it, stopping a wave over a unit it may have broken,
+     * trigger its animation. Undo clears it, stopping a glow over a unit it may have broken,
      * and it is not persisted, so a resume is silent.
      */
     const newlyComplete = ref<NewlyComplete | null>(null)

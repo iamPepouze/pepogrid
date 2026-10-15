@@ -78,7 +78,7 @@ npm run build      # type-check and build to dist/ (includes the service worker)
 npm run preview    # serve the production build to test the PWA locally
 ```
 
-Tests draw random puzzles from a seed that changes every run. A failing test prints `Replay this test with TEST_SEED=<n>`; `TEST_SEED=<n> npm test` replays it with the same puzzles.
+Each test draws its random puzzles from a fresh seed. A failing test prints `Replay this test with TEST_SEED=<n>`; replay it with the same puzzles by running `TEST_SEED=<n> npm test` in Bash, or `$env:TEST_SEED=<n>; npm test` in PowerShell.
 
 If a script fails because `vitest`, `vue-tsc` or `eslint` is "not recognized" or "not found", `node_modules` is likely incomplete: run `npm ci` to reinstall it from the lockfile.
 
