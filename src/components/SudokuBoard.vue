@@ -24,8 +24,8 @@ const GLOW_TOTAL_MS = Math.ceil(Math.hypot(8, 8) * GLOW_STEP_MS) + GLOW_MS
 
 /** The newly complete digit and units, glowing across their cells (or about to), if any. */
 const glow = ref<NewlyComplete | null>(null)
-/** False for the frame before the glow starts, while its cells keep their old look. */
-const glowing = ref(false)
+/** False for the frame before the glow starts, while the digits it locked keep their old color. */
+const glowStarted = ref(false)
 let glowTimer: number | undefined
 
 watch(
@@ -33,14 +33,14 @@ watch(
   (complete) => {
     window.clearTimeout(glowTimer)
     glow.value = complete
-    glowing.value = false
+    glowStarted.value = false
     if (!complete) return
     // Next frame, so a repeat on the same cells restarts the animation.
     requestAnimationFrame(() => {
-      glowing.value = true
+      glowStarted.value = true
       glowTimer = window.setTimeout(() => {
         glow.value = null
-        glowing.value = false
+        glowStarted.value = false
       }, GLOW_TOTAL_MS)
     })
   },
@@ -60,6 +60,7 @@ function cellClass(i: number) {
   const c = colOf(i)
   const r = rowOf(i)
   const inGlow = glow.value?.cells.includes(i) ?? false
+  const newlyLocked = glow.value?.locked.includes(i) ?? false
   return {
     given: isGiven(i),
     peer: game.peers.has(i),
@@ -68,8 +69,9 @@ function cellClass(i: number) {
     wrong: isWrong(i),
     selected: game.selected === i,
     locked: !isGiven(i) && isLocked(i),
-    pending: inGlow && !glowing.value,
-    glow: inGlow && glowing.value,
+    pending: newlyLocked && !glowStarted.value,
+    glow: inGlow && glowStarted.value,
+    settling: newlyLocked && glowStarted.value,
     'box-right': c % 3 === 2 && c !== 8,
     'box-bottom': r % 3 === 2 && r !== 8,
     'last-col': c === 8,
@@ -195,7 +197,7 @@ function cellLabel(i: number) {
 }
 
 /* A digit that just locked stays blue until the wave reaches it, then settles to the given color. */
-.cell.glow.locked .value {
+.cell.settling .value {
   animation:
     swell var(--glow-duration) ease-in-out var(--glow-delay, 0ms),
     settle var(--glow-duration) ease-in-out var(--glow-delay, 0ms) backwards;
@@ -233,7 +235,7 @@ function cellLabel(i: number) {
 @media (prefers-reduced-motion: reduce) {
   .cell.glow::before,
   .cell.glow .value,
-  .cell.glow.locked .value {
+  .cell.settling .value {
     animation: none;
   }
 }

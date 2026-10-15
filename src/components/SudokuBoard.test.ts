@@ -1,52 +1,71 @@
 // @vitest-environment happy-dom
-import { mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it } from 'vitest'
-import { BOXES, COLS, ROWS, boxOf, colOf, rowOf } from '../lib/sudoku'
+import { enableAutoUnmount, mount } from '@vue/test-utils'
+import { createPinia, setActivePinia, type Pinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { COLS, colOf, rowOf } from '../lib/sudoku'
 import { useGameStore } from '../stores/game'
+import { fill, nonGivensOf, quietRow } from '../stores/testing'
 import SudokuBoard from './SudokuBoard.vue'
 
-type Game = ReturnType<typeof useGameStore>
+/** Resolves on the next animation frame, when a pending glow starts. */
+const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve))
 
-function fill(game: Game, cells: number[]) {
-  for (const i of cells) {
-    game.select(i)
-    game.input(game.solution[i])
-  }
-}
-
-/** An empty cell whose row, column and box each keep another empty cell. */
-const openCell = (game: Game) =>
-  game.puzzle.findIndex(
-    (v, i) =>
-      v === 0 && [ROWS[rowOf(i)], COLS[colOf(i)], BOXES[boxOf(i)]].every((u) => u.some((j) => j !== i && game.puzzle[j] === 0)),
-  )
+enableAutoUnmount(afterEach)
 
 describe('SudokuBoard', () => {
+  let pinia: Pinia
+
   beforeEach(() => {
-    setActivePinia(createPinia())
+    pinia = createPinia()
+    setActivePinia(pinia)
   })
+
+  /** The board, on this test's store. */
+  const mountBoard = () => mount(SudokuBoard, { global: { plugins: [pinia] } })
 
   it('shows and announces digits in a complete unit as complete', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const board = mount(SudokuBoard)
+    const board = mountBoard()
     const cell = (i: number) => board.findAll('.cell')[i]
+    const row = quietRow(game)
+    const [first] = row
 
-    const open = openCell(game)
-    fill(game, [open])
+    fill(game, row.slice(0, -1))
     await board.vm.$nextTick()
-    expect(cell(open).attributes('aria-label')).not.toContain('complete')
-    expect(cell(open).classes()).not.toContain('locked')
+    expect(cell(first).attributes('aria-label')).not.toContain('complete')
+    expect(cell(first).classes()).not.toContain('locked')
 
-    const empties = game.puzzle.flatMap((v, i) => (v === 0 && i !== open ? [i] : []))
-    fill(game, empties)
+    fill(game, row.slice(-1))
     await board.vm.$nextTick()
-    expect(cell(open).attributes('aria-label')).toBe(`Row ${rowOf(open) + 1}, column ${colOf(open) + 1}: ${game.solution[open]}, complete`)
-    expect(cell(open).classes()).toContain('locked')
+    expect(cell(first).attributes('aria-label')).toBe(`Row ${rowOf(first) + 1}, column ${colOf(first) + 1}: ${game.solution[first]}, complete`)
+    expect(cell(first).classes()).toContain('locked')
 
     const given = game.puzzle.findIndex((v) => v !== 0)
     expect(cell(given).attributes('aria-label')).not.toContain('complete')
     expect(cell(given).classes()).not.toContain('locked')
+  })
+
+  it('recolors only the digits a placement locked, not ones locked before that its glow covers', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const board = mountBoard()
+    const cell = (i: number) => board.findAll('.cell')[i]
+    const row = quietRow(game)
+    fill(game, row)
+    const column = nonGivensOf(game, COLS[colOf(row[0])]).filter((i) => !row.includes(i))
+    const last = column[column.length - 1]
+    fill(game, column)
+
+    // The frame before the wave starts: only the newly locked digit holds its old color.
+    await board.vm.$nextTick()
+    expect(cell(last).classes()).toContain('pending')
+    expect(cell(row[0]).classes()).not.toContain('pending')
+
+    await nextFrame()
+    await board.vm.$nextTick()
+    expect(cell(row[0]).classes()).toContain('glow')
+    expect(cell(last).classes()).toContain('settling')
+    expect(cell(row[0]).classes()).not.toContain('settling')
   })
 })

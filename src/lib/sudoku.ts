@@ -6,7 +6,7 @@
 import { candidatesAt, digitsOf, popcount, type Grid } from './grid'
 
 export { DIFFICULTIES, type Difficulty } from './difficulty'
-export { BOXES, COLS, PEERS, ROWS, UNITS, bit, boxOf, colOf, rowOf, type Grid } from './grid'
+export { BOXES, COLS, PEERS, ROWS, UNITS, bit, boxOf, colOf, rowOf, unitsOf, type Grid } from './grid'
 
 export function shuffle<T>(items: T[]): T[] {
   for (let i = items.length - 1; i > 0; i--) {

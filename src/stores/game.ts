@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { pickFromBank } from '../lib/bank'
 import { DIFFICULTIES, HODOKU_LEVELS, type Difficulty, type Rating } from '../lib/difficulty'
-import { BOXES, COLS, PEERS, ROWS, UNITS, bit, boxOf, colOf, rowOf } from '../lib/sudoku'
+import { PEERS, UNITS, bit, colOf, rowOf, unitsOf } from '../lib/sudoku'
 import { gridToString, useResultsStore, type Outcome } from './results'
 
 const HISTORY_LIMIT = 100
@@ -23,11 +23,13 @@ export function vibrate(ms: number) {
 
 /**
  * What a placement just made complete, to glow as one wave: the cell it was placed in,
- * and every cell of the digit and the units it completed, each listed once.
+ * every cell of the digit and the units it completed (each listed once), and among those
+ * the placed digits it locked, which take the given color as the wave reaches them.
  */
 export interface NewlyComplete {
   cell: number
   cells: number[]
+  locked: number[]
 }
 
 const isGrid = (value: unknown): value is number[] =>
@@ -101,13 +103,14 @@ export const useGameStore = defineStore(
       return set
     })
 
-    /** Cells in a complete unit: one whose nine cells all match the solution. */
+    /** True when all nine cells of `unit` match the solution. */
+    const isCompleteUnit = (unit: readonly number[]) => unit.every((i) => values.value[i] === solution.value[i])
+
+    /** Cells in a complete unit. */
     const lockedCells = computed(() => {
       const set = new Set<number>()
       if (!isGrid(solution.value)) return set // no game yet
-      for (const unit of UNITS) {
-        if (unit.every((i) => values.value[i] === solution.value[i])) unit.forEach((i) => set.add(i))
-      }
+      for (const unit of UNITS) if (isCompleteUnit(unit)) unit.forEach((i) => set.add(i))
       return set
     })
 
@@ -202,6 +205,7 @@ export const useGameStore = defineStore(
     function setValue(d: number) {
       const i = editableCell()
       if (i === null || values.value[i] === d || completeDigits.value.has(d)) return
+      const lockedBefore = lockedCells.value
       pushHistory()
       values.value[i] = d
       notes.value[i] = 0
@@ -219,10 +223,11 @@ export const useGameStore = defineStore(
           solution.value.forEach((v, k) => v === d && cells.add(k))
         }
         // The cell was editable, so none of its units was complete before.
-        for (const unit of [ROWS[rowOf(i)], COLS[colOf(i)], BOXES[boxOf(i)]]) {
-          if (unit.every((k) => values.value[k] === solution.value[k])) unit.forEach((k) => cells.add(k))
+        for (const unit of unitsOf(i)) if (isCompleteUnit(unit)) unit.forEach((k) => cells.add(k))
+        if (cells.size) {
+          const locked = [...cells].filter((k) => isLocked(k) && !lockedBefore.has(k) && !isGiven(k))
+          newlyComplete.value = { cell: i, cells: [...cells], locked }
         }
-        if (cells.size) newlyComplete.value = { cell: i, cells: [...cells] }
       }
       if (values.value.every((v, k) => v === solution.value[k])) {
         completed.value = true

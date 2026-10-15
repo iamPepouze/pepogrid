@@ -26,7 +26,7 @@ A change that sets or changes a convention updates this file in the same change.
 
 - **G1 Grids are flat.** A grid is an 81-number array in row-major order, `0` for empty (`Grid` in [grid.ts](src/lib/grid.ts)). Persisted results store it as an 81-character string (`gridToString`).
 - **G2 Digit sets are bitmasks.** Notes and candidates are masks where `bit(d)` (d in 1–9) marks digit `d`.
-- **G3 Prefer the grid.ts helpers.** Use `PEERS`, `UNITS`, `ROWS`/`COLS`/`BOXES`, `rowOf`/`colOf`/`boxOf`, `popcount` and `digitsOf` instead of recomputing geometry or bit counts inline.
+- **G3 Prefer the grid.ts helpers.** Use `PEERS`, `UNITS`, `ROWS`/`COLS`/`BOXES`, `rowOf`/`colOf`/`boxOf`, `unitsOf`, `popcount` and `digitsOf` instead of recomputing geometry or bit counts inline.
 
 ### Stores
 
@@ -43,5 +43,6 @@ A change that sets or changes a convention updates this file in the same change.
 
 ### Tests
 
-- **T1 Vitest layout.** `src/lib` is tested from one file, [sudoku.test.ts](src/lib/sudoku.test.ts), with a `describe` per module or behaviour. A store's tests sit beside it as `<store>.test.ts` ([game.test.ts](src/stores/game.test.ts)). Each `it` reads as a sentence about the behaviour.
-- **T2 Through the public interface.** Store tests drive the actions a player triggers (`select`, `input`, `undo`) with a fresh Pinia from `setActivePinia(createPinia())` in `beforeEach`, and assert on store state ([game.test.ts](src/stores/game.test.ts)). Shared steps become small helpers in the test file (`place`, `solve`).
+- **T1 Vitest layout.** `src/lib` is tested from one file, [sudoku.test.ts](src/lib/sudoku.test.ts), with a `describe` per module or behaviour. A store's or component's tests sit beside it as `<name>.test.ts` ([game.test.ts](src/stores/game.test.ts), [SudokuBoard.test.ts](src/components/SudokuBoard.test.ts)). Each `it` reads as a sentence about the behaviour.
+- **T2 Through the public interface.** Store tests drive the actions a player triggers (`select`, `input`, `undo`) with a fresh Pinia from `setActivePinia(createPinia())` in `beforeEach`, and assert on store state ([game.test.ts](src/stores/game.test.ts)). Shared steps become small helpers in the test file (`solve`), or in [testing.ts](src/stores/testing.ts) when the store and component tests both use them (`place`, `fill`, `quietRow`).
+- **T3 Component tests.** A component test opens with `// @vitest-environment happy-dom`, so the rest stay in Node. It mounts the component with `@vue/test-utils`, passing the test's Pinia as a plugin, drives the store as a player would, and asserts on what the player or a screen reader gets: classes and `aria-label`s. `enableAutoUnmount(afterEach)` keeps one test's component from reacting to the next one's store ([SudokuBoard.test.ts](src/components/SudokuBoard.test.ts)).

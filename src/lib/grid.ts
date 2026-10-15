@@ -21,9 +21,12 @@ export const BOXES: readonly number[][] = Array.from({ length: 9 }, (_, b) =>
 /** The 27 units: rows 0-8, columns 9-17, boxes 18-26. */
 export const UNITS: readonly number[][] = [...ROWS, ...COLS, ...BOXES]
 
+/** The row, column and box that cell `i` belongs to. */
+export const unitsOf = (i: number): readonly number[][] => [ROWS[rowOf(i)], COLS[colOf(i)], BOXES[boxOf(i)]]
+
 /** For each cell, the 20 other cells sharing its row, column or box, in ascending order. */
 export const PEERS: readonly number[][] = Array.from({ length: 81 }, (_, i) =>
-  [...new Set([...ROWS[rowOf(i)], ...COLS[colOf(i)], ...BOXES[boxOf(i)]])].filter((p) => p !== i).sort((a, b) => a - b),
+  [...new Set(unitsOf(i).flat())].filter((p) => p !== i).sort((a, b) => a - b),
 )
 
 /** SEES[i][j] is true when cells i and j see each other. */

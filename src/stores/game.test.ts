@@ -1,21 +1,12 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { BOXES, COLS, PEERS, ROWS, bit, boxOf, colOf, rowOf } from '../lib/sudoku'
+import { BOXES, COLS, PEERS, ROWS, bit, boxOf, colOf, rowOf, unitsOf } from '../lib/sudoku'
 import { useGameStore } from './game'
 import { useResultsStore } from './results'
-
-type Game = ReturnType<typeof useGameStore>
+import { fill, nonGivensOf, place, quietRow, type Game } from './testing'
 
 /** Index of the first empty (non-given) cell. */
 const firstEmpty = (game: Game) => game.puzzle.findIndex((v) => v === 0)
-
-/** Selects each cell in turn and enters digit `d`. */
-function place(game: Game, cells: number[], d: number) {
-  for (const i of cells) {
-    game.select(i)
-    game.input(d)
-  }
-}
 
 function solve(game: Game) {
   game.puzzle.forEach((v, i) => {
@@ -109,7 +100,7 @@ const emptyCellsOf = (game: Game, d: number) =>
 function quietDigit(game: Game) {
   const d = [1, 2, 3, 4, 5, 6, 7, 8, 9].find((d) =>
     emptyCellsOf(game, d).every((i) =>
-      [ROWS[rowOf(i)], COLS[colOf(i)], BOXES[boxOf(i)]].every((u) => u.some((j) => game.puzzle[j] === 0 && game.solution[j] !== d)),
+      unitsOf(i).every((u) => u.some((j) => game.puzzle[j] === 0 && game.solution[j] !== d)),
     ),
   )
   if (!d) throw new Error('no quiet digit in this puzzle')
@@ -228,25 +219,6 @@ describe('complete digits', () => {
   })
 })
 
-/** Non-given cells of a unit: the ones the player fills. */
-const emptiesOf = (game: Game, unit: readonly number[]) => unit.filter((i) => game.puzzle[i] === 0)
-
-/** A row with two or more empty cells whose columns and boxes each keep an empty cell outside it, so filling it completes only the row. */
-function quietRow(game: Game) {
-  const row = ROWS.find((r) => {
-    const empties = emptiesOf(game, r)
-    return (
-      empties.length >= 2 &&
-      empties.every((i) => [COLS[colOf(i)], BOXES[boxOf(i)]].every((u) => u.some((j) => game.puzzle[j] === 0 && rowOf(j) !== rowOf(i))))
-    )
-  })
-  if (!row) throw new Error('no quiet row in this puzzle')
-  return emptiesOf(game, row)
-}
-
-/** Places the solution's digit in each of `cells`. */
-const fill = (game: Game, cells: number[]) => cells.forEach((i) => place(game, [i], game.solution[i]))
-
 describe('complete units', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -307,7 +279,7 @@ describe('complete units', () => {
   it('merges every unit and digit one placement completes into one glow', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const empties = emptiesOf(game, game.puzzle.map((_, i) => i))
+    const empties = nonGivensOf(game, game.puzzle.map((_, i) => i))
     const last = empties[empties.length - 1]
     fill(game, empties.slice(0, -1))
     fill(game, [last])
@@ -316,6 +288,21 @@ describe('complete units', () => {
     expect(new Set(cells).size).toBe(cells.length)
     expect(cells).toHaveLength(29)
     expect(cells).toEqual(expect.arrayContaining([...ROWS[rowOf(last)], ...COLS[colOf(last)], ...BOXES[boxOf(last)]]))
+  })
+
+  it('names as newly locked only the placed digits that were not locked before', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const row = quietRow(game)
+    fill(game, row)
+    expect([...(game.newlyComplete?.locked ?? [])].sort((a, b) => a - b)).toEqual(row)
+
+    // Complete the column through the row's first cell: that cell glows again but was already locked.
+    const column = nonGivensOf(game, COLS[colOf(row[0])]).filter((i) => !row.includes(i))
+    fill(game, column)
+    expect(game.newlyComplete?.cells).toContain(row[0])
+    expect(game.newlyComplete?.locked).toContain(column[column.length - 1])
+    expect(game.newlyComplete?.locked.some((i) => row.includes(i))).toBe(false)
   })
 })
 
