@@ -14,6 +14,12 @@ The five default labels: needs-triage, needs-info, ready-for-agent, ready-for-hu
 
 Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root, created when first needed. See `docs/agents/domain.md`.
 
+### Local edits to vendored skills
+
+Re-apply these after updating the skills in `skills-lock.json`:
+
+- `retro`: drop `disable-model-invocation`, so a retro asked for in words can run.
+
 ## Workflow
 
 The **branch file** is `.scratch/<branch>.md` (gitignored), with any `/` in the branch name turned into `-`. It holds the branch's spec and review state.
