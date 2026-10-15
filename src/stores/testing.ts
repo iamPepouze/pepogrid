@@ -38,5 +38,5 @@ export function quietRow(game: Game) {
 }
 
 /** The non-given cells outside `row` of the column through its first cell: filling them completes that column across the row. */
-export const crossingColumn = (game: Game, row: number[]) =>
+export const crossingColumn = (game: Game, row: readonly number[]) =>
   nonGivensOf(game, COLS[colOf(row[0])]).filter((i) => !row.includes(i))

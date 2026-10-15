@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { enableAutoUnmount, mount } from '@vue/test-utils'
+import { enableAutoUnmount, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { colOf, rowOf } from '../lib/sudoku'
@@ -7,8 +7,12 @@ import { useGameStore } from '../stores/game'
 import { crossingColumn, fill, quietRow } from '../stores/testing'
 import SudokuBoard from './SudokuBoard.vue'
 
-/** Resolves on the next animation frame, when a pending glow starts. */
-const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve))
+/** Lets the board schedule a new glow, then waits a frame for it to start and render. */
+async function waveStarted(board: VueWrapper) {
+  await board.vm.$nextTick()
+  await new Promise((resolve) => requestAnimationFrame(resolve))
+  await board.vm.$nextTick()
+}
 
 enableAutoUnmount(afterEach)
 
@@ -62,28 +66,26 @@ describe('SudokuBoard', () => {
     expect(cell(last).classes()).toContain('pending')
     expect(cell(row[0]).classes()).not.toContain('pending')
 
-    await nextFrame()
-    await board.vm.$nextTick()
+    await waveStarted(board)
     expect(cell(row[0]).classes()).toContain('glow')
     expect(cell(last).classes()).toContain('settling')
     expect(cell(row[0]).classes()).not.toContain('settling')
   })
 
-  it('keeps digits that an undo during the wave unlocked from settling to the given color', async () => {
+  it('stops the wave when an undo breaks the unit', async () => {
     const game = useGameStore()
     await game.newGame('easy')
     const board = mountBoard()
     const cell = (i: number) => board.findAll('.cell')[i]
     const row = quietRow(game)
     fill(game, row)
-    await board.vm.$nextTick()
-    await nextFrame()
-    await board.vm.$nextTick()
+    await waveStarted(board)
     expect(cell(row[0]).classes()).toContain('settling')
 
     game.undo()
     await board.vm.$nextTick()
     expect(cell(row[0]).classes()).not.toContain('locked')
     expect(cell(row[0]).classes()).not.toContain('settling')
+    expect(cell(row[0]).classes()).not.toContain('glow')
   })
 })

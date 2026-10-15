@@ -5,7 +5,6 @@ import { useGameStore } from './game'
 import { useResultsStore } from './results'
 import { crossingColumn, fill, nonGivensOf, place, quietRow, type Game } from './testing'
 
-/** Index of the first non-given cell. */
 const firstNonGiven = (game: Game) => game.puzzle.findIndex((v) => v === 0)
 
 function solve(game: Game) {
@@ -197,7 +196,7 @@ describe('complete digits', () => {
 
     game.erase()
     game.undo() // complete again, but not by a placement
-    expect(game.newlyComplete).toBe(signal)
+    expect(game.newlyComplete).toBeNull()
 
     game.erase()
     game.input(d) // placed again: signalled anew
@@ -288,6 +287,15 @@ describe('complete units', () => {
     expect(new Set(cells).size).toBe(cells.length)
     expect(cells).toHaveLength(29)
     expect(cells).toEqual(expect.arrayContaining(unitsOf(last).flat()))
+  })
+
+  it('stops the glow on undo', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    fill(game, quietRow(game))
+    expect(game.newlyComplete).not.toBeNull()
+    game.undo()
+    expect(game.newlyComplete).toBeNull()
   })
 
   it('names as newly locked only the placed digits that were not locked before', async () => {
