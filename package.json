@@ -34,7 +34,15 @@
     "vitest": "^5.0.4",
     "vue-tsc": "^3.3.13"
   },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": ">=11.19.0",
+      "onFail": "warn"
+    }
+  },
   "allowScripts": {
-    "esbuild": false
+    "esbuild": false,
+    "fsevents": false
   }
 }
