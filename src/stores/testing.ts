@@ -1,5 +1,5 @@
 /** Steps shared by the game store and board tests. Test-only: the app never imports this. */
-import { ROWS, rowOf, unitsOf } from '../lib/sudoku'
+import { COLS, ROWS, colOf, rowOf, unitsOf } from '../lib/sudoku'
 import type { useGameStore } from './game'
 
 export type Game = ReturnType<typeof useGameStore>
@@ -36,3 +36,7 @@ export function quietRow(game: Game) {
   if (!row) throw new Error('no quiet row in this puzzle')
   return nonGivensOf(game, row)
 }
+
+/** The non-given cells outside `row` of the column through its first cell: filling them completes that column across the row. */
+export const crossingColumn = (game: Game, row: number[]) =>
+  nonGivensOf(game, COLS[colOf(row[0])]).filter((i) => !row.includes(i))

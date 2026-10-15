@@ -2,9 +2,9 @@
 import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { COLS, colOf, rowOf } from '../lib/sudoku'
+import { colOf, rowOf } from '../lib/sudoku'
 import { useGameStore } from '../stores/game'
-import { fill, nonGivensOf, quietRow } from '../stores/testing'
+import { crossingColumn, fill, quietRow } from '../stores/testing'
 import SudokuBoard from './SudokuBoard.vue'
 
 /** Resolves on the next animation frame, when a pending glow starts. */
@@ -53,7 +53,7 @@ describe('SudokuBoard', () => {
     const cell = (i: number) => board.findAll('.cell')[i]
     const row = quietRow(game)
     fill(game, row)
-    const column = nonGivensOf(game, COLS[colOf(row[0])]).filter((i) => !row.includes(i))
+    const column = crossingColumn(game, row)
     const last = column[column.length - 1]
     fill(game, column)
 
@@ -66,6 +66,24 @@ describe('SudokuBoard', () => {
     await board.vm.$nextTick()
     expect(cell(row[0]).classes()).toContain('glow')
     expect(cell(last).classes()).toContain('settling')
+    expect(cell(row[0]).classes()).not.toContain('settling')
+  })
+
+  it('keeps digits that an undo during the wave unlocked from settling to the given color', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const board = mountBoard()
+    const cell = (i: number) => board.findAll('.cell')[i]
+    const row = quietRow(game)
+    fill(game, row)
+    await board.vm.$nextTick()
+    await nextFrame()
+    await board.vm.$nextTick()
+    expect(cell(row[0]).classes()).toContain('settling')
+
+    game.undo()
+    await board.vm.$nextTick()
+    expect(cell(row[0]).classes()).not.toContain('locked')
     expect(cell(row[0]).classes()).not.toContain('settling')
   })
 })

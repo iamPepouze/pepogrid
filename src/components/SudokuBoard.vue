@@ -60,7 +60,8 @@ function cellClass(i: number) {
   const c = colOf(i)
   const r = rowOf(i)
   const inGlow = glow.value?.cells.includes(i) ?? false
-  const newlyLocked = glow.value?.locked.includes(i) ?? false
+  // Still locked: an undo during the wave unlocks the cell, which then stays blue.
+  const newlyLocked = isLocked(i) && (glow.value?.locked.includes(i) ?? false)
   return {
     given: isGiven(i),
     peer: game.peers.has(i),
