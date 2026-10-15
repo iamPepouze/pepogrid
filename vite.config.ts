@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -36,4 +37,8 @@ export default defineConfig({
       },
     }),
   ],
+  test: {
+    // Seeds Math.random per test; a failure prints the TEST_SEED that replays it.
+    setupFiles: ['src/test-setup.ts'],
+  },
 })

@@ -78,6 +78,8 @@ npm run build      # type-check and build to dist/ (includes the service worker)
 npm run preview    # serve the production build to test the PWA locally
 ```
 
+Tests draw random puzzles from a seed that changes every run. A failing test prints `Replay this test with TEST_SEED=<n>`; `TEST_SEED=<n> npm test` replays it with the same puzzles.
+
 If a script fails because `vitest`, `vue-tsc` or `eslint` is "not recognized" or "not found", `node_modules` is likely incomplete: run `npm ci` to reinstall it from the lockfile.
 
 Dependency install scripts run only when `allowScripts` in [package.json](package.json) approves them, and [.npmrc](.npmrc) makes an unreviewed one fail the install. Both scripts in the tree are denied: esbuild's only re-fetches or relinks the native binary its optional `@esbuild/<platform>` package already installs, and fsevents (macOS only) rebuilds a binary the package already ships. The policy needs the npm version set in `devEngines`, which recent Node 24 releases bundle; older npm ignores `allowScripts` and runs every script. After adding a dependency that has an install script, run `npm install-scripts approve <pkg>` or `npm install-scripts deny <pkg>` to record a decision.
