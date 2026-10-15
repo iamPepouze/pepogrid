@@ -2,13 +2,13 @@
 
 How code in this repo is written. Each rule describes what the code already does, with an example to copy. `/code-review` checks every diff against these rules. A breach is a hard violation, except for rules that say **prefer**, which are judgement calls.
 
-Rules a tool can check live in the tool, not here: [eslint.config.js](eslint.config.js) (house formatting, and `src/lib` free of Vue, Pinia, the DOM and the app layers), `vue-tsc` (strict, no unused locals or parameters) and shellcheck (`scripts/*.sh`, in CI).
+Rules a tool can check live in the tool, not here: [eslint.config.js](eslint.config.js) (house formatting, and what `src/lib` may import and which browser globals it may not touch), `vue-tsc` (strict, no unused locals or parameters) and shellcheck (`scripts/*.sh`, in CI).
 
 A change that sets or changes a convention updates this file in the same change. A review flags a new convention that the diff introduces without an entry here.
 
 ## Everywhere (`src/` and `scripts/`)
 
-- **F1 Line length.** Long lines are fine; ESLint enforces the rest of the formatting.
+- **F1 Line length.** Long lines are fine.
 - **F2 Doc comments.** An export or a piece of state whose name doesn't say what it is or holds gets a `/** */` comment that does, in one or two sentences (`PEERS` and `firstDigit` in [grid.ts](src/lib/grid.ts), the refs in [game.ts](src/stores/game.ts)). Self-explanatory names such as `rowOf` or `bit` go without one.
 - **F3 Inline comments say why.** An inline comment explains a reason or a gotcha the code can't show ("Some browsers still send pointer events to a disabled button."), never a restatement of the next line.
 - **F4 Named constants.** A tuning number or limit gets a `SCREAMING_CASE` constant at the top of its module (`HISTORY_LIMIT`, `LONG_PRESS_MS`, `MAX_RESULTS`). The grid's own sizes (9, 81) stay literal.
@@ -20,7 +20,7 @@ A change that sets or changes a convention updates this file in the same change.
 
 ### Layering
 
-- **L1 Each layer has one job.** `src/lib` holds Sudoku logic as pure TypeScript (ESLint keeps it free of Vue and the DOM), so the bank scripts and the tests use it directly. `src/stores` holds the app state and the actions that change it. `src/composables` wraps browser APIs (theme, install prompt) for components. Components render and forward user input to store actions. Game rules live in the store or `src/lib`, not in a component.
+- **L1 Each layer has one job.** `src/lib` holds Sudoku logic as pure TypeScript, so the bank scripts and the tests use it directly. `src/stores` holds the app state and the actions that change it. `src/composables` wraps browser APIs (theme, install prompt) for components. Components render and forward user input to store actions. Game rules live in the store or `src/lib`, not in a component.
 
 ### Grid model
 
