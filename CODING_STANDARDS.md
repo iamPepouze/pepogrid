@@ -9,7 +9,7 @@ A change that sets or changes a convention updates this file in the same change.
 ## Everywhere (`src/` and `scripts/`)
 
 - **F1 Formatting.** No semicolons, single quotes, 2-space indent, trailing commas in multi-line lists. Long lines are fine. No formatter enforces this, so match the surrounding code.
-- **F2 Doc comments.** Exported functions, types and constants, and any state whose meaning isn't obvious from its name, get a `/** */` comment that says what it is or holds, in one or two sentences ([grid.ts](src/lib/grid.ts), [game.ts](src/stores/game.ts) refs).
+- **F2 Doc comments.** An export or a piece of state whose name doesn't say what it is or holds gets a `/** */` comment that does, in one or two sentences (`PEERS` and `firstDigit` in [grid.ts](src/lib/grid.ts), the refs in [game.ts](src/stores/game.ts)). Self-explanatory names such as `rowOf` or `bit` go without one.
 - **F3 Inline comments say why.** An inline comment explains a reason or a gotcha the code can't show ("Some browsers still send pointer events to a disabled button."), never a restatement of the next line.
 - **F4 Named constants.** A tuning number or limit gets a `SCREAMING_CASE` constant at the top of its module (`HISTORY_LIMIT`, `LONG_PRESS_MS`, `MAX_RESULTS`). The grid's own sizes (9, 81) stay literal.
 - **F5 File headers.** A module whose job isn't obvious from its name opens with a header comment (`/** */`, or `//` in a plain `.mjs` script) saying what it is and how it fits ([sudoku.ts](src/lib/sudoku.ts), [bank.ts](src/lib/bank.ts)). A runnable script's header also gives its usage line ([build-bank.ts](scripts/bank/build-bank.ts)).
@@ -44,5 +44,5 @@ A change that sets or changes a convention updates this file in the same change.
 
 ### Tests
 
-- **T1 Colocated Vitest.** Tests sit beside their module as `<name>.test.ts`, grouped with `describe` per behaviour, and each `it` reads as a sentence about that behaviour.
+- **T1 Vitest layout.** `src/lib` is tested from one file, [sudoku.test.ts](src/lib/sudoku.test.ts), with a `describe` per module or behaviour. A store's tests sit beside it as `<store>.test.ts` ([game.test.ts](src/stores/game.test.ts)). Each `it` reads as a sentence about the behaviour.
 - **T2 Through the public interface.** Store tests drive the actions a player triggers (`select`, `input`, `undo`) with a fresh Pinia from `setActivePinia(createPinia())` in `beforeEach`, and assert on store state ([game.test.ts](src/stores/game.test.ts)). Shared steps become small helpers in the test file (`place`, `solve`).
