@@ -30,6 +30,7 @@ export interface GameResult {
   hardest: string
 }
 
+/** A grid as an 81-character string, the form results store it in. */
 export const gridToString = (grid: readonly number[]) => grid.join('')
 
 /** History of finished and abandoned games, newest last. Persisted as `pepogrid.results`. */
