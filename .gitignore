@@ -5,3 +5,6 @@ dist
 
 # Third-party rating tools and bank-building work files (scripts/bank)
 tools/
+
+# Per-branch specs and review state for agents (see CLAUDE.md)
+.scratch/
