@@ -27,6 +27,7 @@ A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and
 - **Mobile-first layout.** On phones, a compact header sits above the board, with controls and the number pad at the bottom. In landscape and on wide screens, the board sits beside the controls. Keyboard hints show only on devices with a mouse.
 - **Matching numbers.** Selecting a filled cell tints the other cells with the same digit and emphasizes that digit in notes. This can be turned off in the gear menu (*Highlight matching numbers*).
 - **Complete digits.** Once a digit sits in every cell that needs it, its number pad button greys out and stops responding, keyboard key included. Wrong copies don't count. Placing the last one clears any leftover notes of that digit and sends a soft glow across its cells, unless the device asks for reduced motion. Undo or Erase brings the button back.
+- **Complete units.** Once a row, column or box holds the right digit in all nine cells, the same glow runs across it and its placed digits turn from blue to the givens' color as the glow reaches them, so blue marks only what is still in progress. Those cells then lock like givens; only Undo reopens them, and it also stops any glow still running. A placement that completes several units and a digit at once sends a single glow across all of them.
 - **Light, dark or system theme.** Choose it from the gear menu in the header. *System* (the default) follows the device setting. The choice is saved, and the title/status bar color follows the theme.
 - **Haptics.** The phone gives a short vibration on a mistake (Android only; iOS doesn't support web vibration).
 - **Installable PWA.** Works offline. An *Install* button appears in the header when the browser supports it (Chrome, Edge, Android). On iOS, use Share → Add to Home Screen. Updates download in the background and apply the next time the app is launched.
@@ -76,6 +77,8 @@ npm test           # run the tests
 npm run build      # type-check and build to dist/ (includes the service worker)
 npm run preview    # serve the production build to test the PWA locally
 ```
+
+Each test draws its random puzzles from a fresh seed. A failing test prints `Replay this test with TEST_SEED=<n>`; replay it with the same puzzles by running `TEST_SEED=<n> npm test` in Bash, or `$env:TEST_SEED=<n>; npm test` in PowerShell.
 
 If a script fails because `vitest`, `vue-tsc` or `eslint` is "not recognized" or "not found", `node_modules` is likely incomplete: run `npm ci` to reinstall it from the lockfile.
 

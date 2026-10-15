@@ -1,21 +1,11 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { PEERS, bit } from '../lib/sudoku'
+import { PEERS, ROWS, bit, rowOf, unitsOf } from '../lib/sudoku'
 import { useGameStore } from './game'
 import { useResultsStore } from './results'
+import { crossingColumn, fill, nonGivensOf, place, quietRow, type Game } from './testing'
 
-type Game = ReturnType<typeof useGameStore>
-
-/** Index of the first empty (non-given) cell. */
-const firstEmpty = (game: Game) => game.puzzle.findIndex((v) => v === 0)
-
-/** Selects each cell in turn and enters digit `d`. */
-function place(game: Game, cells: number[], d: number) {
-  for (const i of cells) {
-    game.select(i)
-    game.input(d)
-  }
-}
+const firstNonGiven = (game: Game) => game.puzzle.findIndex((v) => v === 0)
 
 function solve(game: Game) {
   game.puzzle.forEach((v, i) => {
@@ -39,7 +29,7 @@ describe('game store results', () => {
     const game = useGameStore()
     const results = useResultsStore()
     await game.newGame('easy')
-    const i = firstEmpty(game)
+    const i = firstNonGiven(game)
     game.select(i)
     game.input((game.solution[i] % 9) + 1) // one mistake
     solve(game)
@@ -64,7 +54,7 @@ describe('game store results', () => {
     const results = useResultsStore()
     await game.newGame('medium')
     const empties = game.puzzle.filter((v) => v === 0).length
-    const i = firstEmpty(game)
+    const i = firstNonGiven(game)
     game.select(i)
     game.input(game.solution[i])
     await game.newGame('hard')
@@ -84,7 +74,7 @@ describe('game store results', () => {
     await game.newGame('easy')
     expect(results.results).toHaveLength(0)
 
-    game.select(firstEmpty(game))
+    game.select(firstNonGiven(game))
     game.toggleNote(5)
     await game.newGame('easy')
     expect(results.results).toHaveLength(1)
@@ -102,8 +92,19 @@ describe('game store results', () => {
 })
 
 /** Non-given cells whose solution is digit `d`: the ones the player must fill with it. */
-const emptyCellsOf = (game: Game, d: number) =>
+const nonGivensOfDigit = (game: Game, d: number) =>
   game.solution.flatMap((v, i) => (v === d && game.puzzle[i] === 0 ? [i] : []))
+
+/** A digit whose cells each keep, in their row, column and box, an empty cell needing another digit, so placing it completes no unit. */
+function quietDigit(game: Game) {
+  const d = [1, 2, 3, 4, 5, 6, 7, 8, 9].find((d) =>
+    nonGivensOfDigit(game, d).every((i) =>
+      unitsOf(i).every((u) => u.some((j) => game.puzzle[j] === 0 && game.solution[j] !== d)),
+    ),
+  )
+  if (!d) throw new Error('no quiet digit in this puzzle')
+  return d
+}
 
 describe('complete digits', () => {
   beforeEach(() => {
@@ -113,8 +114,8 @@ describe('complete digits', () => {
   it('completes a digit once all nine of its solution cells hold it', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
-    const cells = emptyCellsOf(game, d)
+    const d = quietDigit(game)
+    const cells = nonGivensOfDigit(game, d)
     place(game, cells.slice(0, -1), d)
     expect(game.completeDigits.has(d)).toBe(false)
     place(game, cells.slice(-1), d)
@@ -124,8 +125,8 @@ describe('complete digits', () => {
   it('ignores wrong copies: they neither complete a digit nor undo it', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
-    const cells = emptyCellsOf(game, d)
+    const d = quietDigit(game)
+    const cells = nonGivensOfDigit(game, d)
     const other = game.puzzle.findIndex((v, i) => v === 0 && game.solution[i] !== d)
     place(game, [other], d) // wrong copy
     place(game, cells.slice(0, -1), d)
@@ -137,8 +138,8 @@ describe('complete digits', () => {
   it('stops being complete after erase or undo', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
-    const cells = emptyCellsOf(game, d)
+    const d = quietDigit(game)
+    const cells = nonGivensOfDigit(game, d)
     place(game, cells, d)
     game.erase()
     expect(game.completeDigits.has(d)).toBe(false)
@@ -151,8 +152,8 @@ describe('complete digits', () => {
   it('ignores input of a complete digit, as a value or a note', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
-    place(game, emptyCellsOf(game, d), d)
+    const d = quietDigit(game)
+    place(game, nonGivensOfDigit(game, d), d)
     const other = game.puzzle.findIndex((v, i) => v === 0 && game.values[i] === 0)
     game.select(other)
     game.input(d)
@@ -168,8 +169,8 @@ describe('complete digits', () => {
   it('clears stray notes of a digit once it is complete, and undo restores them', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
-    const cells = emptyCellsOf(game, d)
+    const d = quietDigit(game)
+    const cells = nonGivensOfDigit(game, d)
     const last = cells[cells.length - 1]
     place(game, cells.slice(0, -1), d)
     // A note out of reach of the last placement's own peer clearing.
@@ -185,35 +186,131 @@ describe('complete digits', () => {
   it('signals a newly complete digit only when a placement completes it', async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
-    const cells = emptyCellsOf(game, d)
+    const d = quietDigit(game)
+    const cells = nonGivensOfDigit(game, d)
     place(game, cells.slice(0, -1), d)
     expect(game.newlyComplete).toBeNull()
     place(game, cells.slice(-1), d)
     const signal = game.newlyComplete
-    expect(signal?.digit).toBe(d)
+    expect(signal?.cell).toBe(cells[cells.length - 1])
 
     game.erase()
     game.undo() // complete again, but not by a placement
-    expect(game.newlyComplete).toBe(signal)
+    expect(game.newlyComplete).toBeNull()
 
     game.erase()
     game.input(d) // placed again: signalled anew
     expect(game.newlyComplete).not.toBe(signal)
-    expect(game.newlyComplete?.digit).toBe(d)
+    expect(game.newlyComplete?.cell).toBe(cells[cells.length - 1])
   })
 
   it("names the digit's nine cells to glow, leaving out a wrong copy", async () => {
     const game = useGameStore()
     await game.newGame('easy')
-    const d = game.solution[firstEmpty(game)]
+    const d = quietDigit(game)
     const wrong = game.puzzle.findIndex((v, i) => v === 0 && game.solution[i] !== d)
     place(game, [wrong], d)
-    place(game, emptyCellsOf(game, d), d)
+    place(game, nonGivensOfDigit(game, d), d)
     const cells = game.newlyComplete?.cells ?? []
     expect(cells).toHaveLength(9)
     expect(cells).not.toContain(wrong)
     expect(cells.every((i) => game.solution[i] === d)).toBe(true)
+  })
+})
+
+describe('complete units', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('locks a unit once all nine of its cells match the solution', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const empties = quietRow(game)
+    fill(game, empties.slice(0, -1))
+    expect(empties.some(game.isLocked)).toBe(false)
+    fill(game, empties.slice(-1))
+    expect(empties.every(game.isLocked)).toBe(true)
+  })
+
+  it('leaves a full unit with a mistake in it unlocked', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const empties = quietRow(game)
+    const last = empties[empties.length - 1]
+    fill(game, empties.slice(0, -1))
+    place(game, [last], (game.solution[last] % 9) + 1)
+    expect(empties.some(game.isLocked)).toBe(false)
+  })
+
+  it('ignores input and erase on a locked cell, until undo reopens the unit', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const empties = quietRow(game)
+    fill(game, empties)
+    const [first] = empties
+    const digit = game.solution[first]
+    game.select(first)
+    game.erase()
+    game.input((digit % 9) + 1)
+    expect(game.values[first]).toBe(digit)
+    expect(game.mistakes).toBe(0)
+
+    game.undo() // takes back the placement that completed the row
+    expect(empties.some(game.isLocked)).toBe(false)
+    game.select(first)
+    game.erase()
+    expect(game.values[first]).toBe(0)
+  })
+
+  it("signals the unit's nine cells to glow from the placement that completed it", async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const empties = quietRow(game)
+    const last = empties[empties.length - 1]
+    fill(game, empties.slice(0, -1))
+    expect(game.newlyComplete).toBeNull()
+    fill(game, [last])
+    expect(game.newlyComplete?.cell).toBe(last)
+    expect([...(game.newlyComplete?.cells ?? [])].sort((a, b) => a - b)).toEqual(ROWS[rowOf(last)])
+  })
+
+  it('merges every unit and digit one placement completes into one glow', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const empties = nonGivensOf(game, game.puzzle.map((_, i) => i))
+    const last = empties[empties.length - 1]
+    fill(game, empties.slice(0, -1))
+    fill(game, [last])
+    // Its row, column and box (21 cells) and the digit's 8 other cells.
+    const cells = game.newlyComplete?.cells ?? []
+    expect(new Set(cells).size).toBe(cells.length)
+    expect(cells).toHaveLength(29)
+    expect(cells).toEqual(expect.arrayContaining(unitsOf(last).flat()))
+  })
+
+  it('stops the glow on undo', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    fill(game, quietRow(game))
+    expect(game.newlyComplete).not.toBeNull()
+    game.undo()
+    expect(game.newlyComplete).toBeNull()
+  })
+
+  it('names as newly locked only the placed digits that were not locked before', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const row = quietRow(game)
+    fill(game, row)
+    expect([...(game.newlyComplete?.locked ?? [])].sort((a, b) => a - b)).toEqual(row)
+
+    // Complete the column through the row's first cell: that cell glows again but was already locked.
+    const column = crossingColumn(game, row)
+    fill(game, column)
+    expect(game.newlyComplete?.cells).toContain(row[0])
+    expect(game.newlyComplete?.locked).toContain(column[column.length - 1])
+    expect(game.newlyComplete?.locked.some((i) => row.includes(i))).toBe(false)
   })
 })
 

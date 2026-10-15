@@ -6,7 +6,7 @@ import { useSettingsStore } from '../stores/settings'
 
 const game = useGameStore()
 const settings = useSettingsStore()
-const { isGiven, isWrong } = game
+const { isGiven, isLocked, isWrong } = game
 
 const cells = [...Array(81).keys()]
 
@@ -22,27 +22,40 @@ const GLOW_STEP_MS = 70
 /** The farthest cell's delay (corner to corner) plus its own glow. */
 const GLOW_TOTAL_MS = Math.ceil(Math.hypot(8, 8) * GLOW_STEP_MS) + GLOW_MS
 
-/** The newly complete digit currently glowing across its cells, if any. */
+/** The newly complete digit and units, glowing across their cells (or about to), if any. */
 const glow = ref<NewlyComplete | null>(null)
+/** False for the frame before the glow starts, while the digits it locked keep their old color. */
+const glowStarted = ref(false)
+let glowFrame: number | undefined
 let glowTimer: number | undefined
+
+/** Cancels a glow's queued start and its end, so a stale one can't touch the next glow. */
+function cancelGlow() {
+  window.cancelAnimationFrame(glowFrame ?? 0)
+  window.clearTimeout(glowTimer)
+}
 
 watch(
   () => game.newlyComplete,
   (complete) => {
-    window.clearTimeout(glowTimer)
-    glow.value = null
+    cancelGlow()
+    glow.value = complete
+    glowStarted.value = false
     if (!complete) return
     // Next frame, so a repeat on the same cells restarts the animation.
-    requestAnimationFrame(() => {
-      glow.value = complete
-      glowTimer = window.setTimeout(() => (glow.value = null), GLOW_TOTAL_MS)
+    glowFrame = window.requestAnimationFrame(() => {
+      glowStarted.value = true
+      glowTimer = window.setTimeout(() => {
+        glow.value = null
+        glowStarted.value = false
+      }, GLOW_TOTAL_MS)
     })
   },
 )
 
-onBeforeUnmount(() => window.clearTimeout(glowTimer))
+onBeforeUnmount(cancelGlow)
 
-/** Glow delay for cell `i`: a wave spreading out from the placement that completed the digit. */
+/** Glow delay for cell `i`: a wave spreading out from the placement that completed the digit or units. */
 function glowDelay(i: number) {
   if (!glow.value) return undefined
   const from = glow.value.cell
@@ -53,6 +66,8 @@ function glowDelay(i: number) {
 function cellClass(i: number) {
   const c = colOf(i)
   const r = rowOf(i)
+  const inGlow = glow.value?.cells.includes(i) ?? false
+  const newlyLocked = glow.value?.locked.includes(i) ?? false
   return {
     given: isGiven(i),
     peer: game.peers.has(i),
@@ -60,7 +75,10 @@ function cellClass(i: number) {
     conflict: game.conflicts.has(i),
     wrong: isWrong(i),
     selected: game.selected === i,
-    glow: glow.value?.cells.includes(i) ?? false,
+    locked: !isGiven(i) && isLocked(i),
+    pending: newlyLocked && !glowStarted.value,
+    glow: inGlow && glowStarted.value,
+    settling: newlyLocked && glowStarted.value,
     'box-right': c % 3 === 2 && c !== 8,
     'box-bottom': r % 3 === 2 && r !== 8,
     'last-col': c === 8,
@@ -71,7 +89,7 @@ function cellClass(i: number) {
 function cellLabel(i: number) {
   const where = `Row ${rowOf(i) + 1}, column ${colOf(i) + 1}`
   const v = game.values[i]
-  if (v) return `${where}: ${v}${isGiven(i) ? ' (given)' : ''}${isWrong(i) ? ', incorrect' : ''}`
+  if (v) return `${where}: ${v}${isGiven(i) ? ' (given)' : isLocked(i) ? ', complete' : ''}${isWrong(i) ? ', incorrect' : ''}`
   return `${where}: empty`
 }
 </script>
@@ -162,7 +180,8 @@ function cellLabel(i: number) {
   background: var(--selected);
 }
 
-.cell.given {
+.cell.given,
+.cell.locked:not(.pending) {
   color: var(--given-digit);
 }
 
@@ -184,13 +203,30 @@ function cellLabel(i: number) {
   animation: swell var(--glow-duration) ease-in-out var(--glow-delay, 0ms);
 }
 
-/* A soft wash of color and a gentle swell, played when a digit becomes complete. */
+/* A digit that just locked stays blue until the wave reaches it, then settles to the given color. */
+.cell.settling .value {
+  animation:
+    swell var(--glow-duration) ease-in-out var(--glow-delay, 0ms),
+    settle var(--glow-duration) ease-in-out var(--glow-delay, 0ms) backwards;
+}
+
+/* A soft wash of color and a gentle swell, played when a digit or unit becomes complete. */
 @keyframes glow {
   40% {
     opacity: 0.28;
   }
   100% {
     opacity: 0;
+  }
+}
+
+@keyframes settle {
+  0%,
+  25% {
+    color: var(--user-digit);
+  }
+  55% {
+    color: var(--given-digit);
   }
 }
 
@@ -205,7 +241,8 @@ function cellLabel(i: number) {
 
 @media (prefers-reduced-motion: reduce) {
   .cell.glow::before,
-  .cell.glow .value {
+  .cell.glow .value,
+  .cell.settling .value {
     animation: none;
   }
 }
