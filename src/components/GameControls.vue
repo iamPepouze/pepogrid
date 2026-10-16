@@ -33,7 +33,7 @@ defineEmits<{ newGame: [] }>()
       <WandSparkles class="icon" aria-hidden="true" />
       <span>Fill notes</span>
     </button>
-    <button type="button" class="control" @click="$emit('newGame')">
+    <button type="button" class="control full-row" @click="$emit('newGame')">
       <Plus class="icon" aria-hidden="true" />
       <span>New game</span>
     </button>
@@ -104,45 +104,45 @@ defineEmits<{ newGame: [] }>()
   color: var(--accent);
 }
 
+/* Mouse and keyboard devices. */
 @media (hover: hover) and (pointer: fine) {
   .control:hover:not(:disabled, .active) {
     background: var(--peer);
   }
-}
 
-/* Mouse and keyboard devices: icon left of the label, in the side panel or once five such buttons fit in a row. */
-@media (hover: hover) and (pointer: fine) and (orientation: landscape) and (min-width: 600px),
-  (hover: hover) and (pointer: fine) and (min-width: 760px) {
-  .control {
-    flex-direction: row;
-    gap: 6px;
-    min-height: 44px;
-    padding: 8px 6px;
-    font-size: 0.875rem;
-    white-space: nowrap;
+  /* Icon left of the label, in the side panel or once five such buttons fit in a row. */
+  @media (orientation: landscape) and (min-width: 600px), (min-width: 760px) {
+    .control {
+      flex-direction: row;
+      gap: 6px;
+      min-height: 44px;
+      padding: 8px 6px;
+      font-size: 0.875rem;
+      white-space: nowrap;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    .badge {
+      top: 4px;
+      right: 4px;
+      padding: 1px 5px;
+      font-size: 0.6rem;
+    }
   }
 
-  .icon {
-    width: 18px;
-    height: 18px;
-  }
+  /* The side panel is too narrow for inline labels in one row: two columns, with New game alone on the last. */
+  @media (orientation: landscape) and (min-width: 600px) {
+    .controls {
+      grid-template-columns: repeat(2, 1fr);
+    }
 
-  .badge {
-    top: 4px;
-    right: 4px;
-    padding: 1px 5px;
-    font-size: 0.6rem;
-  }
-}
-
-/* The desktop side panel is too narrow for inline labels in one row; the odd last button spans both columns. */
-@media (orientation: landscape) and (min-width: 600px) and (hover: hover) and (pointer: fine) {
-  .controls {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .control:last-child {
-    grid-column: 1 / -1;
+    .full-row {
+      grid-column: 1 / -1;
+    }
   }
 }
 </style>

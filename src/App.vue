@@ -78,7 +78,7 @@ function onKeydown(e: KeyboardEvent) {
     game.erase()
   } else if (e.key.toLowerCase() === 'n') {
     game.toggleNotesMode()
-  } else if (e.key.toLowerCase() === 'f') {
+  } else if (e.key.toLowerCase() === 'f' && !e.shiftKey) {
     game.fillNotes()
   }
 }

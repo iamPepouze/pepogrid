@@ -60,7 +60,7 @@ The outcome of a game whose grid has been filled to match the solution.
 _Avoid_: Completed, won, finished
 
 **Abandoned**:
-The outcome of a game replaced by a new one after the player had made progress.
+The outcome of a game replaced by a new one after the player had placed at least one digit, right or wrong; notes alone do not count.
 _Avoid_: Quit, lost
 
 **Result**:

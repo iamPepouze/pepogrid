@@ -120,9 +120,11 @@ export const useGameStore = defineStore(
 
     const peers = computed(() => new Set(selected.value === null ? [] : PEERS[selected.value]))
 
-    const hasProgress = computed(
-      () => values.value.some((v, i) => v !== puzzle.value[i]) || notes.value.some((n) => n !== 0),
-    )
+    /** True once the player has placed a digit, right or wrong: only then is a replaced game recorded as abandoned. */
+    const hasPlacedDigit = computed(() => values.value.some((v, i) => v !== puzzle.value[i]))
+
+    /** True once the player has placed a digit or written a note: what a new game would throw away. */
+    const hasProgress = computed(() => hasPlacedDigit.value || notes.value.some((n) => n !== 0))
 
     function recordResult(outcome: Outcome) {
       const empties = puzzle.value.filter((v) => v === 0).length
@@ -145,13 +147,13 @@ export const useGameStore = defineStore(
       })
     }
 
-    /** Starts a new puzzle; an unfinished game with progress is recorded as abandoned. */
+    /** Starts a new puzzle; an unfinished game with a placed digit is recorded as abandoned. */
     async function newGame(level: Difficulty, { recordAbandoned = true } = {}) {
       if (loading.value) return
       loading.value = true
       try {
         const pick = await pickFromBank(level, bankUsed.value[level] ?? [], familyPlayed.value[level] ?? {})
-        if (recordAbandoned && isValid() && !completed.value && hasProgress.value) recordResult('abandoned')
+        if (recordAbandoned && isValid() && !completed.value && hasPlacedDigit.value) recordResult('abandoned')
         bankUsed.value[level] = pick.restarted ? [pick.index] : [...(bankUsed.value[level] ?? []), pick.index]
         // Strictly increasing, so two games in the same millisecond still order correctly.
         const plays = familyPlayed.value[level] ?? {}
