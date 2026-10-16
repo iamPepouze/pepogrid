@@ -67,6 +67,18 @@ _Avoid_: Quit, lost
 The stored record of a solved or abandoned game: difficulty, ratings, time and mistakes.
 _Avoid_: Score, history entry
 
+**Statistics**:
+Figures drawn from the stored results, per difficulty and overall; ratings, times and mistakes count solved games only.
+_Avoid_: Stats page, history
+
+**Solve rate**:
+Solved results as a share of all results at a difficulty; games replaced before a digit was placed are not results, so they do not count.
+_Avoid_: Win rate
+
+**Streak**:
+A run of consecutive solved results at one difficulty, broken by an abandoned one.
+_Avoid_: Winning streak
+
 **Matching-number highlight**:
 An optional tint on every cell holding the digit of the selected cell.
 

@@ -4,6 +4,7 @@ import { loadBank, pickFromBank } from './bank'
 import { DIFFICULTIES, TIERS, familyOf, tierOf, type HodokuLevel } from './difficulty'
 import { PEERS, UNITS } from './grid'
 import { rateHodoku, rateSE } from './rater'
+import { statisticsOf, type StatResult } from './statistics'
 import { countSolutions, randomSolution, solve } from './sudoku'
 import { applyTransform, randomTransform } from './transform'
 
@@ -155,5 +156,23 @@ describe('family rotation', () => {
 
   it('does not rotate Easy', () => {
     expect(TIERS.easy.rotate).toBe(false)
+  })
+})
+
+describe('statistics', () => {
+  const solved = (difficulty: StatResult['difficulty']): StatResult => ({ difficulty, outcome: 'completed' })
+  const abandoned = (difficulty: StatResult['difficulty']): StatResult => ({ difficulty, outcome: 'abandoned' })
+
+  it('counts played, solved and abandoned results and the solve rate at one difficulty', () => {
+    const results = [solved('hard'), abandoned('hard'), solved('hard'), solved('easy'), solved('hard')]
+    expect(statisticsOf(results, 'hard')).toEqual({ played: 4, solved: 3, abandoned: 1, solveRate: 0.75 })
+  })
+
+  it('counts across every difficulty when none is given', () => {
+    expect(statisticsOf([solved('easy'), abandoned('master'), solved('medium'), abandoned('easy')])).toEqual({ played: 4, solved: 2, abandoned: 2, solveRate: 0.5 })
+  })
+
+  it('has no solve rate without results', () => {
+    expect(statisticsOf([solved('easy')], 'master')).toEqual({ played: 0, solved: 0, abandoned: 0, solveRate: null })
   })
 })
