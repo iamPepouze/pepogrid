@@ -4,6 +4,9 @@ version: 2
 updates:
   - package-ecosystem: npm
     directory: /
+    commit-message:
+      prefix: chore
+      include: scope
     schedule:
       interval: weekly
     cooldown:
@@ -26,6 +29,9 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    commit-message:
+      prefix: chore
+      include: scope
     schedule:
       interval: weekly
     cooldown:
@@ -38,6 +44,9 @@ updates:
 
   - package-ecosystem: docker-compose
     directory: /.github/lint
+    commit-message:
+      prefix: chore
+      include: scope
     schedule:
       interval: weekly
     cooldown:
