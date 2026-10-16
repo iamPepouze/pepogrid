@@ -29,10 +29,11 @@ jobs:
         with:
           # Full history: test-seeds.sh diffs against the merge base with origin/main.
           fetch-depth: 0
+      # The linter images are pinned in .github/lint/compose.yml, where Dependabot bumps them.
       - name: Lint workflows
-        run: docker run --rm -v "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.12 -color
+        run: docker compose -f .github/lint/compose.yml run --rm actionlint -color
       - name: Lint shell scripts
-        run: docker run --rm -v "$PWD:/mnt" --workdir /mnt koalaman/shellcheck:v0.11.0 scripts/*.sh
+        run: docker compose -f .github/lint/compose.yml run --rm shellcheck scripts/*.sh
       - uses: actions/setup-node@v5
         with:
           node-version: 24

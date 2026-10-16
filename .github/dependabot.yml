@@ -1,0 +1,46 @@
+# Weekly version updates for every ecosystem: minor and patch bumps share one PR,
+# each major bump gets its own. Security updates are left ungrouped and undelayed.
+# See docs/agents/ci.md.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      npm-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]
+    ignore:
+      # TypeScript stays on 6 until vue-tsc supports 7: docs/adr/0005-typescript-pinned-to-6.md
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  # The linter images in .github/lint/compose.yml, which ci.yml runs.
+  - package-ecosystem: docker-compose
+    directory: /.github/lint
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      lint-images-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]
