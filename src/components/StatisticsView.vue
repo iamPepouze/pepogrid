@@ -2,8 +2,9 @@
 import { ArrowLeft } from '@lucide/vue'
 import { computed, nextTick, ref } from 'vue'
 import { DIFFICULTIES, LABELS, type Difficulty } from '../lib/difficulty'
-import { statisticsOf, type Statistics } from '../lib/statistics'
+import { statisticsOf } from '../lib/statistics'
 import { useResultsStore } from '../stores/results'
+import StatFigures from './StatFigures.vue'
 
 const props = defineProps<{ current: Difficulty }>()
 const emit = defineEmits<{ back: [] }>()
@@ -14,18 +15,8 @@ const results = useResultsStore()
 const selected = ref<Difficulty>(props.current)
 const tabs = ref<HTMLButtonElement[]>([])
 
-const overall = computed(() => statisticsOf(results.results))
-const shown = computed(() => statisticsOf(results.results, selected.value))
-
-const percent = (rate: number | null) => (rate === null ? '—' : `${Math.round(rate * 100)}%`)
-
-/** The count rows shared by the summary and each tab. */
-const countRows = (s: Statistics): [string, string][] => [
-  ['Played', String(s.played)],
-  ['Solved', String(s.solved)],
-  ['Abandoned', String(s.abandoned)],
-  ['Solve rate', percent(s.solveRate)],
-]
+const overallStats = computed(() => statisticsOf(results.results))
+const selectedStats = computed(() => statisticsOf(results.results, selected.value))
 
 /** Arrow keys, Home and End move between tabs, as in the WAI-ARIA tabs pattern. */
 async function onTabKeydown(e: KeyboardEvent) {
@@ -43,21 +34,16 @@ async function onTabKeydown(e: KeyboardEvent) {
 <template>
   <section class="statistics" aria-labelledby="statistics-title">
     <div class="heading">
-      <button type="button" class="back" @click="emit('back')">
+      <button type="button" class="back surface" @click="emit('back')">
         <ArrowLeft aria-hidden="true" />
         <span>Back</span>
       </button>
       <h2 id="statistics-title">Statistics</h2>
     </div>
 
-    <section class="summary card" aria-labelledby="summary-title">
+    <section class="summary card surface" aria-labelledby="summary-title">
       <h3 id="summary-title">All difficulties</h3>
-      <dl class="figures">
-        <div v-for="[label, value] in countRows(overall)" :key="label">
-          <dt>{{ label }}</dt>
-          <dd>{{ value }}</dd>
-        </div>
-      </dl>
+      <StatFigures :stats="overallStats" />
     </section>
 
     <div class="tabs" role="tablist" aria-label="Difficulty" @keydown="onTabKeydown">
@@ -77,14 +63,9 @@ async function onTabKeydown(e: KeyboardEvent) {
       </button>
     </div>
 
-    <div id="statistics-panel" class="card" role="tabpanel" :aria-labelledby="`statistics-tab-${selected}`">
-      <p v-if="!shown.played" class="empty">No {{ LABELS[selected] }} games yet.</p>
-      <dl v-else class="figures">
-        <div v-for="[label, value] in countRows(shown)" :key="label">
-          <dt>{{ label }}</dt>
-          <dd>{{ value }}</dd>
-        </div>
-      </dl>
+    <div id="statistics-panel" class="card surface" role="tabpanel" :aria-labelledby="`statistics-tab-${selected}`">
+      <p v-if="!selectedStats.played" class="empty">No {{ LABELS[selected] }} games yet.</p>
+      <StatFigures v-else :stats="selectedStats" />
     </div>
   </section>
 </template>
@@ -114,10 +95,6 @@ async function onTabKeydown(e: KeyboardEvent) {
   gap: 4px;
   min-height: 36px;
   padding: 6px 12px 6px 8px;
-  border: 1px solid var(--button-border);
-  border-radius: 10px;
-  background: var(--button-bg);
-  color: var(--text);
   font: inherit;
   cursor: pointer;
 }
@@ -129,9 +106,6 @@ async function onTabKeydown(e: KeyboardEvent) {
 
 .card {
   padding: 12px;
-  border: 1px solid var(--button-border);
-  border-radius: 10px;
-  background: var(--button-bg);
 }
 
 .card h3 {
@@ -141,35 +115,16 @@ async function onTabKeydown(e: KeyboardEvent) {
   font-weight: 600;
 }
 
-.figures {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0;
-}
-
-.figures dt {
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
-.figures dd {
-  margin: 2px 0 0;
-  font-size: 1.15rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
 .tabs {
   display: flex;
   gap: 4px;
 }
 
 .tabs button {
-  flex: 1;
-  min-width: 0;
+  /* Sized from the label, so Medium gets the room it needs on the narrowest phones. */
+  flex: 1 1 auto;
   min-height: 36px;
-  padding: 6px 8px;
+  padding: 6px 4px;
   border: 1px solid var(--button-border);
   border-radius: 999px;
   background: var(--button-bg);
@@ -191,7 +146,6 @@ async function onTabKeydown(e: KeyboardEvent) {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .back:hover,
   .tabs button:hover:not([aria-selected='true']) {
     background: var(--peer);
   }

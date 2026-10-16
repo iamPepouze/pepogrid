@@ -216,6 +216,7 @@ onBeforeUnmount(() => {
         aria-label="Statistics"
         title="Statistics"
         :aria-pressed="statisticsOpen"
+        :disabled="game.loading"
         @click="toggleStatistics"
       >
         <ChartColumn aria-hidden="true" />
@@ -345,11 +346,6 @@ onBeforeUnmount(() => {
 .icon-button[aria-pressed='true'] {
   border-color: var(--accent);
   color: var(--accent);
-}
-
-.new-game:disabled {
-  opacity: 0.6;
-  cursor: progress;
 }
 
 .game {

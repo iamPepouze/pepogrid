@@ -4,10 +4,13 @@
  */
 import type { Difficulty } from './difficulty'
 
-/** The parts of a stored result the statistics read. `completed` is a solved game. */
+/** How a game ended; `completed` is a solved game. */
+export type Outcome = 'completed' | 'abandoned'
+
+/** The parts of a stored result the statistics read. */
 export interface StatResult {
   difficulty: Difficulty
-  outcome: 'completed' | 'abandoned'
+  outcome: Outcome
 }
 
 export interface Statistics {

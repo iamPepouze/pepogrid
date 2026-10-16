@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Difficulty, HodokuLevel } from '../lib/difficulty'
+import type { Outcome } from '../lib/statistics'
+
+export type { Outcome }
 
 const MAX_RESULTS = 1000
-
-export type Outcome = 'completed' | 'abandoned'
 
 export interface GameResult {
   id: string

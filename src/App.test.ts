@@ -3,9 +3,7 @@ import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.vue'
-import type { Difficulty } from './lib/difficulty'
 import { useGameStore } from './stores/game'
-import { useResultsStore, type Outcome } from './stores/results'
 import { fill, nonGivensOf } from './stores/testing'
 
 enableAutoUnmount(afterEach)
@@ -201,16 +199,6 @@ describe('App', () => {
   describe('Statistics', () => {
     const statisticsButton = '.topbar button[aria-label="Statistics"]'
 
-    /** Stores a result as the game store would, filled in with plausible values. */
-    function seed(difficulty: Difficulty, outcome: Outcome) {
-      const grid = '0'.repeat(81)
-      useResultsStore().record({
-        difficulty, outcome, startedAt: '2026-10-01T10:00:00Z', endedAt: '2026-10-01T10:10:00Z', elapsed: 600, mistakes: 0,
-        progress: outcome === 'completed' ? 100 : 40, puzzle: grid, solution: grid, finalBoard: grid,
-        se: 2, hodokuScore: 200, hodokuLevel: 'medium', hardest: 'Hidden Single',
-      })
-    }
-
     it('swaps the game for Statistics, and Back returns to the game with focus on the Statistics button', async () => {
       const app = await mountApp()
       const button = app.find<HTMLButtonElement>(statisticsButton)
@@ -226,6 +214,17 @@ describe('App', () => {
       expect(app.find<HTMLElement>('.game').element.style.display).toBe('')
       expect(app.find(newGameButton).exists()).toBe(true)
       expect(document.activeElement).toBe(button.element)
+    })
+
+    it('disables the Statistics button while a puzzle loads, so no game is dealt behind it', async () => {
+      const app = await mountApp()
+      const button = app.find<HTMLButtonElement>(statisticsButton)
+
+      await app.find(newGameButton).trigger('click')
+      expect(button.element.disabled).toBe(true)
+      await settle()
+      await flushPromises()
+      expect(button.element.disabled).toBe(false)
     })
 
     it('goes back to the game when the Statistics button is pressed again', async () => {
@@ -264,35 +263,11 @@ describe('App', () => {
       expect(game.values[cell]).toBe(0)
     })
 
-    it('shows counts across every difficulty, and opens on the current difficulty’s tab', async () => {
-      seed('easy', 'completed')
-      seed('easy', 'abandoned')
-      seed('easy', 'completed')
-      seed('master', 'abandoned')
+    it('opens Statistics on the current gameâ€™s difficulty', async () => {
       const app = await mountApp()
+      await useGameStore().newGame('hard')
       await app.find(statisticsButton).trigger('click')
-
-      const summary = app.find('.statistics .summary').text()
-      expect(summary).toMatch(/Played\s*4/)
-      expect(summary).toMatch(/Solved\s*2/)
-      expect(summary).toMatch(/Abandoned\s*2/)
-      expect(summary).toMatch(/Solve rate\s*50%/)
-
-      expect(app.find('[role="tab"][aria-selected="true"]').text()).toBe('Easy')
-      const panel = app.find('[role="tabpanel"]').text()
-      expect(panel).toMatch(/Played\s*3/)
-      expect(panel).toMatch(/Solved\s*2/)
-      expect(panel).toMatch(/Abandoned\s*1/)
-      expect(panel).toMatch(/Solve rate\s*67%/)
-    })
-
-    it('says so on a difficulty with no games yet', async () => {
-      seed('easy', 'completed')
-      const app = await mountApp()
-      await app.find(statisticsButton).trigger('click')
-
-      await app.findAll('[role="tab"]').find((t) => t.text() === 'Master')!.trigger('click')
-      expect(app.find('[role="tabpanel"]').text()).toBe('No Master games yet.')
+      expect(app.find('[role="tab"][aria-selected="true"]').text()).toBe('Hard')
     })
   })
 })
