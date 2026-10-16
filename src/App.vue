@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { Plus } from '@lucide/vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import AppDialog, { type DialogContent } from './components/AppDialog.vue'
 import DifficultyMenu from './components/DifficultyMenu.vue'
 import GameControls from './components/GameControls.vue'
 import NumberPad from './components/NumberPad.vue'
@@ -17,15 +19,36 @@ if (!game.isValid()) loadGame('easy', { recordAbandoned: false })
 useTheme()
 const { canInstall, install } = useInstall()
 
-/** Ratings of the current puzzle, shown only for the tiers that display them. */
+/** Ratings of the current puzzle, shown only for the difficulties that display them. */
 const shownRating = computed(() => (TIERS[game.difficulty].showRating ? game.rating : null))
 
+/** The open dialog's content, and how to report the player's answer; null while no dialog is open. */
+const prompt = ref<{ content: DialogContent; resolve: (confirmed: boolean) => void } | null>(null)
+
+/** Opens the in-app dialog and resolves with whether the player confirmed. */
+function ask(content: DialogContent) {
+  return new Promise<boolean>((resolve) => {
+    prompt.value = { content, resolve }
+  })
+}
+
+async function closePrompt(confirmed: boolean) {
+  const open = prompt.value
+  prompt.value = null
+  // Answer only once the dialog is gone: while it is open and modal, the page behind it can't take focus.
+  await nextTick()
+  open?.resolve(confirmed)
+}
+
+/** Deals a new game; on failure, says so and resolves false once the player has read it. */
 async function loadGame(difficulty: Difficulty, options?: { recordAbandoned?: boolean }) {
   try {
     await game.newGame(difficulty, options)
+    return true
   } catch (error) {
     console.error(error)
-    window.alert(`Couldn't load a ${LABELS[difficulty]} puzzle. Check your connection and try again.`)
+    await ask({ title: `Couldn't load a new ${LABELS[difficulty]} puzzle`, message: 'Check your connection and try again.', confirmLabel: 'OK' })
+    return false
   }
 }
 
@@ -35,12 +58,29 @@ const time = computed(() => {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 })
 
-function startGame(difficulty: Difficulty) {
+/**
+ * Deals a new game, asking first when that would lose progress. `from` is the button the player
+ * used: focus returns there when they cancel or the load fails.
+ */
+async function startGame(difficulty: Difficulty, from: EventTarget | null) {
+  // Passed in rather than read from document.activeElement: Safari doesn't focus a tapped button.
+  const opener = from instanceof HTMLElement ? from : null
   const unfinished = game.hasProgress && !game.completed
-  if (unfinished && !window.confirm(`Start a new ${LABELS[difficulty]} game? Your current progress will be lost.`)) {
-    return
+  if (unfinished) {
+    const confirmed = await ask({
+      title: `Start a new ${LABELS[difficulty]} game?`,
+      message: `Your current ${LABELS[game.difficulty]} game will be lost.`,
+      confirmLabel: 'New game',
+      cancelLabel: 'Cancel',
+    })
+    if (!confirmed) {
+      opener?.focus()
+      return
+    }
   }
-  loadGame(difficulty)
+  // A fresh game starts on the board; after a failed load, the player is back where they tried from.
+  if (await loadGame(difficulty)) board.value?.focus()
+  else opener?.focus()
 }
 
 const ARROWS: Record<string, [number, number]> = {
@@ -51,6 +91,8 @@ const ARROWS: Record<string, [number, number]> = {
 }
 
 function onKeydown(e: KeyboardEvent) {
+  // Focus can leave the dialog's buttons (a tap on its text lands on <body>), so check the dialog itself.
+  if (prompt.value) return
   if (e.target instanceof Element && e.target.closest('[data-own-keys]')) return
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'z') {
     e.preventDefault()
@@ -91,6 +133,7 @@ const appEl = ref<HTMLElement | null>(null)
 const headerEl = ref<HTMLElement | null>(null)
 const gameEl = ref<HTMLElement | null>(null)
 const boardAreaEl = ref<HTMLElement | null>(null)
+const board = ref<InstanceType<typeof SudokuBoard> | null>(null)
 
 /**
  * Stacked layout: sizes the board to the largest square that leaves room for
@@ -154,6 +197,16 @@ onBeforeUnmount(() => {
       </div>
       <button v-if="canInstall" type="button" class="install" @click="install">Install</button>
       <SettingsMenu />
+      <button
+        type="button"
+        class="new-game icon-button"
+        aria-label="New game"
+        title="New game"
+        :disabled="game.loading"
+        @click="startGame(game.difficulty, $event.currentTarget)"
+      >
+        <Plus aria-hidden="true" />
+      </button>
       <DifficultyMenu :current="game.difficulty" :disabled="game.loading" @select="startGame" />
     </header>
 
@@ -173,15 +226,15 @@ onBeforeUnmount(() => {
               ({{ HODOKU_LABELS[shownRating.hodokuLevel] }}) · hardest: {{ shownRating.hardest }}
             </span>
           </p>
-          <button type="button" @click="startGame(game.difficulty)">Play again</button>
+          <button type="button" :disabled="game.loading" @click="startGame(game.difficulty, $event.currentTarget)">Play again</button>
         </div>
       </div>
 
       <div ref="boardAreaEl" class="board-area">
-        <SudokuBoard />
+        <SudokuBoard ref="board" />
       </div>
 
-      <GameControls class="controls-area" @new-game="startGame(game.difficulty)" />
+      <GameControls class="controls-area" />
       <NumberPad class="pad-area" />
 
       <p class="hints">
@@ -190,6 +243,9 @@ onBeforeUnmount(() => {
       </p>
     </main>
   </div>
+
+  <!-- Outside .app: a modal is no part of its column layout. -->
+  <AppDialog v-if="prompt" v-bind="prompt.content" @close="closePrompt" />
 </template>
 
 <style scoped>
@@ -203,11 +259,13 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   height: 100dvh;
-  padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+  /* Room below the status bar too: at just the inset, the header touches the iPhone's Dynamic Island area. */
+  padding: calc(env(safe-area-inset-top) + 12px) max(12px, env(safe-area-inset-right))
     max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
 }
 
-.app > * {
+/* The header and the game only: a bare `> *` would also size any child component's root, such as a dialog. */
+.app > :is(.topbar, .game) {
   flex-shrink: 0;
   width: var(--board-size, 100%);
 }
@@ -246,6 +304,11 @@ onBeforeUnmount(() => {
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+.new-game:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
 
 .game {
@@ -368,7 +431,7 @@ kbd {
     margin: 0 auto;
   }
 
-  .app > * {
+  .app > :is(.topbar, .game) {
     width: auto;
   }
 
@@ -397,7 +460,7 @@ kbd {
   }
 }
 
-/* Desktop-sized screens get the tagline and a roomier header. */
+/* Desktop-sized screens get the tagline and a roomier header. AppDialog.vue widens at the same query. */
 @media (min-width: 768px) and (min-height: 600px) {
   .app {
     gap: 16px;

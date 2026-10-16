@@ -8,9 +8,9 @@ A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and
 
 ## Features
 
-- **Five difficulty tiers** with ratings from two community-standard tools: [Sudoku Explainer](https://github.com/SudokuMonster/SukakuExplainer) 1.2.1 (SE) and [HoDoKu](https://hodoku.sourceforge.net/). SE decides the tier, and HoDoKu's level must match it, or the puzzle isn't used.
+- **Five difficulties** with ratings from two community-standard tools: [Sudoku Explainer](https://github.com/SudokuMonster/SukakuExplainer) 1.2.1 (SE) and [HoDoKu](https://hodoku.sourceforge.net/). SE decides the difficulty, and HoDoKu's level must match it, or the puzzle isn't used.
 
-  | Tier | SE rating | HoDoKu level | Typical hardest technique |
+  | Difficulty | SE rating | HoDoKu level | Typical hardest technique |
   | --- | --- | --- | --- |
   | Easy | 1.0–1.5 | Easy | hidden singles |
   | Medium | 1.6–2.6 | Medium | naked singles, pointing |
@@ -18,14 +18,15 @@ A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and
   | Expert | 4.3–6.5 | Unfair | uniqueness, quads, APE, short chains |
   | Master | 6.6–8.0 | Extreme | forcing chains and cycles |
 
-  Puzzles come from a bundled bank of 1000 per tier, rated offline by the real tools. Each game disguises its puzzle with a random digit relabelling, row/column shuffles and transposition, and a tier's puzzles don't repeat until all have been played. Expert and Master show the SE rating in the status bar, and the full ratings once solved.
+  Puzzles come from a bundled bank of 1000 per difficulty, rated offline by the real tools. Each game disguises its puzzle with a random digit relabelling, row/column shuffles and transposition, and a difficulty's puzzles don't repeat until all have been played. Expert and Master show the SE rating in the status bar, and the full ratings once solved.
 - **Notes (pencil marks).** Use the *Notes* button or press `N` to toggle notes mode. To add a single note, press `Shift` + digit, or long-press a number pad button on touch screens. Placing a number clears that digit from the notes in its row, column and box.
 - **Fill notes.** The *Fill notes* button or `F` replaces every empty cell's notes with the digits not yet placed in its row, column or box, wrong ones included, so it gives nothing away. One Undo brings back the notes you had. The button greys out when it would change nothing.
 - **Error checking.** Digits that don't match the solution are shown in red. Cells that clash in a row, column or box are tinted red. A mistake counter tracks wrong entries.
 - **Timer, Undo, Erase.** The timer pauses while the tab is hidden.
 - **Auto-save.** The game in progress, including the selected cell, notes mode and undo history, is saved after every change. A browser refresh resumes exactly where you were.
 - **Results history.** Solved games are recorded, and so are games abandoned by starting a new one after placing at least one digit (notes alone don't count, though starting over still asks first). Each record has the difficulty, outcome, start/end time, time played, mistakes, progress %, the puzzle, solution and final board, and its ratings (SE, HoDoKu score and level, hardest technique). The 1000 most recent are kept.
-- **Mobile-first layout.** On phones, a compact header sits above the board, with controls and the number pad at the bottom. In landscape and on wide screens, the board sits beside the controls. Keyboard hints show only on devices with a mouse.
+- **New game.** The *+* button in the header, next to the difficulty menu, deals a new puzzle at the current difficulty; picking a difficulty deals one at that difficulty. If the game in progress has a digit or a note, an in-app dialog asks first. Cancel, `Esc` or a tap outside it keeps the game.
+- **Mobile-first layout.** On phones, a compact header sits above the board, clear of the status bar in the installed app, with controls and the number pad at the bottom. In landscape and on wide screens, the board sits beside the controls. Keyboard hints show only on devices with a mouse.
 - **Matching numbers.** Selecting a filled cell tints the other cells with the same digit and emphasizes that digit in notes. This can be turned off in the gear menu (*Highlight matching numbers*).
 - **Complete digits.** Once a digit sits in every cell that needs it, its number pad button greys out and stops responding, keyboard key included. Wrong copies don't count. Placing the last one clears any leftover notes of that digit and sends a soft glow across its cells, unless the device asks for reduced motion. Undo or Erase brings the button back.
 - **Complete units.** Once a row, column or box holds the right digit in all nine cells, the same glow runs across it and its placed digits turn from blue to the givens' color as the glow reaches them, so blue marks only what is still in progress. Those cells then lock like givens; only Undo reopens them, and it also stops any glow still running. A placement that completes several units and a digit at once sends a single glow across all of them.
@@ -59,11 +60,11 @@ Grids in results are 81-character strings in row-major order, with `0` for an em
 
 ## Puzzle bank
 
-The bank lives in `src/data/bank-<tier>.json`. Each entry is `[puzzle, SE rating, HoDoKu score, hardest technique]`. To rebuild it (needs Java 17+):
+The bank lives in `src/data/bank-<difficulty>.json`. Each entry is `[puzzle, SE rating, HoDoKu score, hardest technique]`. To rebuild it (needs Java 17+):
 
 ```sh
 node scripts/bank/setup-tools.mjs        # download SukakuExplainer and HoDoKu into tools/ (gitignored)
-npx tsx scripts/bank/build-bank.ts 1000  # generate, rate and file 1000 puzzles per tier (resumable)
+npx tsx scripts/bank/build-bank.ts 1000  # generate, rate and file 1000 puzzles per difficulty (resumable)
 npx tsx scripts/bank/calibrate.ts 2000   # check the built-in rater against the real tools
 ```
 

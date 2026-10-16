@@ -19,6 +19,13 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
   const context = await browser.newContext({ viewport, reducedMotion, hasTouch: touch, isMobile: touch })
   const page = await context.newPage()
   const errors = []
+  // Every screenshot path, listed by close() so the skill's Look step can be checked off.
+  const shots = []
+  const screenshot = page.screenshot.bind(page)
+  page.screenshot = (options) => {
+    if (options?.path) shots.push(options.path)
+    return screenshot(options)
+  }
   page.on('pageerror', (e) => errors.push(String(e)))
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
   await page.goto(URL)
@@ -45,6 +52,10 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
           })
           .map((b) => b.textContent.trim()),
       ),
-    close: () => browser.close(),
+    /** Closes the browser and prints every screenshot this page saved. */
+    close: async () => {
+      if (shots.length) console.log(`Screenshots to look at:\n${shots.map((p) => `  ${p}`).join('\n')}`)
+      await browser.close()
+    },
   }
 }

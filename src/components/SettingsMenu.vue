@@ -39,13 +39,13 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
     <button
       ref="trigger"
       type="button"
-      class="trigger"
+      class="trigger icon-button"
       aria-label="Settings"
       aria-haspopup="true"
       :aria-expanded="open"
       @click="open = !open"
     >
-      <Settings class="icon" aria-hidden="true" />
+      <Settings aria-hidden="true" />
     </button>
 
     <div v-if="open" class="popover" role="dialog" aria-label="Settings">
@@ -76,20 +76,6 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
 /* No positioning here: the popover anchors to the header (App.vue) so it stays on screen. */
 .settings {
   display: contents;
-}
-
-.trigger {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid var(--button-border);
-  border-radius: 10px;
-  background: var(--button-bg);
-  color: var(--text);
-  cursor: pointer;
 }
 
 .trigger[aria-expanded='true'] {
