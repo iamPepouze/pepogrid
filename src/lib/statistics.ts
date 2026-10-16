@@ -4,6 +4,9 @@
  */
 import { TIERS, familyOf, type Difficulty } from './difficulty'
 
+/** How many of the latest results a difficulty's figures list. */
+const RECENT_COUNT = 10
+
 /** How a game ended; `completed` is a solved game. */
 export type Outcome = 'completed' | 'abandoned'
 
@@ -46,7 +49,7 @@ export interface Statistics extends Counts {
   currentStreak: number
   /** The longest run of solved results. */
   bestStreak: number
-  /** Each technique family played, most played first; empty where the tier doesn't rotate (Easy). */
+  /** Each technique family played, most played first; empty on a difficulty that doesn't rotate (Easy). */
   families: FamilyRecord[]
   /** Mean progress of abandoned results, 0-100; null when there are none. */
   averageProgress: number | null
@@ -54,19 +57,19 @@ export interface Statistics extends Counts {
   recent: StatResult[]
 }
 
+/** A technique family's solved and played results at one difficulty. */
 export interface FamilyRecord {
   family: string
   solved: number
   played: number
 }
 
+/** The mean, smallest and largest of a set of values, such as solved results' SE ratings. */
 export interface Spread {
   average: number
   min: number
   max: number
 }
-
-const RECENT_COUNT = 10
 
 const mean = (values: readonly number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
 
@@ -92,7 +95,7 @@ export function countsOf(results: readonly StatResult[], difficulty?: Difficulty
 
 /** Solved of played per technique family, most played first, then by name. */
 function familiesOf(results: readonly StatResult[], difficulty: Difficulty): FamilyRecord[] {
-  // A tier that doesn't rotate has a single family (Easy: Singles), so listing it says nothing.
+  // A difficulty that doesn't rotate has a single family (Easy: Singles), so listing it says nothing.
   if (!TIERS[difficulty].rotate) return []
   const records = new Map<string, FamilyRecord>()
   for (const r of results) {

@@ -11,6 +11,7 @@ import SudokuBoard from './components/SudokuBoard.vue'
 import { useInstall } from './composables/useInstall'
 import { useTheme } from './composables/useTheme'
 import { HODOKU_LABELS, LABELS, TIERS, type Difficulty } from './lib/difficulty'
+import { formatDuration } from './lib/statistics'
 import { useGameStore } from './stores/game'
 
 const game = useGameStore()
@@ -63,11 +64,7 @@ async function loadGame(difficulty: Difficulty, options?: { recordAbandoned?: bo
   }
 }
 
-const time = computed(() => {
-  const m = Math.floor(game.elapsed / 60)
-  const s = game.elapsed % 60
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-})
+const time = computed(() => formatDuration(game.elapsed))
 
 /**
  * Deals a new game, asking first when that would lose progress. `from` is the button the player
