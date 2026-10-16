@@ -1,13 +1,19 @@
 <script setup lang="ts">
-/** Label and shown value of each figure, in display order. */
-defineProps<{ figures: [string, string][] }>()
+/** A figure's label and its value as shown, such as "—" when it is missing. */
+export interface Figure {
+  label: string
+  value: string
+}
+
+/** The figures in display order. */
+defineProps<{ figures: Figure[] }>()
 </script>
 
 <template>
   <dl class="figures">
-    <div v-for="[label, value] in figures" :key="label">
-      <dt>{{ label }}</dt>
-      <dd>{{ value }}</dd>
+    <div v-for="f in figures" :key="f.label">
+      <dt>{{ f.label }}</dt>
+      <dd class="stat-value">{{ f.value }}</dd>
     </div>
   </dl>
 </template>
@@ -42,7 +48,5 @@ dt {
 dd {
   margin: 2px 0 0;
   font-size: 1.15rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 </style>

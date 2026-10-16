@@ -4,7 +4,7 @@ import { computed, nextTick, ref } from 'vue'
 import { DIFFICULTIES, LABELS, type Difficulty } from '../lib/difficulty'
 import { countsOf, formatDuration, statisticsOf, type Counts, type Spread, type StatResult } from '../lib/statistics'
 import { useResultsStore } from '../stores/results'
-import StatFigures from './StatFigures.vue'
+import StatFigures, { type Figure } from './StatFigures.vue'
 
 const props = defineProps<{ current: Difficulty }>()
 const emit = defineEmits<{ back: [] }>()
@@ -22,18 +22,23 @@ const shown = <T>(value: T | null, format: (v: T) => string) => (value === null 
 const percent = (share: number) => `${Math.round(share)}%`
 const tenths = (n: number) => n.toFixed(1)
 
-const countFigures = (counts: Counts): [string, string][] => [
-  ['Played', String(counts.played)],
-  ['Solved', String(counts.solved)],
-  ['Abandoned', String(counts.abandoned)],
-  ['Solve rate', shown(counts.solveRate, (rate) => percent(rate * 100))],
+const countFigures = (counts: Counts): Figure[] => [
+  { label: 'Played', value: String(counts.played) },
+  { label: 'Solved', value: String(counts.solved) },
+  { label: 'Abandoned', value: String(counts.abandoned) },
+  { label: 'Solve rate', value: shown(counts.solveRate, (rate) => percent(rate * 100)) },
 ]
 
-const solvedFigures = computed((): [string, string][] => [
-  ['Best time', shown(stats.value.bestTime, formatDuration)],
-  ['Average time', shown(stats.value.averageTime, formatDuration)],
-  ['Average mistakes', shown(stats.value.averageMistakes, tenths)],
-  ['Flawless', shown(stats.value.flawless, String)],
+const solvedFigures = computed((): Figure[] => [
+  { label: 'Best time', value: shown(stats.value.bestTime, formatDuration) },
+  { label: 'Average time', value: shown(stats.value.averageTime, formatDuration) },
+  { label: 'Average mistakes', value: shown(stats.value.averageMistakes, tenths) },
+  { label: 'Flawless', value: shown(stats.value.flawless, String) },
+])
+
+const streakFigures = computed((): Figure[] => [
+  { label: 'Current', value: String(stats.value.currentStreak) },
+  { label: 'Best', value: String(stats.value.bestStreak) },
 ])
 
 const rating = (label: string, spread: Spread | null, format: (n: number) => string) => ({
@@ -117,14 +122,14 @@ async function onTabKeydown(e: KeyboardEvent) {
         <StatFigures :figures="solvedFigures" />
 
         <h3>Streaks</h3>
-        <StatFigures :figures="[['Current', String(stats.currentStreak)], ['Best', String(stats.bestStreak)]]" />
+        <StatFigures :figures="streakFigures" />
 
         <h3>Ratings</h3>
         <dl class="list">
           <div v-for="r in ratings" :key="r.label">
             <dt>{{ r.label }}</dt>
             <dd>
-              <span class="value">{{ r.average }}</span>
+              <span class="stat-value">{{ r.average }}</span>
               <span v-if="r.range" class="range">{{ r.range }}</span>
             </dd>
           </div>
@@ -136,7 +141,7 @@ async function onTabKeydown(e: KeyboardEvent) {
           <dl class="list">
             <div v-for="f in stats.families" :key="f.family">
               <dt>{{ f.family }}</dt>
-              <dd class="value">{{ f.solved }}/{{ f.played }}</dd>
+              <dd class="stat-value">{{ f.solved }}/{{ f.played }}</dd>
             </div>
           </dl>
         </template>
@@ -250,11 +255,6 @@ async function onTabKeydown(e: KeyboardEvent) {
   align-items: baseline;
   gap: 8px;
   margin: 0;
-}
-
-.value {
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 
 .range {

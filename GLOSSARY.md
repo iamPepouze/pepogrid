@@ -79,6 +79,10 @@ _Avoid_: Win rate
 A run of consecutive solved results at one difficulty, broken by an abandoned one.
 _Avoid_: Winning streak
 
+**Flawless**:
+A solved result with no mistakes.
+_Avoid_: Perfect game, clean solve
+
 **Matching-number highlight**:
 An optional tint on every cell holding the digit of the selected cell.
 

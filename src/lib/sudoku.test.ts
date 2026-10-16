@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import sample from './__fixtures__/rated-sample.json'
 import { loadBank, pickFromBank } from './bank'
 import { DIFFICULTIES, TIERS, familyOf, tierOf, type Difficulty, type HodokuLevel } from './difficulty'
@@ -160,8 +160,11 @@ describe('family rotation', () => {
 })
 
 describe('statistics', () => {
-  /** End times one minute apart, in the order the results are built. */
+  /** End times one minute apart, in the order each test builds its results. */
   let minute = 0
+  beforeEach(() => {
+    minute = 0
+  })
   const nextEnd = () => new Date(Date.UTC(2026, 9, 1) + minute++ * 60_000).toISOString()
   const result = (difficulty: Difficulty, outcome: StatResult['outcome'], fields: Partial<StatResult>): StatResult => ({
     difficulty, outcome, endedAt: nextEnd(), elapsed: 600, mistakes: 0, progress: outcome === 'completed' ? 100 : 40,
