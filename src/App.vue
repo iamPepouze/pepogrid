@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Plus } from '@lucide/vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import AppDialog from './components/AppDialog.vue'
+import AppDialog, { type DialogContent } from './components/AppDialog.vue'
 import DifficultyMenu from './components/DifficultyMenu.vue'
 import GameControls from './components/GameControls.vue'
 import NumberPad from './components/NumberPad.vue'
@@ -22,22 +22,13 @@ const { canInstall, install } = useInstall()
 /** Ratings of the current puzzle, shown only for the tiers that display them. */
 const shownRating = computed(() => (TIERS[game.difficulty].showRating ? game.rating : null))
 
-/** What the open dialog shows, and how to report the player's answer; null while none is open. */
-interface Prompt {
-  title: string
-  message: string
-  confirmLabel: string
-  cancelLabel?: string
-  resolve: (confirmed: boolean) => void
-}
+/** The open dialog's content, and how to report the player's answer; null while no dialog is open. */
+const prompt = ref<{ content: DialogContent; resolve: (confirmed: boolean) => void } | null>(null)
 
-const prompt = ref<Prompt | null>(null)
-
-/** Opens the in-app dialog and resolves with whether the player confirmed. A newer prompt cancels the open one. */
-function ask(options: Omit<Prompt, 'resolve'>) {
-  prompt.value?.resolve(false)
+/** Opens the in-app dialog and resolves with whether the player confirmed. */
+function ask(content: DialogContent) {
   return new Promise<boolean>((resolve) => {
-    prompt.value = { ...options, resolve }
+    prompt.value = { content, resolve }
   })
 }
 
@@ -52,7 +43,7 @@ async function loadGame(difficulty: Difficulty, options?: { recordAbandoned?: bo
     await game.newGame(difficulty, options)
   } catch (error) {
     console.error(error)
-    await ask({ title: `Couldn't load a ${LABELS[difficulty]} puzzle`, message: 'Check your connection and try again.', confirmLabel: 'OK' })
+    await ask({ title: `Couldn't load a new ${LABELS[difficulty]} puzzle`, message: 'Check your connection and try again.', confirmLabel: 'OK' })
   }
 }
 
@@ -84,6 +75,8 @@ const ARROWS: Record<string, [number, number]> = {
 }
 
 function onKeydown(e: KeyboardEvent) {
+  // Focus can leave the dialog's buttons (a tap on its text lands on <body>), so check the dialog itself.
+  if (prompt.value) return
   if (e.target instanceof Element && e.target.closest('[data-own-keys]')) return
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'z') {
     e.preventDefault()
@@ -189,13 +182,13 @@ onBeforeUnmount(() => {
       <SettingsMenu />
       <button
         type="button"
-        class="new-game"
+        class="new-game icon-button"
         aria-label="New game"
         title="New game"
         :disabled="game.loading"
         @click="startGame(game.difficulty)"
       >
-        <Plus class="icon" aria-hidden="true" />
+        <Plus aria-hidden="true" />
       </button>
       <DifficultyMenu :current="game.difficulty" :disabled="game.loading" @select="startGame" />
     </header>
@@ -233,14 +226,7 @@ onBeforeUnmount(() => {
       </p>
     </main>
 
-    <AppDialog
-      v-if="prompt"
-      :title="prompt.title"
-      :message="prompt.message"
-      :confirm-label="prompt.confirmLabel"
-      :cancel-label="prompt.cancelLabel"
-      @close="closePrompt"
-    />
+    <AppDialog v-if="prompt" v-bind="prompt.content" @close="closePrompt" />
   </div>
 </template>
 
@@ -301,28 +287,9 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
-.new-game {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid var(--button-border);
-  border-radius: 10px;
-  background: var(--button-bg);
-  color: var(--text);
-  cursor: pointer;
-}
-
 .new-game:disabled {
   opacity: 0.6;
   cursor: progress;
-}
-
-.new-game .icon {
-  width: 20px;
-  height: 20px;
 }
 
 .game {

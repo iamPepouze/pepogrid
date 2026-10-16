@@ -1,21 +1,39 @@
 <script setup lang="ts">
 /**
  * Modal message in the app's own style, used instead of window.confirm and window.alert,
- * which iOS home-screen apps don't show reliably. Without a cancelLabel it is a lone-button alert.
+ * which iOS home-screen apps don't show reliably.
  */
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
-defineProps<{ title: string; message: string; confirmLabel: string; cancelLabel?: string }>()
+/** What the dialog says. Without a cancelLabel it is a lone-button alert. */
+export interface DialogContent {
+  title: string
+  message: string
+  confirmLabel: string
+  cancelLabel?: string
+}
+
+defineProps<DialogContent>()
 const emit = defineEmits<{ close: [confirmed: boolean] }>()
 
 const dialog = ref<HTMLDialogElement | null>(null)
 const cancelButton = ref<HTMLButtonElement | null>(null)
 const confirmButton = ref<HTMLButtonElement | null>(null)
 
+/** What had focus before the dialog opened, to hand focus back to. */
+let opener: HTMLElement | null = null
+
 onMounted(() => {
+  opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
   dialog.value?.showModal()
   // Focus Cancel when there is one, so a stray Enter is harmless.
   ;(cancelButton.value ?? confirmButton.value)?.focus()
+})
+
+// The parent closes the dialog by unmounting it. Close it first: while modal, it leaves the opener inert and unfocusable.
+onBeforeUnmount(() => {
+  dialog.value?.close()
+  opener?.focus()
 })
 
 /** A click on the dialog element itself, not its content, landed on the backdrop. */
