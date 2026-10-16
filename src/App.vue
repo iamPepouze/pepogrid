@@ -78,6 +78,8 @@ function onKeydown(e: KeyboardEvent) {
     game.erase()
   } else if (e.key.toLowerCase() === 'n') {
     game.toggleNotesMode()
+  } else if (e.key.toLowerCase() === 'f' && !e.shiftKey) {
+    game.fillNotes()
   }
 }
 
@@ -184,7 +186,7 @@ onBeforeUnmount(() => {
 
       <p class="hints">
         <kbd>1</kbd>–<kbd>9</kbd> place · <kbd>Shift</kbd>+digit note · <kbd>N</kbd> notes mode ·
-        <kbd>Del</kbd> erase · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo · arrows move
+        <kbd>F</kbd> fill notes · <kbd>Del</kbd> erase · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo · arrows move
       </p>
     </main>
   </div>

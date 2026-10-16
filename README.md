@@ -20,10 +20,11 @@ A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and
 
   Puzzles come from a bundled bank of 1000 per tier, rated offline by the real tools. Each game disguises its puzzle with a random digit relabelling, row/column shuffles and transposition, and a tier's puzzles don't repeat until all have been played. Expert and Master show the SE rating in the status bar, and the full ratings once solved.
 - **Notes (pencil marks).** Use the *Notes* button or press `N` to toggle notes mode. To add a single note, press `Shift` + digit, or long-press a number pad button on touch screens. Placing a number clears that digit from the notes in its row, column and box.
+- **Fill notes.** The *Fill notes* button or `F` replaces every empty cell's notes with the digits not yet placed in its row, column or box, wrong ones included, so it gives nothing away. One Undo brings back the notes you had. The button greys out when it would change nothing.
 - **Error checking.** Digits that don't match the solution are shown in red. Cells that clash in a row, column or box are tinted red. A mistake counter tracks wrong entries.
 - **Timer, Undo, Erase.** The timer pauses while the tab is hidden.
 - **Auto-save.** The game in progress, including the selected cell, notes mode and undo history, is saved after every change. A browser refresh resumes exactly where you were.
-- **Results history.** Solved games are recorded, and so are games abandoned by starting a new one after any progress. Each record has the difficulty, outcome, start/end time, time played, mistakes, progress %, the puzzle, solution and final board, and its ratings (SE, HoDoKu score and level, hardest technique). The 1000 most recent are kept.
+- **Results history.** Solved games are recorded, and so are games abandoned by starting a new one after placing at least one digit (notes alone don't count, though starting over still asks first). Each record has the difficulty, outcome, start/end time, time played, mistakes, progress %, the puzzle, solution and final board, and its ratings (SE, HoDoKu score and level, hardest technique). The 1000 most recent are kept.
 - **Mobile-first layout.** On phones, a compact header sits above the board, with controls and the number pad at the bottom. In landscape and on wide screens, the board sits beside the controls. Keyboard hints show only on devices with a mouse.
 - **Matching numbers.** Selecting a filled cell tints the other cells with the same digit and emphasizes that digit in notes. This can be turned off in the gear menu (*Highlight matching numbers*).
 - **Complete digits.** Once a digit sits in every cell that needs it, its number pad button greys out and stops responding, keyboard key included. Wrong copies don't count. Placing the last one clears any leftover notes of that digit and sends a soft glow across its cells, unless the device asks for reduced motion. Undo or Erase brings the button back.
@@ -39,6 +40,7 @@ A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and
 | `1`–`9` | Place a digit (or a note, in notes mode) |
 | `Shift` + `1`–`9` | Toggle a note |
 | `N` | Toggle notes mode |
+| `F` | Fill notes |
 | `Backspace` / `Delete` / `0` | Erase cell |
 | `Ctrl` + `Z` | Undo |
 | Arrow keys | Move selection |
@@ -78,13 +80,13 @@ npm run build      # type-check and build to dist/ (includes the service worker)
 npm run preview    # serve the production build to test the PWA locally
 ```
 
-Each test draws its random puzzles from a fresh seed. A failing test prints `Replay this test with TEST_SEED=<n>`; replay it with the same puzzles by running `TEST_SEED=<n> npm test` in Bash, or `$env:TEST_SEED=<n>; npm test` in PowerShell.
+Each test draws its random puzzles from a fresh seed. A failing test's error ends with `Replay this test with TEST_SEED=<n>`; replay it with the same puzzles by running `TEST_SEED=<n> npm test` in Bash, or `$env:TEST_SEED=<n>; npm test` in PowerShell. A test that passes only for some puzzles is caught by [scripts/test-seeds.sh](scripts/test-seeds.sh), which reruns the tests related to files changed since `origin/main` under seeds 1–20 (`bash scripts/test-seeds.sh`, about 40 seconds).
 
 If a script fails because `vitest`, `vue-tsc` or `eslint` is "not recognized" or "not found", `node_modules` is likely incomplete: run `npm ci` to reinstall it from the lockfile.
 
 Dependency install scripts run only when `allowScripts` in [package.json](package.json) approves them, and [.npmrc](.npmrc) makes an unreviewed one fail the install. Both scripts in the tree are denied: esbuild's only re-fetches or relinks the native binary its optional `@esbuild/<platform>` package already installs, and fsevents (macOS only) rebuilds a binary the package already ships. The policy needs the npm version set in `devEngines`, which recent Node 24 releases bundle; older npm ignores `allowScripts` and runs every script. After adding a dependency that has an install script, run `npm install-scripts approve <pkg>` or `npm install-scripts deny <pkg>` to record a decision.
 
-Changes reach `main` through pull requests, which must pass the `check` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) (`npm run lint`, `npm test`, `npm run build`, plus actionlint on the workflows and shellcheck on `scripts/*.sh`); see [docs/agents/ci.md](docs/agents/ci.md). Every push to `main` reruns `check` and deploys the build to GitHub Pages ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)).
+Changes reach `main` through pull requests, which must pass the `check` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) (`npm run lint`, `npm test`, `scripts/test-seeds.sh`, `npm run build`, plus actionlint on the workflows and shellcheck on `scripts/*.sh`); see [docs/agents/ci.md](docs/agents/ci.md). Every push to `main` reruns `check` and deploys the build to GitHub Pages ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)).
 
 Code follows [CODING_STANDARDS.md](CODING_STANDARDS.md), which `/code-review` checks every change against.
 

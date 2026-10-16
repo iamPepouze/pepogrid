@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { pickFromBank } from '../lib/bank'
 import { DIFFICULTIES, HODOKU_LEVELS, type Difficulty, type Rating } from '../lib/difficulty'
-import { PEERS, UNITS, bit, colOf, rowOf, unitsOf } from '../lib/sudoku'
+import { PEERS, UNITS, bit, candidatesAt, colOf, rowOf, unitsOf } from '../lib/sudoku'
 import { gridToString, useResultsStore, type Outcome } from './results'
 
 const HISTORY_LIMIT = 100
@@ -120,9 +120,11 @@ export const useGameStore = defineStore(
 
     const peers = computed(() => new Set(selected.value === null ? [] : PEERS[selected.value]))
 
-    const hasProgress = computed(
-      () => values.value.some((v, i) => v !== puzzle.value[i]) || notes.value.some((n) => n !== 0),
-    )
+    /** True once the player has placed a digit, right or wrong: only then is a replaced game recorded as abandoned. */
+    const hasPlacedDigit = computed(() => values.value.some((v, i) => v !== puzzle.value[i]))
+
+    /** True once the player has placed a digit or written a note: what a new game would throw away. */
+    const hasProgress = computed(() => hasPlacedDigit.value || notes.value.some((n) => n !== 0))
 
     function recordResult(outcome: Outcome) {
       const empties = puzzle.value.filter((v) => v === 0).length
@@ -145,13 +147,13 @@ export const useGameStore = defineStore(
       })
     }
 
-    /** Starts a new puzzle; an unfinished game with progress is recorded as abandoned. */
+    /** Starts a new puzzle; an unfinished game with a placed digit is recorded as abandoned. */
     async function newGame(level: Difficulty, { recordAbandoned = true } = {}) {
       if (loading.value) return
       loading.value = true
       try {
         const pick = await pickFromBank(level, bankUsed.value[level] ?? [], familyPlayed.value[level] ?? {})
-        if (recordAbandoned && isValid() && !completed.value && hasProgress.value) recordResult('abandoned')
+        if (recordAbandoned && isValid() && !completed.value && hasPlacedDigit.value) recordResult('abandoned')
         bankUsed.value[level] = pick.restarted ? [pick.index] : [...(bankUsed.value[level] ?? []), pick.index]
         // Strictly increasing, so two games in the same millisecond still order correctly.
         const plays = familyPlayed.value[level] ?? {}
@@ -250,6 +252,18 @@ export const useGameStore = defineStore(
       else setValue(d)
     }
 
+    /** Every empty cell's notes as the digits none of its peers holds, mistakes included. */
+    const filledNotes = computed(() => values.value.map((v, i) => (v ? 0 : candidatesAt(values.value, i))))
+
+    /** False when filling would change no cell's notes, which includes a solved grid. */
+    const canFillNotes = computed(() => !loading.value && filledNotes.value.some((n, i) => n !== notes.value[i]))
+
+    function fillNotes() {
+      if (!canFillNotes.value) return
+      pushHistory()
+      notes.value = filledNotes.value.slice()
+    }
+
     function erase() {
       const i = editableCell()
       if (i === null || (values.value[i] === 0 && notes.value[i] === 0)) return
@@ -311,6 +325,7 @@ export const useGameStore = defineStore(
       completeDigits,
       peers,
       hasProgress,
+      canFillNotes,
       isGiven,
       isLocked,
       isWrong,
@@ -319,6 +334,7 @@ export const useGameStore = defineStore(
       move,
       input,
       toggleNote,
+      fillNotes,
       erase,
       undo,
       toggleNotesMode,

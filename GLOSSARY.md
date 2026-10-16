@@ -51,12 +51,16 @@ One attempt at one puzzle, from start until it is solved or abandoned.
 **Notes mode**:
 The input mode in which entering a digit toggles a note instead of placing it.
 
+**Fill notes**:
+The one-off action that sets every empty cell's notes to the digits none of its peers holds, mistakes included, replacing the notes the player wrote.
+_Avoid_: Auto notes, auto candidates
+
 **Solved**:
 The outcome of a game whose grid has been filled to match the solution.
 _Avoid_: Completed, won, finished
 
 **Abandoned**:
-The outcome of a game replaced by a new one after the player had made progress.
+The outcome of a game replaced by a new one after the player had placed at least one digit, right or wrong; notes alone do not count.
 _Avoid_: Quit, lost
 
 **Result**:

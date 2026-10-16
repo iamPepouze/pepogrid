@@ -1,6 +1,6 @@
 /**
  * Vitest setup: seeds Math.random for every test, so a random puzzle pick or transform can be
- * replayed. Each test gets a fresh seed, or TEST_SEED when set; a failure prints the seed.
+ * replayed. Each test gets a fresh seed, or TEST_SEED when set; a failure's error ends with the seed.
  */
 import { beforeEach, vi } from 'vitest'
 
@@ -21,7 +21,10 @@ beforeEach(({ onTestFailed }) => {
   const fixed = import.meta.env.TEST_SEED
   const seed = fixed ? Number(fixed) : Math.floor(unseeded() * 2 ** 32)
   const random = vi.spyOn(Math, 'random').mockImplementation(mulberry32(seed))
-  onTestFailed(() => console.error(`Replay this test with TEST_SEED=${seed}`))
+  // In the error itself, so output filtered down to the failures still carries the seed.
+  onTestFailed(({ task }) => {
+    for (const error of task.result?.errors ?? []) error.message += `\nReplay this test with TEST_SEED=${seed}`
+  })
   // Only this spy: a test file's own spies keep their lifetime.
   return () => random.mockRestore()
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Eraser, Pencil, Plus, Undo2 } from '@lucide/vue'
+import { Eraser, Pencil, Plus, Undo2, WandSparkles } from '@lucide/vue'
 import { useGameStore } from '../stores/game'
 
 const game = useGameStore()
@@ -29,7 +29,11 @@ defineEmits<{ newGame: [] }>()
       <span>Notes</span>
       <span class="badge" aria-hidden="true">{{ game.notesMode ? 'ON' : 'OFF' }}</span>
     </button>
-    <button type="button" class="control" @click="$emit('newGame')">
+    <button type="button" class="control" :disabled="!game.canFillNotes" @click="game.fillNotes">
+      <WandSparkles class="icon" aria-hidden="true" />
+      <span>Fill notes</span>
+    </button>
+    <button type="button" class="control full-row" @click="$emit('newGame')">
       <Plus class="icon" aria-hidden="true" />
       <span>New game</span>
     </button>
@@ -39,7 +43,7 @@ defineEmits<{ newGame: [] }>()
 <style scoped>
 .controls {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
 }
 
@@ -100,38 +104,45 @@ defineEmits<{ newGame: [] }>()
   color: var(--accent);
 }
 
-/* Mouse and keyboard devices: icon left of the label. */
+/* Mouse and keyboard devices. */
 @media (hover: hover) and (pointer: fine) {
-  .control {
-    flex-direction: row;
-    gap: 6px;
-    min-height: 44px;
-    padding: 8px 6px;
-    font-size: 0.875rem;
-    white-space: nowrap;
-  }
-
-  .icon {
-    width: 18px;
-    height: 18px;
-  }
-
-  .badge {
-    top: 4px;
-    right: 4px;
-    padding: 1px 5px;
-    font-size: 0.6rem;
-  }
-
   .control:hover:not(:disabled, .active) {
     background: var(--peer);
   }
-}
 
-/* The desktop side panel is too narrow for four inline labels in a row. */
-@media (orientation: landscape) and (min-width: 600px) and (hover: hover) and (pointer: fine) {
-  .controls {
-    grid-template-columns: repeat(2, 1fr);
+  /* Icon left of the label, in the side panel or once five such buttons fit in a row. */
+  @media (orientation: landscape) and (min-width: 600px), (min-width: 760px) {
+    .control {
+      flex-direction: row;
+      gap: 6px;
+      min-height: 44px;
+      padding: 8px 6px;
+      font-size: 0.875rem;
+      white-space: nowrap;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    .badge {
+      top: 4px;
+      right: 4px;
+      padding: 1px 5px;
+      font-size: 0.6rem;
+    }
+  }
+
+  /* The side panel is too narrow for inline labels in one row: two columns, with New game alone on the last. */
+  @media (orientation: landscape) and (min-width: 600px) {
+    .controls {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .full-row {
+      grid-column: 1 / -1;
+    }
   }
 }
 </style>
