@@ -25,7 +25,7 @@ Re-apply these after updating the skills in `skills-lock.json`:
 
 The **branch file** is `.scratch/<branch>.md` (gitignored), with any `/` in the branch name turned into `-`. It holds the branch's spec and review state.
 
-- **Branch names**: when work starts on `main`, branch before the first commit. Name it `<type>/<kebab-case summary>`, e.g. `feat/fill-notes`, where `<type>` is the Conventional Commits type of the branch's main purpose: feat, fix, docs, style, refactor, perf, test, build, ci, chore or revert. Title its PR `<type>: <lowercase summary>` with the same type: squash merge makes the title the commit on `main`, so branch commits stay free-form.
+- **Branch names**: when work starts on `main`, branch before the first commit, named `<type>/<kebab-case summary>` with no issue number, e.g. `feat/fill-notes`, where `<type>` is the Conventional Commits type of the branch's main purpose. Title its PR `<type>: <lowercase summary>` with the same type and no scope.
 - **Grilling**: put each round through AskUserQuestion, recommended option first, at most 4 questions per call (this overrides the vendored skill's text format).
 - **After grilling**: when a grilling session ends, stop at the recap of settled decisions: no plan approval, no implementation. The user picks the next step, `/to-spec` or `/implement`. In plan mode, end with AskUserQuestion offering those two.
 - **`/implement`**: commit before calling `/code-review`, since it reviews commits, not the working tree (this overrides the vendored skill's order). Reference the spec issue with `Closes #N` when the work comes from one. With no spec issue, first write the grilling recap to the branch file: it is the spec `/code-review` finds.

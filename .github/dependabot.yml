@@ -6,7 +6,6 @@ updates:
     directory: /
     commit-message:
       prefix: chore
-      include: scope
     schedule:
       interval: weekly
     cooldown:
@@ -31,7 +30,6 @@ updates:
     directory: /
     commit-message:
       prefix: chore
-      include: scope
     schedule:
       interval: weekly
     cooldown:
@@ -46,7 +44,6 @@ updates:
     directory: /.github/lint
     commit-message:
       prefix: chore
-      include: scope
     schedule:
       interval: weekly
     cooldown:
