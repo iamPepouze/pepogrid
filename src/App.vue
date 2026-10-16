@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { Plus } from '@lucide/vue'
+import { ChartColumn, Plus } from '@lucide/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import AppDialog, { type DialogContent } from './components/AppDialog.vue'
 import DifficultyMenu from './components/DifficultyMenu.vue'
 import GameControls from './components/GameControls.vue'
 import NumberPad from './components/NumberPad.vue'
 import SettingsMenu from './components/SettingsMenu.vue'
+import StatisticsView from './components/StatisticsView.vue'
 import SudokuBoard from './components/SudokuBoard.vue'
 import { useInstall } from './composables/useInstall'
 import { useTheme } from './composables/useTheme'
@@ -21,6 +22,16 @@ const { canInstall, install } = useInstall()
 
 /** Ratings of the current puzzle, shown only for the difficulties that display them. */
 const shownRating = computed(() => (TIERS[game.difficulty].showRating ? game.rating : null))
+
+/** True while Statistics stands in for the game: the timer and the board keys pause meanwhile. */
+const statisticsOpen = ref(false)
+const statisticsButton = ref<HTMLButtonElement | null>(null)
+
+/** Opens Statistics, or goes back to the game; focus lands on the Statistics button either way. */
+function toggleStatistics() {
+  statisticsOpen.value = !statisticsOpen.value
+  statisticsButton.value?.focus()
+}
 
 /** The open dialog's content, and how to report the player's answer; null while no dialog is open. */
 const prompt = ref<{ content: DialogContent; resolve: (confirmed: boolean) => void } | null>(null)
@@ -92,7 +103,7 @@ const ARROWS: Record<string, [number, number]> = {
 
 function onKeydown(e: KeyboardEvent) {
   // Focus can leave the dialog's buttons (a tap on its text lands on <body>), so check the dialog itself.
-  if (prompt.value) return
+  if (prompt.value || statisticsOpen.value) return
   if (e.target instanceof Element && e.target.closest('[data-own-keys]')) return
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'z') {
     e.preventDefault()
@@ -145,7 +156,8 @@ function fitBoard() {
   const header = headerEl.value
   const main = gameEl.value
   const area = boardAreaEl.value
-  if (!app || !header || !main || !area) return
+  // A hidden game measures as empty, so keep the size it had until it shows again.
+  if (!app || !header || !main || !area || statisticsOpen.value) return
   if (SIDE_BY_SIDE.matches) {
     app.style.removeProperty('--board-size')
     return
@@ -168,9 +180,9 @@ let resizeObserver: ResizeObserver | undefined
 
 onMounted(() => {
   window.addEventListener('keydown', onKeydown)
-  // The timer only runs while the tab is visible.
+  // The timer only runs while the tab is visible and the board is on screen.
   timer = window.setInterval(() => {
-    if (document.visibilityState === 'visible') game.tick()
+    if (document.visibilityState === 'visible' && !statisticsOpen.value) game.tick()
   }, 1000)
 
   // Refit when the window resizes or content changes height (win banner, install button).
@@ -198,19 +210,36 @@ onBeforeUnmount(() => {
       <button v-if="canInstall" type="button" class="install" @click="install">Install</button>
       <SettingsMenu />
       <button
+        ref="statisticsButton"
         type="button"
-        class="new-game icon-button"
-        aria-label="New game"
-        title="New game"
+        class="icon-button"
+        aria-label="Statistics"
+        title="Statistics"
+        :aria-pressed="statisticsOpen"
         :disabled="game.loading"
-        @click="startGame(game.difficulty, $event.currentTarget)"
+        @click="toggleStatistics"
       >
-        <Plus aria-hidden="true" />
+        <ChartColumn aria-hidden="true" />
       </button>
-      <DifficultyMenu :current="game.difficulty" :disabled="game.loading" @select="startGame" />
+      <template v-if="!statisticsOpen">
+        <button
+          type="button"
+          class="new-game icon-button"
+          aria-label="New game"
+          title="New game"
+          :disabled="game.loading"
+          @click="startGame(game.difficulty, $event.currentTarget)"
+        >
+          <Plus aria-hidden="true" />
+        </button>
+        <DifficultyMenu :current="game.difficulty" :disabled="game.loading" @select="startGame" />
+      </template>
     </header>
 
-    <main ref="gameEl" class="game">
+    <StatisticsView v-if="statisticsOpen" class="statistics-area" :current="game.difficulty" @back="toggleStatistics" />
+
+    <!-- Hidden rather than unmounted, so the board's element and the layout's observers outlive a look at Statistics. -->
+    <main v-show="!statisticsOpen" ref="gameEl" class="game">
       <div class="status-area">
         <div class="status">
           <span>Mistakes: <strong>{{ game.mistakes }}</strong></span>
@@ -270,6 +299,14 @@ onBeforeUnmount(() => {
   width: var(--board-size, 100%);
 }
 
+/* Statistics takes the rest of the height and scrolls inside it, under a header that stays put. */
+.statistics-area {
+  flex: 1;
+  min-height: 0;
+  width: var(--board-size, 100%);
+  overflow-y: auto;
+}
+
 .topbar {
   position: relative;
   display: flex;
@@ -306,9 +343,9 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
-.new-game:disabled {
-  opacity: 0.6;
-  cursor: progress;
+.icon-button[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .game {
@@ -433,6 +470,11 @@ kbd {
 
   .app > :is(.topbar, .game) {
     width: auto;
+  }
+
+  .statistics-area {
+    align-self: center;
+    width: min(100%, 640px);
   }
 
   .game {

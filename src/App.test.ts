@@ -195,4 +195,79 @@ describe('App', () => {
     await flushPromises()
     expect(document.activeElement).toBe(button.element)
   })
+
+  describe('Statistics', () => {
+    const statisticsButton = '.topbar button[aria-label="Statistics"]'
+
+    it('swaps the game for Statistics, and Back returns to the game with focus on the Statistics button', async () => {
+      const app = await mountApp()
+      const button = app.find<HTMLButtonElement>(statisticsButton)
+
+      await button.trigger('click')
+      expect(button.attributes('aria-pressed')).toBe('true')
+      expect(app.find('.statistics').exists()).toBe(true)
+      expect(app.find<HTMLElement>('.game').element.style.display).toBe('none')
+      expect(app.find(newGameButton).exists()).toBe(false)
+
+      await app.findAll('.statistics button').find((b) => b.text() === 'Back')!.trigger('click')
+      expect(app.find('.statistics').exists()).toBe(false)
+      expect(app.find<HTMLElement>('.game').element.style.display).toBe('')
+      expect(app.find(newGameButton).exists()).toBe(true)
+      expect(document.activeElement).toBe(button.element)
+    })
+
+    it('disables the Statistics button while a puzzle loads, so no game is dealt behind it', async () => {
+      const app = await mountApp()
+      const button = app.find<HTMLButtonElement>(statisticsButton)
+
+      await app.find(newGameButton).trigger('click')
+      expect(button.element.disabled).toBe(true)
+      await settle()
+      await flushPromises()
+      expect(button.element.disabled).toBe(false)
+    })
+
+    it('goes back to the game when the Statistics button is pressed again', async () => {
+      const app = await mountApp()
+      await app.find(statisticsButton).trigger('click')
+      await app.find(statisticsButton).trigger('click')
+      expect(app.find('.statistics').exists()).toBe(false)
+      expect(app.find(statisticsButton).attributes('aria-pressed')).toBe('false')
+    })
+
+    it('stops the timer while Statistics is open', async () => {
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+      try {
+        const app = await mountApp()
+        const game = useGameStore()
+        await app.find(statisticsButton).trigger('click')
+        vi.advanceTimersByTime(5000)
+        expect(game.elapsed).toBe(0)
+
+        await app.find(statisticsButton).trigger('click')
+        vi.advanceTimersByTime(2000)
+        expect(game.elapsed).toBe(2)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('leaves the board alone when a key is pressed while Statistics is open', async () => {
+      const app = await mountApp()
+      const game = useGameStore()
+      const [cell] = nonGivensOf(game, [...game.puzzle.keys()])
+      game.select(cell)
+      await app.find(statisticsButton).trigger('click')
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: '5', code: 'Digit5' }))
+      expect(game.values[cell]).toBe(0)
+    })
+
+    it('opens Statistics on the current game’s difficulty', async () => {
+      const app = await mountApp()
+      await useGameStore().newGame('hard')
+      await app.find(statisticsButton).trigger('click')
+      expect(app.find('[role="tab"][aria-selected="true"]').text()).toBe('Hard')
+    })
+  })
 })

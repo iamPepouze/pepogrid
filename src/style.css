@@ -107,7 +107,15 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
-/* Square icon-only button in the header: settings and new game. */
+/* Bordered box in the button colours: the icon buttons, and Statistics' Back button and cards. */
+:is(.icon-button, .surface) {
+  border: 1px solid var(--button-border);
+  border-radius: 10px;
+  background: var(--button-bg);
+  color: var(--text);
+}
+
+/* Square icon-only button in the header: settings, statistics and new game. */
 .icon-button {
   display: flex;
   align-items: center;
@@ -115,10 +123,6 @@ button:focus-visible {
   width: 36px;
   height: 36px;
   padding: 0;
-  border: 1px solid var(--button-border);
-  border-radius: 10px;
-  background: var(--button-bg);
-  color: var(--text);
   cursor: pointer;
 }
 
@@ -127,8 +131,13 @@ button:focus-visible {
   height: 18px;
 }
 
+.icon-button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
 @media (hover: hover) and (pointer: fine) {
-  .icon-button:hover:not(:disabled) {
+  :is(.icon-button, button.surface):hover:not(:disabled) {
     background: var(--peer);
   }
 }
