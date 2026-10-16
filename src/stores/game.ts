@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { pickFromBank } from '../lib/bank'
 import { DIFFICULTIES, HODOKU_LEVELS, type Difficulty, type Rating } from '../lib/difficulty'
-import { PEERS, UNITS, bit, colOf, rowOf, unitsOf } from '../lib/sudoku'
+import { PEERS, UNITS, bit, candidatesAt, colOf, rowOf, unitsOf } from '../lib/sudoku'
 import { gridToString, useResultsStore, type Outcome } from './results'
 
 const HISTORY_LIMIT = 100
@@ -250,6 +250,18 @@ export const useGameStore = defineStore(
       else setValue(d)
     }
 
+    /** Every empty cell's notes as the digits none of its peers holds, mistakes included. */
+    const filledNotes = computed(() => values.value.map((v, i) => (v ? 0 : candidatesAt(values.value, i))))
+
+    /** False when filling would change no cell's notes, which includes a solved grid. */
+    const canFillNotes = computed(() => !loading.value && filledNotes.value.some((n, i) => n !== notes.value[i]))
+
+    function fillNotes() {
+      if (!canFillNotes.value) return
+      pushHistory()
+      notes.value = filledNotes.value.slice()
+    }
+
     function erase() {
       const i = editableCell()
       if (i === null || (values.value[i] === 0 && notes.value[i] === 0)) return
@@ -311,6 +323,7 @@ export const useGameStore = defineStore(
       completeDigits,
       peers,
       hasProgress,
+      canFillNotes,
       isGiven,
       isLocked,
       isWrong,
@@ -319,6 +332,7 @@ export const useGameStore = defineStore(
       move,
       input,
       toggleNote,
+      fillNotes,
       erase,
       undo,
       toggleNotesMode,

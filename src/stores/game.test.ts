@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { PEERS, ROWS, bit, rowOf, unitsOf } from '../lib/sudoku'
+import { PEERS, ROWS, bit, digitsOf, rowOf, unitsOf } from '../lib/sudoku'
 import { useGameStore } from './game'
 import { useResultsStore } from './results'
 import { crossingColumn, fill, nonGivensOf, place, quietRow, type Game } from './testing'
@@ -311,6 +311,81 @@ describe('complete units', () => {
     expect(game.newlyComplete?.cells).toContain(row[0])
     expect(game.newlyComplete?.locked).toContain(column[column.length - 1])
     expect(game.newlyComplete?.locked.some((i) => row.includes(i))).toBe(false)
+  })
+})
+
+const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+describe('fill notes', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('notes in each empty cell exactly the digits none of its peers holds, and its solution digit', async () => {
+    const game = useGameStore()
+    await game.newGame('medium')
+    game.fillNotes()
+
+    game.values.forEach((v, i) => {
+      if (v) return expect(game.notes[i]).toBe(0)
+      const held = new Set(PEERS[i].map((p) => game.values[p]))
+      expect(digitsOf(game.notes[i])).toEqual(DIGITS.filter((d) => !held.has(d)))
+      expect(digitsOf(game.notes[i])).toContain(game.solution[i])
+    })
+  })
+
+  it('treats a mistake like any placed digit', async () => {
+    const game = useGameStore()
+    await game.newGame('medium')
+    // A mistake `wrong` at `i`, and an empty peer `j` that only this mistake keeps from having `wrong` as a candidate.
+    const empties = nonGivensOf(game, game.values.map((_, k) => k))
+    const pick = empties
+      .flatMap((i) => DIGITS.filter((d) => d !== game.solution[i]).map((wrong) => ({ i, wrong })))
+      .map(({ i, wrong }) => ({ i, wrong, j: PEERS[i].find((p) => game.values[p] === 0 && !PEERS[p].some((q) => game.values[q] === wrong)) }))
+      .find(({ j }) => j !== undefined)
+    if (!pick) throw new Error('no such mistake in this puzzle')
+    const { i, wrong, j } = pick
+    place(game, [i], wrong)
+    game.fillNotes()
+
+    expect(game.values[i]).toBe(wrong)
+    expect(digitsOf(game.notes[j!])).not.toContain(wrong)
+  })
+
+  it("replaces the player's notes, and one undo restores them", async () => {
+    const game = useGameStore()
+    await game.newGame('medium')
+    const i = firstNonGiven(game)
+    const held = game.values[PEERS[i].find((p) => game.values[p] !== 0)!]
+    game.select(i)
+    game.toggleNote(held) // a note no candidate backs
+    game.toggleNote(game.solution[i])
+    const written = game.notes.slice()
+    game.fillNotes()
+
+    expect(digitsOf(game.notes[i])).not.toContain(held)
+    game.undo()
+    expect(game.notes).toEqual(written)
+  })
+
+  it('is unavailable, and adds no undo step, when it would change no notes', async () => {
+    const game = useGameStore()
+    await game.newGame('medium')
+    expect(game.canFillNotes).toBe(true)
+    game.fillNotes()
+    const steps = game.history.length
+
+    expect(game.canFillNotes).toBe(false)
+    game.fillNotes()
+    expect(game.history).toHaveLength(steps)
+  })
+
+  it('is unavailable once the game is solved', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    solve(game)
+
+    expect(game.canFillNotes).toBe(false)
   })
 })
 

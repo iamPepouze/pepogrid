@@ -20,6 +20,7 @@ A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and
 
   Puzzles come from a bundled bank of 1000 per tier, rated offline by the real tools. Each game disguises its puzzle with a random digit relabelling, row/column shuffles and transposition, and a tier's puzzles don't repeat until all have been played. Expert and Master show the SE rating in the status bar, and the full ratings once solved.
 - **Notes (pencil marks).** Use the *Notes* button or press `N` to toggle notes mode. To add a single note, press `Shift` + digit, or long-press a number pad button on touch screens. Placing a number clears that digit from the notes in its row, column and box.
+- **Fill notes.** The *Fill notes* button or `F` replaces every empty cell's notes with the digits not yet placed in its row, column or box, wrong ones included, so it gives nothing away. One Undo brings back the notes you had. The button greys out when it would change nothing.
 - **Error checking.** Digits that don't match the solution are shown in red. Cells that clash in a row, column or box are tinted red. A mistake counter tracks wrong entries.
 - **Timer, Undo, Erase.** The timer pauses while the tab is hidden.
 - **Auto-save.** The game in progress, including the selected cell, notes mode and undo history, is saved after every change. A browser refresh resumes exactly where you were.
@@ -39,6 +40,7 @@ A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and
 | `1`–`9` | Place a digit (or a note, in notes mode) |
 | `Shift` + `1`–`9` | Toggle a note |
 | `N` | Toggle notes mode |
+| `F` | Fill notes |
 | `Backspace` / `Delete` / `0` | Erase cell |
 | `Ctrl` + `Z` | Undo |
 | Arrow keys | Move selection |
