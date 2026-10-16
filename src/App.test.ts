@@ -107,7 +107,40 @@ describe('App', () => {
 
     await button.trigger('click')
     await dialogButton(app, 'Cancel').trigger('click')
+    await flushPromises()
     expect(document.activeElement).toBe(button.element)
+  })
+
+  it('keeps the game and gives focus back to New game on Escape or a backdrop tap', async () => {
+    const app = await mountApp()
+    const game = useGameStore()
+    makeProgress()
+    const puzzle = [...game.puzzle]
+    const button = app.find<HTMLButtonElement>(newGameButton)
+
+    await button.trigger('click')
+    await app.find('dialog').trigger('cancel')
+    await flushPromises()
+    expect(document.activeElement).toBe(button.element)
+
+    button.element.blur()
+    await button.trigger('click')
+    await app.find('dialog').trigger('click')
+    await flushPromises()
+    expect(document.activeElement).toBe(button.element)
+    expect(game.puzzle).toEqual(puzzle)
+  })
+
+  it('disables Play again while the next puzzle loads', async () => {
+    const app = await mountApp()
+    const game = useGameStore()
+    fill(game, nonGivensOf(game, [...game.puzzle.keys()]))
+    await flushPromises()
+
+    const playAgain = app.findAll('.win button').find((b) => b.text() === 'Play again')!
+    await playAgain.trigger('click')
+    expect(playAgain.attributes('disabled')).toBeDefined()
+    await settle()
   })
 
   it('moves focus to the board once a confirmed new game is dealt', async () => {
@@ -159,6 +192,7 @@ describe('App', () => {
     expect(app.find('dialog').text()).toContain("Couldn't load a new Easy puzzle")
     expect(app.findAll('dialog button').map((b) => b.text())).toEqual(['OK'])
     await dialogButton(app, 'OK').trigger('click')
+    await flushPromises()
     expect(document.activeElement).toBe(button.element)
   })
 })

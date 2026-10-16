@@ -4,7 +4,8 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { DIFFICULTIES, LABELS, type Difficulty } from '../lib/difficulty'
 
 defineProps<{ current: Difficulty; disabled?: boolean }>()
-const emit = defineEmits<{ select: [Difficulty] }>()
+/** `select` also carries the menu's trigger, for focus to return to if the pick is cancelled. */
+const emit = defineEmits<{ select: [difficulty: Difficulty, trigger: HTMLButtonElement | null] }>()
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
@@ -17,7 +18,7 @@ function close(returnFocus = false) {
 
 function choose(d: Difficulty) {
   close(true)
-  emit('select', d)
+  emit('select', d, trigger.value)
 }
 
 function onDocumentPointerDown(e: PointerEvent) {

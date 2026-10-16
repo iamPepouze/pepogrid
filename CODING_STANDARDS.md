@@ -43,6 +43,7 @@ A change that sets or changes a convention updates this file in the same change.
 - **C5 Props objects.** When a parent builds a component's props as one object, the component exports their type as an interface and passes it to `defineProps`, and the parent hands the object over with `v-bind` (`DialogContent` in [AppDialog.vue](src/components/AppDialog.vue), bound in [App.vue](src/App.vue)).
 - **C6 Shared looks.** A look several components share is one class in [style.css](src/style.css), and each component's scoped style adds only its own states (`.icon-button`, used by the header's settings and New game buttons).
 - **C7 Exposed methods.** A parent that must act on a child's element calls a method the child exposes with `defineExpose`, rather than reaching into its DOM (`focus` in [SudokuBoard.vue](src/components/SudokuBoard.vue)).
+- **C8 Dialog focus.** [AppDialog.vue](src/components/AppDialog.vue) only takes focus when it opens. The code that opens it gives focus back when it closes, to the element the player used, passed in rather than read from `document.activeElement`, because Safari doesn't focus a tapped button (`startGame`'s `from` in [App.vue](src/App.vue), the trigger in `DifficultyMenu`'s `select` event).
 
 ### Tests
 

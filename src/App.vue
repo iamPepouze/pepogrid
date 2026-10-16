@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Plus } from '@lucide/vue'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import AppDialog, { type DialogContent } from './components/AppDialog.vue'
 import DifficultyMenu from './components/DifficultyMenu.vue'
 import GameControls from './components/GameControls.vue'
@@ -32,9 +32,11 @@ function ask(content: DialogContent) {
   })
 }
 
-function closePrompt(confirmed: boolean) {
+async function closePrompt(confirmed: boolean) {
   const open = prompt.value
   prompt.value = null
+  // Answer only once the dialog is gone: while it is open and modal, the page behind it can't take focus.
+  await nextTick()
   open?.resolve(confirmed)
 }
 
@@ -60,10 +62,9 @@ const time = computed(() => {
  * Deals a new game, asking first when that would lose progress. `from` is the button the player
  * used: focus returns there when they cancel or the load fails.
  */
-async function startGame(difficulty: Difficulty, from?: EventTarget | null) {
-  // Safari doesn't focus a tapped button, so prefer the one clicked. The difficulty menu focuses its own trigger.
-  const focused = from ?? document.activeElement
-  const opener = focused instanceof HTMLElement ? focused : null
+async function startGame(difficulty: Difficulty, from: EventTarget | null) {
+  // Passed in rather than read from document.activeElement: Safari doesn't focus a tapped button.
+  const opener = from instanceof HTMLElement ? from : null
   const unfinished = game.hasProgress && !game.completed
   if (unfinished) {
     const confirmed = await ask({
@@ -458,7 +459,7 @@ kbd {
   }
 }
 
-/* Desktop-sized screens get the tagline and a roomier header. */
+/* Desktop-sized screens get the tagline and a roomier header. AppDialog.vue widens at the same query. */
 @media (min-width: 768px) and (min-height: 600px) {
   .app {
     gap: 16px;
