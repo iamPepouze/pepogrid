@@ -6,6 +6,8 @@ import { TIERS, familyOf, type Difficulty } from './difficulty'
 
 /** How many of the latest results a difficulty's figures list. */
 const RECENT_COUNT = 10
+/** How many results are kept; older ones are dropped, so the figures cover only these. */
+export const MAX_RESULTS = 1000
 
 /** How a game ended; `completed` is a solved game. */
 export type Outcome = 'completed' | 'abandoned'
@@ -83,6 +85,11 @@ export function formatDuration(seconds: number) {
   const mm = String(Math.floor((total % 3600) / 60)).padStart(2, '0')
   const ss = String(total % 60).padStart(2, '0')
   return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
+}
+
+/** Whether `results` has reached the cap, so older games may have been dropped. */
+export function capReached(results: readonly StatResult[]) {
+  return results.length >= MAX_RESULTS
 }
 
 /** The counts of `results` at `difficulty`, or across every difficulty when it is left out. */

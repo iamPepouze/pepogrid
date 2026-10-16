@@ -1,11 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Difficulty, HodokuLevel } from '../lib/difficulty'
-import type { Outcome } from '../lib/statistics'
+import { MAX_RESULTS, type Outcome } from '../lib/statistics'
 
 export type { Outcome }
-
-const MAX_RESULTS = 1000
 
 export interface GameResult {
   id: string
@@ -46,7 +44,12 @@ export const useResultsStore = defineStore(
       if (results.value.length > MAX_RESULTS) results.value.splice(0, results.value.length - MAX_RESULTS)
     }
 
-    return { results, record }
+    /** Forgets every result. The game store's rotation history is kept, so dealing order carries on. */
+    function clear() {
+      results.value = []
+    }
+
+    return { results, record, clear }
   },
   {
     persist: {

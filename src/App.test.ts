@@ -4,7 +4,7 @@ import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.vue'
 import { useGameStore } from './stores/game'
-import { fill, nonGivensOf } from './stores/testing'
+import { fill, nonGivensOf, seedResult } from './stores/testing'
 
 enableAutoUnmount(afterEach)
 
@@ -261,6 +261,44 @@ describe('App', () => {
 
       window.dispatchEvent(new KeyboardEvent('keydown', { key: '5', code: 'Digit5' }))
       expect(game.values[cell]).toBe(0)
+    })
+
+    /** Opens Statistics over two stored results, and returns its Reset statistics button. */
+    async function openWithResults(app: Awaited<ReturnType<typeof mountApp>>) {
+      seedResult('hard', 'completed')
+      seedResult('hard', 'abandoned')
+      await app.find(statisticsButton).trigger('click')
+      return app.findAll<HTMLButtonElement>('.statistics button').find((b) => b.text() === 'Reset statistics')!
+    }
+
+    it('asks before Reset statistics clears every result, and then focuses Back', async () => {
+      const app = await mountApp()
+      const reset = await openWithResults(app)
+
+      await reset.trigger('click')
+      expect(app.find('dialog').text()).toContain('Reset statistics?')
+      await dialogButton(app, 'Reset').trigger('click')
+      await flushPromises()
+
+      expect(app.find('dialog').exists()).toBe(false)
+      expect(app.find('.summary').text()).toMatch(/Played\s*0/)
+      expect(document.activeElement?.textContent?.trim()).toBe('Back')
+    })
+
+    it('keeps every result and gives focus back to Reset on Cancel, Escape or a backdrop tap', async () => {
+      const app = await mountApp()
+      const reset = await openWithResults(app)
+      const dismissals = [() => dialogButton(app, 'Cancel').trigger('click'), () => app.find('dialog').trigger('cancel'), () => app.find('dialog').trigger('click')]
+
+      for (const dismiss of dismissals) {
+        reset.element.blur()
+        await reset.trigger('click')
+        await dismiss()
+        await flushPromises()
+        expect(app.find('dialog').exists()).toBe(false)
+        expect(document.activeElement).toBe(reset.element)
+      }
+      expect(app.find('.summary').text()).toMatch(/Played\s*2/)
     })
 
     it('opens Statistics on the current game’s difficulty', async () => {

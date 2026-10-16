@@ -2,14 +2,22 @@
 import { ArrowLeft } from '@lucide/vue'
 import { computed, nextTick, ref } from 'vue'
 import { DIFFICULTIES, LABELS, type Difficulty } from '../lib/difficulty'
-import { countsOf, formatDuration, statisticsOf, type Counts, type Spread, type StatResult } from '../lib/statistics'
+import { MAX_RESULTS, capReached, countsOf, formatDuration, statisticsOf, type Counts, type Spread, type StatResult } from '../lib/statistics'
 import { useResultsStore } from '../stores/results'
 import StatFigures, { type Figure } from './StatFigures.vue'
 
 const props = defineProps<{ current: Difficulty }>()
-const emit = defineEmits<{ back: [] }>()
+const emit = defineEmits<{ back: []; reset: [trigger: HTMLButtonElement | null] }>()
 
 const results = useResultsStore()
+
+const backButton = ref<HTMLButtonElement | null>(null)
+const resetButton = ref<HTMLButtonElement | null>(null)
+
+defineExpose({
+  /** Focuses Back, for when the button the player used is gone or disabled. */
+  focusBack: () => backButton.value?.focus(),
+})
 
 /** The difficulty whose tab is shown; opens on the one being played. */
 const selected = ref<Difficulty>(props.current)
@@ -84,7 +92,7 @@ async function onTabKeydown(e: KeyboardEvent) {
 <template>
   <section class="statistics" aria-labelledby="statistics-title">
     <div class="heading">
-      <button type="button" class="back surface" @click="emit('back')">
+      <button ref="backButton" type="button" class="back surface" @click="emit('back')">
         <ArrowLeft aria-hidden="true" />
         <span>Back</span>
       </button>
@@ -94,6 +102,7 @@ async function onTabKeydown(e: KeyboardEvent) {
     <section class="summary card surface" aria-labelledby="summary-title">
       <h3 id="summary-title">All difficulties</h3>
       <StatFigures :figures="countFigures(countsOf(results.results))" />
+      <p v-if="capReached(results.results)" class="note">Based on your latest {{ MAX_RESULTS }} games.</p>
     </section>
 
     <div class="tabs" role="tablist" aria-label="Difficulty" @keydown="onTabKeydown">
@@ -155,6 +164,16 @@ async function onTabKeydown(e: KeyboardEvent) {
         </ol>
       </template>
     </div>
+
+    <button
+      ref="resetButton"
+      type="button"
+      class="reset surface"
+      :disabled="!results.results.length"
+      @click="emit('reset', resetButton)"
+    >
+      Reset statistics
+    </button>
   </section>
 </template>
 
@@ -181,10 +200,7 @@ async function onTabKeydown(e: KeyboardEvent) {
   display: flex;
   align-items: center;
   gap: 4px;
-  min-height: 36px;
   padding: 6px 12px 6px 8px;
-  font: inherit;
-  cursor: pointer;
 }
 
 .back > svg {
@@ -285,6 +301,11 @@ async function onTabKeydown(e: KeyboardEvent) {
   display: flex;
   flex-wrap: wrap;
   column-gap: 0.3em;
+}
+
+.reset {
+  align-self: center;
+  padding: 6px 16px;
 }
 
 @media (hover: hover) and (pointer: fine) {

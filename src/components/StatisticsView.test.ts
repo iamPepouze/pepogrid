@@ -110,6 +110,28 @@ describe('StatisticsView', () => {
     expect(selectedTab(view).text()).toBe('Easy')
   })
 
+  it('says the figures cover only the latest 1000 games once that many are stored', async () => {
+    for (let i = 0; i < 999; i++) seedResult('easy', 'completed')
+    const view = mountView('easy')
+    expect(view.find('.summary').text()).not.toContain('latest')
+
+    seedResult('hard', 'abandoned')
+    await view.vm.$nextTick()
+    expect(view.find('.summary').text()).toContain('Based on your latest 1000 games.')
+  })
+
+  it('disables Reset statistics with nothing to clear, and otherwise emits reset with the button pressed', async () => {
+    const view = mountView('easy')
+    const reset = () => view.findAll<HTMLButtonElement>('button').find((b) => b.text() === 'Reset statistics')!
+    expect(reset().element.disabled).toBe(true)
+
+    seedResult('medium', 'abandoned')
+    await view.vm.$nextTick()
+    expect(reset().element.disabled).toBe(false)
+    await reset().trigger('click')
+    expect(view.emitted('reset')).toEqual([[reset().element]])
+  })
+
   it('emits back when Back is pressed', async () => {
     const view = mountView('easy')
     await view.findAll('button').find((b) => b.text() === 'Back')!.trigger('click')
