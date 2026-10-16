@@ -28,9 +28,9 @@ description: "Drive PepoGrid in a real browser. Use to see a UI change working, 
    await app.close()
    ```
 
-   `playwright-core` resolves through `drive.mjs`, so the script runs from anywhere. Without `touch: true`, the page sees a mouse at every width, so a phone-sized viewport alone still renders the desktop styles. For a layout change, open the game at each width it affects, once with `touch: true` and once without.
+   `playwright-core` resolves through `drive.mjs`, so the script runs from anywhere. Without `touch: true`, the page sees a mouse at every width, so a phone-sized viewport alone still renders the desktop styles. For a layout change, open the game three times: at 320 and 400 px wide with `touch: true` (the narrowest phone and a typical one), and at 1200 × 800 without. A colour change also runs once with `colorScheme: 'dark'`. A view that shows saved data takes it through `storage`, so the first load already has it.
 
-   The step is done when the script has printed `app.errors` (an empty list), and `app.clipped()` (an empty list) for a layout change, and saved a screenshot of every state the change touches.
+   The step is done when the script has printed `app.errors` (an empty list), and `app.clipped()` (an empty list) at all three sizes for a layout change, and saved a screenshot of every state the change touches.
 
 3. **Look** at every screenshot with Read. Rendered is not the same as correct. `app.close()` prints each one it saved; the step is done when every printed path has been opened.
 

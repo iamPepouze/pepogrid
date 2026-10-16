@@ -11,12 +11,15 @@ const readSave = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('
 
 /**
  * `touch` emulates a phone (no hover, coarse pointer), which gets the touch layout; without it the
- * page sees a mouse at any viewport size.
- * @param {{ reducedMotion?: 'reduce' | 'no-preference', viewport?: { width: number, height: number }, touch?: boolean }} options
+ * page sees a mouse at any viewport size. `colorScheme` is the device theme the default *System*
+ * setting follows. `storage` seeds localStorage, keyed as the stores persist
+ * (`pepogrid.results`: `{ results: [...] }`, `pepogrid.settings`: `{ theme, ... }`), and the game
+ * opens on it; objects are stored as JSON.
+ * @param {{ reducedMotion?: 'reduce' | 'no-preference', viewport?: { width: number, height: number }, touch?: boolean, colorScheme?: 'light' | 'dark', storage?: Record<string, unknown> }} options
  */
-export async function openGame({ reducedMotion = 'no-preference', viewport = { width: 400, height: 800 }, touch = false } = {}) {
+export async function openGame({ reducedMotion = 'no-preference', viewport = { width: 400, height: 800 }, touch = false, colorScheme = 'light', storage = {} } = {}) {
   const browser = await chromium.launch({ channel: 'msedge' })
-  const context = await browser.newContext({ viewport, reducedMotion, hasTouch: touch, isMobile: touch })
+  const context = await browser.newContext({ viewport, reducedMotion, colorScheme, hasTouch: touch, isMobile: touch })
   const page = await context.newPage()
   const errors = []
   // Every screenshot path, listed by close() so the skill's Look step can be checked off.
@@ -28,9 +31,21 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
   }
   page.on('pageerror', (e) => errors.push(String(e)))
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+  const ready = async () => {
+    await page.waitForSelector('.cell')
+    while ((await readSave(page))?.solution?.length !== 81) await page.waitForTimeout(50)
+  }
   await page.goto(URL)
-  await page.waitForSelector('.cell')
-  while ((await readSave(page))?.solution?.length !== 81) await page.waitForTimeout(50)
+  await ready()
+  const entries = Object.entries(storage)
+  if (entries.length) {
+    // Seeded after a first load and read on a reload: on a fresh profile, main.ts's schema check drops saved results.
+    await page.evaluate((list) => {
+      for (const [key, value] of list) localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
+    }, entries)
+    await page.reload()
+    await ready()
+  }
 
   return {
     page,
