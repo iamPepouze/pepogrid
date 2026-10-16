@@ -4,7 +4,7 @@ import { loadBank, pickFromBank } from './bank'
 import { DIFFICULTIES, TIERS, familyOf, tierOf, type Difficulty, type HodokuLevel } from './difficulty'
 import { PEERS, UNITS } from './grid'
 import { rateHodoku, rateSE } from './rater'
-import { countsOf, formatDuration, statisticsOf, type StatResult } from './statistics'
+import { capReached, countsOf, formatDuration, statisticsOf, type StatResult } from './statistics'
 import { countSolutions, randomSolution, solve } from './sudoku'
 import { applyTransform, randomTransform } from './transform'
 
@@ -262,6 +262,13 @@ describe('statistics', () => {
     // Stored newest first, against recording order.
     results.reverse()
     expect(statisticsOf(results, 'medium').recent.map((r) => r.elapsed)).toEqual([12, 11, 10, 9, 8, 7, 6, 5, 4, 3])
+  })
+
+  it('flags the results as capped once they number 1000', () => {
+    const results = Array.from({ length: 999 }, () => solved('easy'))
+    expect(capReached(results)).toBe(false)
+    results.push(abandoned('master'))
+    expect(capReached(results)).toBe(true)
   })
 
   it('shows a time as mm:ss, or h:mm:ss from one hour', () => {

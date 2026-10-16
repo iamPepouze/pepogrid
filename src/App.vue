@@ -13,8 +13,10 @@ import { useTheme } from './composables/useTheme'
 import { HODOKU_LABELS, LABELS, TIERS, type Difficulty } from './lib/difficulty'
 import { formatDuration } from './lib/statistics'
 import { useGameStore } from './stores/game'
+import { useResultsStore } from './stores/results'
 
 const game = useGameStore()
+const results = useResultsStore()
 // First visit, or a save that's missing or corrupt: start a game.
 if (!game.isValid()) loadGame('easy', { recordAbandoned: false })
 
@@ -32,6 +34,26 @@ const statisticsButton = ref<HTMLButtonElement | null>(null)
 function toggleStatistics() {
   statisticsOpen.value = !statisticsOpen.value
   statisticsButton.value?.focus()
+}
+
+const statisticsView = ref<InstanceType<typeof StatisticsView> | null>(null)
+
+/** Asks, then clears every result. `trigger` is the Reset button: focus returns there on cancel. */
+async function resetStatistics(trigger: HTMLButtonElement | null) {
+  const confirmed = await ask({
+    title: 'Reset statistics?',
+    message: 'Every solved and abandoned game will be forgotten. This can’t be undone.',
+    confirmLabel: 'Reset',
+    cancelLabel: 'Cancel',
+  })
+  if (!confirmed) {
+    trigger?.focus()
+    return
+  }
+  results.clear()
+  // Reset is disabled once there is nothing to clear, so focus moves to Back.
+  await nextTick()
+  statisticsView.value?.focusBack()
 }
 
 /** The open dialog's content, and how to report the player's answer; null while no dialog is open. */
@@ -233,7 +255,14 @@ onBeforeUnmount(() => {
       </template>
     </header>
 
-    <StatisticsView v-if="statisticsOpen" class="statistics-area" :current="game.difficulty" @back="toggleStatistics" />
+    <StatisticsView
+      v-if="statisticsOpen"
+      ref="statisticsView"
+      class="statistics-area"
+      :current="game.difficulty"
+      @back="toggleStatistics"
+      @reset="resetStatistics"
+    />
 
     <!-- Hidden rather than unmounted, so the board's element and the layout's observers outlive a look at Statistics. -->
     <main v-show="!statisticsOpen" ref="gameEl" class="game">
