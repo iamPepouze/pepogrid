@@ -107,12 +107,24 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
-/* Bordered box in the button colours: the icon buttons, and Statistics' Back button and cards. */
+/* Bordered box in the button colours: the icon buttons, and Statistics' Back and Reset buttons and cards. */
 :is(.icon-button, .surface) {
   border: 1px solid var(--button-border);
   border-radius: 10px;
   background: var(--button-bg);
   color: var(--text);
+}
+
+/* A text button in that box: Statistics' Back and Reset. */
+button.surface {
+  min-height: 36px;
+  font: inherit;
+  cursor: pointer;
+}
+
+button.surface:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 /* A figure's value in Statistics: bold, with digits of one width so columns of numbers line up. */

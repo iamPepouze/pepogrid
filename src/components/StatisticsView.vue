@@ -200,10 +200,7 @@ async function onTabKeydown(e: KeyboardEvent) {
   display: flex;
   align-items: center;
   gap: 4px;
-  min-height: 36px;
   padding: 6px 12px 6px 8px;
-  font: inherit;
-  cursor: pointer;
 }
 
 .back > svg {
@@ -213,19 +210,6 @@ async function onTabKeydown(e: KeyboardEvent) {
 
 .card {
   padding: 12px;
-}
-
-.reset {
-  align-self: center;
-  min-height: 36px;
-  padding: 6px 16px;
-  font: inherit;
-  cursor: pointer;
-}
-
-.reset:disabled {
-  color: var(--muted);
-  cursor: default;
 }
 
 .card h3 {
@@ -317,6 +301,11 @@ async function onTabKeydown(e: KeyboardEvent) {
   display: flex;
   flex-wrap: wrap;
   column-gap: 0.3em;
+}
+
+.reset {
+  align-self: center;
+  padding: 6px 16px;
 }
 
 @media (hover: hover) and (pointer: fine) {

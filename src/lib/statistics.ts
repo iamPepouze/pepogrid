@@ -88,7 +88,9 @@ export function formatDuration(seconds: number) {
 }
 
 /** Whether `results` has reached the cap, so older games may have been dropped. */
-export const capReached = (results: readonly StatResult[]) => results.length >= MAX_RESULTS
+export function capReached(results: readonly StatResult[]) {
+  return results.length >= MAX_RESULTS
+}
 
 /** The counts of `results` at `difficulty`, or across every difficulty when it is left out. */
 export function countsOf(results: readonly StatResult[], difficulty?: Difficulty): Counts {

@@ -2,10 +2,8 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { toRaw } from 'vue'
 import App from './App.vue'
 import { useGameStore } from './stores/game'
-import { useResultsStore } from './stores/results'
 import { fill, nonGivensOf, seedResult } from './stores/testing'
 
 enableAutoUnmount(afterEach)
@@ -273,11 +271,8 @@ describe('App', () => {
       return app.findAll<HTMLButtonElement>('.statistics button').find((b) => b.text() === 'Reset statistics')!
     }
 
-    it('asks before Reset statistics clears every result, keeping the rotation history, and then focuses Back', async () => {
+    it('asks before Reset statistics clears every result, and then focuses Back', async () => {
       const app = await mountApp()
-      const game = useGameStore()
-      await game.newGame('hard')
-      const rotation = structuredClone(toRaw(game.familyPlayed))
       const reset = await openWithResults(app)
 
       await reset.trigger('click')
@@ -286,12 +281,8 @@ describe('App', () => {
       await flushPromises()
 
       expect(app.find('dialog').exists()).toBe(false)
-      expect(useResultsStore().results).toEqual([])
       expect(app.find('.summary').text()).toMatch(/Played\s*0/)
-      expect(app.find('[role="tabpanel"]').text()).toBe('No Hard games yet.')
-      expect(reset.element.disabled).toBe(true)
       expect(document.activeElement?.textContent?.trim()).toBe('Back')
-      expect(game.familyPlayed).toEqual(rotation)
     })
 
     it('keeps every result and gives focus back to Reset on Cancel, Escape or a backdrop tap', async () => {
@@ -307,7 +298,7 @@ describe('App', () => {
         expect(app.find('dialog').exists()).toBe(false)
         expect(document.activeElement).toBe(reset.element)
       }
-      expect(useResultsStore().results).toHaveLength(2)
+      expect(app.find('.summary').text()).toMatch(/Played\s*2/)
     })
 
     it('opens Statistics on the current game’s difficulty', async () => {

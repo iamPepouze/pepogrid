@@ -1,5 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { toRaw } from 'vue'
 import { PEERS, ROWS, bit, digitsOf, rowOf, unitsOf } from '../lib/sudoku'
 import { useGameStore } from './game'
 import { useResultsStore } from './results'
@@ -25,6 +26,18 @@ describe('game store results', () => {
     expect(game.isValid()).toBe(false)
     await game.newGame('easy')
     expect(game.isValid()).toBe(true)
+  })
+
+  it('keeps the technique-family rotation history when the results are cleared', async () => {
+    const game = useGameStore()
+    await game.newGame('hard')
+    const rotation = structuredClone(toRaw(game.familyPlayed))
+    expect(Object.keys(rotation.hard)).toHaveLength(1)
+
+    const results = useResultsStore()
+    results.clear()
+    expect(results.results).toEqual([])
+    expect(game.familyPlayed).toEqual(rotation)
   })
 
   it('records a completed game with full stats', async () => {
