@@ -77,6 +77,12 @@ function onCancel(e: Event) {
   box-shadow: var(--shadow);
 }
 
+@media (min-width: 768px) {
+  .dialog {
+    width: 400px;
+  }
+}
+
 .dialog::backdrop {
   background: rgb(0 0 0 / 0.45);
 }

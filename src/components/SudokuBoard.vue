@@ -10,6 +10,13 @@ const { isGiven, isLocked, isWrong } = game
 
 const cells = [...Array(81).keys()]
 
+const board = ref<HTMLElement | null>(null)
+
+defineExpose({
+  /** Moves focus onto the board as a whole, without scrolling: where a fresh game starts. */
+  focus: () => board.value?.focus({ preventScroll: true }),
+})
+
 /** Digit of the selected cell, highlighted across the grid; 0 for none. */
 const matchDigit = computed(() =>
   settings.highlightMatching && game.selected !== null ? game.values[game.selected] : 0,
@@ -95,7 +102,8 @@ function cellLabel(i: number) {
 </script>
 
 <template>
-  <div class="board" role="grid" aria-label="Sudoku board" :style="{ '--glow-duration': `${GLOW_MS}ms` }">
+  <!-- tabindex="-1": focusable from script (a new game), but no extra Tab stop. -->
+  <div ref="board" class="board" role="grid" tabindex="-1" aria-label="Sudoku board" :style="{ '--glow-duration': `${GLOW_MS}ms` }">
     <button
       v-for="i in cells"
       :key="i"
@@ -144,6 +152,7 @@ function cellLabel(i: number) {
   cursor: pointer;
 }
 
+.board:focus,
 .cell:focus {
   outline: none;
 }

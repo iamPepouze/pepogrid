@@ -19,7 +19,7 @@ if (!game.isValid()) loadGame('easy', { recordAbandoned: false })
 useTheme()
 const { canInstall, install } = useInstall()
 
-/** Ratings of the current puzzle, shown only for the tiers that display them. */
+/** Ratings of the current puzzle, shown only for the difficulties that display them. */
 const shownRating = computed(() => (TIERS[game.difficulty].showRating ? game.rating : null))
 
 /** The open dialog's content, and how to report the player's answer; null while no dialog is open. */
@@ -38,12 +38,15 @@ function closePrompt(confirmed: boolean) {
   open?.resolve(confirmed)
 }
 
+/** Deals a new game; on failure, says so and resolves false once the player has read it. */
 async function loadGame(difficulty: Difficulty, options?: { recordAbandoned?: boolean }) {
   try {
     await game.newGame(difficulty, options)
+    return true
   } catch (error) {
     console.error(error)
     await ask({ title: `Couldn't load a new ${LABELS[difficulty]} puzzle`, message: 'Check your connection and try again.', confirmLabel: 'OK' })
+    return false
   }
 }
 
@@ -54,6 +57,8 @@ const time = computed(() => {
 })
 
 async function startGame(difficulty: Difficulty) {
+  // Kept now: loading disables the button that started this, and the browser drops its focus.
+  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
   const unfinished = game.hasProgress && !game.completed
   if (unfinished) {
     const confirmed = await ask({
@@ -64,7 +69,9 @@ async function startGame(difficulty: Difficulty) {
     })
     if (!confirmed) return
   }
-  await loadGame(difficulty)
+  // A fresh game starts on the board; after a failed load, the player is back where they tried from.
+  if (await loadGame(difficulty)) board.value?.focus()
+  else opener?.focus()
 }
 
 const ARROWS: Record<string, [number, number]> = {
@@ -117,6 +124,7 @@ const appEl = ref<HTMLElement | null>(null)
 const headerEl = ref<HTMLElement | null>(null)
 const gameEl = ref<HTMLElement | null>(null)
 const boardAreaEl = ref<HTMLElement | null>(null)
+const board = ref<InstanceType<typeof SudokuBoard> | null>(null)
 
 /**
  * Stacked layout: sizes the board to the largest square that leaves room for
@@ -214,7 +222,7 @@ onBeforeUnmount(() => {
       </div>
 
       <div ref="boardAreaEl" class="board-area">
-        <SudokuBoard />
+        <SudokuBoard ref="board" />
       </div>
 
       <GameControls class="controls-area" />
@@ -225,9 +233,10 @@ onBeforeUnmount(() => {
         <kbd>F</kbd> fill notes · <kbd>Del</kbd> erase · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo · arrows move
       </p>
     </main>
-
-    <AppDialog v-if="prompt" v-bind="prompt.content" @close="closePrompt" />
   </div>
+
+  <!-- Outside .app, whose column rules would otherwise size it like the board. -->
+  <AppDialog v-if="prompt" v-bind="prompt.content" @close="closePrompt" />
 </template>
 
 <style scoped>

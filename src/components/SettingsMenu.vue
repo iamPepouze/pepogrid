@@ -45,7 +45,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
       :aria-expanded="open"
       @click="open = !open"
     >
-      <Settings class="icon" aria-hidden="true" />
+      <Settings aria-hidden="true" />
     </button>
 
     <div v-if="open" class="popover" role="dialog" aria-label="Settings">

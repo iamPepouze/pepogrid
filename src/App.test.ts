@@ -4,7 +4,7 @@ import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.vue'
 import { useGameStore } from './stores/game'
-import { nonGivensOf } from './stores/testing'
+import { fill, nonGivensOf } from './stores/testing'
 
 enableAutoUnmount(afterEach)
 
@@ -98,7 +98,7 @@ describe('App', () => {
     expect(game.values[empty]).toBe(0)
   })
 
-  it('gives focus back to the New game button when the dialog closes', async () => {
+  it('gives focus back to the New game button when the dialog is cancelled', async () => {
     const app = await mountApp()
     makeProgress()
     const button = app.find<HTMLButtonElement>(newGameButton)
@@ -109,14 +109,44 @@ describe('App', () => {
     expect(document.activeElement).toBe(button.element)
   })
 
-  it('says so in the dialog when a puzzle fails to load', async () => {
+  it('moves focus to the board once a confirmed new game is dealt', async () => {
+    const app = await mountApp()
+    makeProgress()
+
+    app.find<HTMLButtonElement>(newGameButton).element.focus()
+    await app.find(newGameButton).trigger('click')
+    await dialogButton(app, 'New game').trigger('click')
+    await settle()
+    expect(document.activeElement).toBe(app.find('[role="grid"]').element)
+  })
+
+  it('moves focus to the board once Play again deals a new game', async () => {
+    const app = await mountApp()
+    const game = useGameStore()
+    fill(game, nonGivensOf(game, [...game.puzzle.keys()]))
+    await flushPromises()
+
+    const playAgain = app.findAll('.win button').find((b) => b.text() === 'Play again')!
+    ;(playAgain.element as HTMLButtonElement).focus()
+    await playAgain.trigger('click')
+    await settle()
+    expect(document.activeElement).toBe(app.find('[role="grid"]').element)
+  })
+
+  it('says so in the dialog when a puzzle fails to load, then gives focus back to New game', async () => {
     const app = await mountApp()
     vi.spyOn(useGameStore(), 'newGame').mockRejectedValueOnce(new Error('offline'))
     vi.spyOn(console, 'error').mockImplementation(() => {})
+    const button = app.find<HTMLButtonElement>(newGameButton)
 
-    await app.find(newGameButton).trigger('click')
+    button.element.focus()
+    await button.trigger('click')
+    // A real browser drops focus from the button once loading disables it.
+    button.element.blur()
     await flushPromises()
     expect(app.find('dialog').text()).toContain("Couldn't load a new Easy puzzle")
     expect(app.findAll('dialog button').map((b) => b.text())).toEqual(['OK'])
+    await dialogButton(app, 'OK').trigger('click')
+    expect(document.activeElement).toBe(button.element)
   })
 })
