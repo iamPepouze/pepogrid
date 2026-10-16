@@ -98,12 +98,13 @@ describe('App', () => {
     expect(game.values[empty]).toBe(0)
   })
 
+  // The tests below click without focusing first, as Safari does: a tap leaves focus where it was.
+
   it('gives focus back to the New game button when the dialog is cancelled', async () => {
     const app = await mountApp()
     makeProgress()
     const button = app.find<HTMLButtonElement>(newGameButton)
 
-    button.element.focus()
     await button.trigger('click')
     await dialogButton(app, 'Cancel').trigger('click')
     expect(document.activeElement).toBe(button.element)
@@ -113,9 +114,25 @@ describe('App', () => {
     const app = await mountApp()
     makeProgress()
 
-    app.find<HTMLButtonElement>(newGameButton).element.focus()
     await app.find(newGameButton).trigger('click')
     await dialogButton(app, 'New game').trigger('click')
+    await settle()
+    expect(document.activeElement).toBe(app.find('[role="grid"]').element)
+  })
+
+  it('moves focus to the board once New game deals a game without asking', async () => {
+    const app = await mountApp()
+
+    await app.find(newGameButton).trigger('click')
+    await settle()
+    expect(document.activeElement).toBe(app.find('[role="grid"]').element)
+  })
+
+  it('moves focus to the board once a difficulty pick deals a game', async () => {
+    const app = await mountApp()
+
+    await app.find('.topbar button[aria-haspopup="menu"]').trigger('click')
+    await app.findAll('[role="menuitemradio"]').find((b) => b.text() === 'Medium')!.trigger('click')
     await settle()
     expect(document.activeElement).toBe(app.find('[role="grid"]').element)
   })
@@ -126,9 +143,7 @@ describe('App', () => {
     fill(game, nonGivensOf(game, [...game.puzzle.keys()]))
     await flushPromises()
 
-    const playAgain = app.findAll('.win button').find((b) => b.text() === 'Play again')!
-    ;(playAgain.element as HTMLButtonElement).focus()
-    await playAgain.trigger('click')
+    await app.findAll('.win button').find((b) => b.text() === 'Play again')!.trigger('click')
     await settle()
     expect(document.activeElement).toBe(app.find('[role="grid"]').element)
   })
@@ -139,10 +154,7 @@ describe('App', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     const button = app.find<HTMLButtonElement>(newGameButton)
 
-    button.element.focus()
     await button.trigger('click')
-    // A real browser drops focus from the button once loading disables it.
-    button.element.blur()
     await flushPromises()
     expect(app.find('dialog').text()).toContain("Couldn't load a new Easy puzzle")
     expect(app.findAll('dialog button').map((b) => b.text())).toEqual(['OK'])

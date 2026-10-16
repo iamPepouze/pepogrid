@@ -37,12 +37,12 @@ A change that sets or changes a convention updates this file in the same change.
 ### Components
 
 - **C1 Shape.** Single-file components use `<script setup lang="ts">`, type-based `defineProps<{ ... }>()` and `defineEmits<{ ... }>()`, and `<style scoped>`. Global styles live only in [style.css](src/style.css).
-  - When a parent builds a component's props as one object, the component exports their type as an interface and passes it to `defineProps`, and the parent hands the object over with `v-bind` (`DialogContent` in [AppDialog.vue](src/components/AppDialog.vue)).
-  - A look several components share is one class in [style.css](src/style.css), and each component's scoped style adds only its own states (`.icon-button`, used by the header's settings and New game buttons).
-  - A parent that must act on a child's element calls a method the child exposes with `defineExpose`, rather than reaching into its DOM (`focus` in [SudokuBoard.vue](src/components/SudokuBoard.vue)).
 - **C2 Theme tokens.** Colours come from the CSS custom properties defined in [style.css](src/style.css) (`var(--accent)`, `var(--text)`, …), so light and dark themes both work. A new colour becomes a new token defined for both themes. Literal colours are only for values that stay the same in both themes, such as the switch knob's `#fff` and its shadow ([SettingsMenu.vue](src/components/SettingsMenu.vue)).
 - **C3 Reduced motion.** A keyframe animation, or a transition longer than a quick control feedback (about 0.15s), has a `@media (prefers-reduced-motion: reduce)` override that turns it off ([SudokuBoard.vue](src/components/SudokuBoard.vue) glow, [NumberPad.vue](src/components/NumberPad.vue) fade). Quick hover, chevron and switch transitions don't need one.
 - **C4 Best-effort browser APIs.** Optional browser features fail silently: optional chaining and `try`/`catch` around the call, as in `vibrate` ([game.ts](src/stores/game.ts)). Listeners and timers a component adds are removed in `onBeforeUnmount`.
+- **C5 Props objects.** When a parent builds a component's props as one object, the component exports their type as an interface and passes it to `defineProps`, and the parent hands the object over with `v-bind` (`DialogContent` in [AppDialog.vue](src/components/AppDialog.vue), bound in [App.vue](src/App.vue)).
+- **C6 Shared looks.** A look several components share is one class in [style.css](src/style.css), and each component's scoped style adds only its own states (`.icon-button`, used by the header's settings and New game buttons).
+- **C7 Exposed methods.** A parent that must act on a child's element calls a method the child exposes with `defineExpose`, rather than reaching into its DOM (`focus` in [SudokuBoard.vue](src/components/SudokuBoard.vue)).
 
 ### Tests
 

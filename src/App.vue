@@ -56,9 +56,14 @@ const time = computed(() => {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 })
 
-async function startGame(difficulty: Difficulty) {
-  // Kept now: loading disables the button that started this, and the browser drops its focus.
-  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
+/**
+ * Deals a new game, asking first when that would lose progress. `from` is the button the player
+ * used: focus returns there when they cancel or the load fails.
+ */
+async function startGame(difficulty: Difficulty, from?: EventTarget | null) {
+  // Safari doesn't focus a tapped button, so prefer the one clicked. The difficulty menu focuses its own trigger.
+  const focused = from ?? document.activeElement
+  const opener = focused instanceof HTMLElement ? focused : null
   const unfinished = game.hasProgress && !game.completed
   if (unfinished) {
     const confirmed = await ask({
@@ -67,7 +72,10 @@ async function startGame(difficulty: Difficulty) {
       confirmLabel: 'New game',
       cancelLabel: 'Cancel',
     })
-    if (!confirmed) return
+    if (!confirmed) {
+      opener?.focus()
+      return
+    }
   }
   // A fresh game starts on the board; after a failed load, the player is back where they tried from.
   if (await loadGame(difficulty)) board.value?.focus()
@@ -194,7 +202,7 @@ onBeforeUnmount(() => {
         aria-label="New game"
         title="New game"
         :disabled="game.loading"
-        @click="startGame(game.difficulty)"
+        @click="startGame(game.difficulty, $event.currentTarget)"
       >
         <Plus aria-hidden="true" />
       </button>
@@ -217,7 +225,7 @@ onBeforeUnmount(() => {
               ({{ HODOKU_LABELS[shownRating.hodokuLevel] }}) · hardest: {{ shownRating.hardest }}
             </span>
           </p>
-          <button type="button" @click="startGame(game.difficulty)">Play again</button>
+          <button type="button" :disabled="game.loading" @click="startGame(game.difficulty, $event.currentTarget)">Play again</button>
         </div>
       </div>
 

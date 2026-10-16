@@ -1,9 +1,10 @@
 <script setup lang="ts">
 /**
  * Modal message in the app's own style, used instead of window.confirm and window.alert,
- * which iOS home-screen apps don't show reliably.
+ * which iOS home-screen apps don't show reliably. The parent closes it by unmounting it, and decides
+ * where focus goes next: it knows which button opened it, which Safari doesn't focus on a tap.
  */
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 /** What the dialog says. Without a cancelLabel it is a lone-button alert. */
 export interface DialogContent {
@@ -20,20 +21,10 @@ const dialog = ref<HTMLDialogElement | null>(null)
 const cancelButton = ref<HTMLButtonElement | null>(null)
 const confirmButton = ref<HTMLButtonElement | null>(null)
 
-/** What had focus before the dialog opened, to hand focus back to. */
-let opener: HTMLElement | null = null
-
 onMounted(() => {
-  opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
   dialog.value?.showModal()
   // Focus Cancel when there is one, so a stray Enter is harmless.
   ;(cancelButton.value ?? confirmButton.value)?.focus()
-})
-
-// The parent closes the dialog by unmounting it. Close it first: while modal, it leaves the opener inert and unfocusable.
-onBeforeUnmount(() => {
-  dialog.value?.close()
-  opener?.focus()
 })
 
 /** A click on the dialog element itself, not its content, landed on the backdrop. */
@@ -41,7 +32,7 @@ function onClick(e: MouseEvent) {
   if (e.target === dialog.value) emit('close', false)
 }
 
-/** Escape: the parent closes the dialog by unmounting it, so keep the browser from closing it first. */
+/** Escape: keep the browser from closing the dialog itself, and let the parent unmount it. */
 function onCancel(e: Event) {
   e.preventDefault()
   emit('close', false)
@@ -77,7 +68,8 @@ function onCancel(e: Event) {
   box-shadow: var(--shadow);
 }
 
-@media (min-width: 768px) {
+/* Desktop-sized screens, as in App.vue: a landscape phone keeps the phone width. */
+@media (min-width: 768px) and (min-height: 600px) {
   .dialog {
     width: 400px;
   }
