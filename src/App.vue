@@ -244,7 +244,7 @@ onBeforeUnmount(() => {
     </main>
   </div>
 
-  <!-- Outside .app, whose column rules would otherwise size it like the board. -->
+  <!-- Outside .app: a modal is no part of its column layout. -->
   <AppDialog v-if="prompt" v-bind="prompt.content" @close="closePrompt" />
 </template>
 
@@ -264,7 +264,8 @@ onBeforeUnmount(() => {
     max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
 }
 
-.app > * {
+/* The header and the game only: a bare `> *` would also size any child component's root, such as a dialog. */
+.app > :is(.topbar, .game) {
   flex-shrink: 0;
   width: var(--board-size, 100%);
 }
@@ -430,7 +431,7 @@ kbd {
     margin: 0 auto;
   }
 
-  .app > * {
+  .app > :is(.topbar, .game) {
     width: auto;
   }
 

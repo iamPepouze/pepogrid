@@ -1,6 +1,6 @@
 ---
 name: drive-app
-description: "Drive PepoGrid in a real browser. Use to see a UI change working, or to check an animation."
+description: "Drive PepoGrid in a real browser. Use to see a UI change working, or to check focus or an animation."
 ---
 
 ## Steps
@@ -32,7 +32,7 @@ description: "Drive PepoGrid in a real browser. Use to see a UI change working, 
 
    The step is done when the script has printed `app.errors` (an empty list), and `app.clipped()` (an empty list) for a layout change, and saved a screenshot of every state the change touches.
 
-3. **Look** at every screenshot with Read. Rendered is not the same as correct.
+3. **Look** at every screenshot with Read. Rendered is not the same as correct. `app.close()` prints each one it saved; the step is done when every printed path has been opened.
 
 4. **Stop** the server by its port's PID. The background job's own PID is npm's wrapper, and killing it leaves Vite running:
 
@@ -47,3 +47,7 @@ description: "Drive PepoGrid in a real browser. Use to see a UI change working, 
 The owner's Windows has **Animation effects** off, so their browser reports `prefers-reduced-motion: reduce`, and the app skips motion on purpose. Check an animation twice: `openGame({ reducedMotion: 'no-preference' })` to see it play (screenshot a few frames ~150-300 ms apart), and `openGame({ reducedMotion: 'reduce' })` to see what the owner sees.
 
 To assert one is running, list `document.getAnimations().map((a) => a.animationName)` in `page.evaluate`. Vue suffixes scoped keyframe names with a hash (`glow` runs as `glow-<hash>`), so match with `startsWith`.
+
+## Focus
+
+Read where focus is with `document.activeElement` in `page.evaluate`, after each step that should move it (open, cancel, confirm). The browser is Chromium, which focuses a button on click; Safari doesn't, so a Safari tap is checked in the component tests, which click without focusing first.
