@@ -203,7 +203,8 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   height: 100dvh;
-  padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+  /* Room below the status bar too: at just the inset, the header touches the iPhone's Dynamic Island area. */
+  padding: calc(env(safe-area-inset-top) + 12px) max(12px, env(safe-area-inset-right))
     max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
 }
 
