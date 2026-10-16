@@ -115,6 +115,12 @@ button:focus-visible {
   color: var(--text);
 }
 
+/* A figure's value in Statistics: bold, with digits of one width so columns of numbers line up. */
+.stat-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Square icon-only button in the header: settings, statistics and new game. */
 .icon-button {
   display: flex;

@@ -1,25 +1,19 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { Statistics } from '../lib/statistics'
+/** A figure's label and its value as shown, such as "—" when it is missing. */
+export interface Figure {
+  label: string
+  value: string
+}
 
-const props = defineProps<{ stats: Statistics }>()
-
-const percent = (rate: number | null) => (rate === null ? '—' : `${Math.round(rate * 100)}%`)
-
-/** Label and shown value of each figure, in display order. */
-const rows = computed((): [string, string][] => [
-  ['Played', String(props.stats.played)],
-  ['Solved', String(props.stats.solved)],
-  ['Abandoned', String(props.stats.abandoned)],
-  ['Solve rate', percent(props.stats.solveRate)],
-])
+/** The figures in display order. */
+defineProps<{ figures: Figure[] }>()
 </script>
 
 <template>
   <dl class="figures">
-    <div v-for="[label, value] in rows" :key="label">
-      <dt>{{ label }}</dt>
-      <dd>{{ value }}</dd>
+    <div v-for="f in figures" :key="f.label">
+      <dt>{{ f.label }}</dt>
+      <dd class="stat-value">{{ f.value }}</dd>
     </div>
   </dl>
 </template>
@@ -39,7 +33,14 @@ const rows = computed((): [string, string][] => [
   }
 }
 
+/* A label that wraps, like "Average mistakes" on phones, pushes only its own figure's top, so values stay in line. */
+.figures > div {
+  display: flex;
+  flex-direction: column;
+}
+
 dt {
+  margin-bottom: auto;
   color: var(--muted);
   font-size: 0.8rem;
 }
@@ -47,7 +48,5 @@ dt {
 dd {
   margin: 2px 0 0;
   font-size: 1.15rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 </style>

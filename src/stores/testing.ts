@@ -2,7 +2,7 @@
 import { COLS, ROWS, colOf, rowOf, unitsOf } from '../lib/sudoku'
 import type { Difficulty } from '../lib/difficulty'
 import type { useGameStore } from './game'
-import { useResultsStore, type Outcome } from './results'
+import { useResultsStore, type GameResult, type Outcome } from './results'
 
 export type Game = ReturnType<typeof useGameStore>
 
@@ -43,12 +43,12 @@ export function quietRow(game: Game) {
 export const crossingColumn = (game: Game, row: readonly number[]) =>
   nonGivensOf(game, COLS[colOf(row[0])]).filter((i) => !row.includes(i))
 
-/** Stores a result as the game store would, filled in with plausible values. */
-export function seedResult(difficulty: Difficulty, outcome: Outcome) {
+/** Stores a result as the game store would, filled in with plausible values that `fields` override. */
+export function seedResult(difficulty: Difficulty, outcome: Outcome, fields: Partial<Omit<GameResult, 'id'>> = {}) {
   const grid = '0'.repeat(81)
   useResultsStore().record({
     difficulty, outcome, startedAt: '2026-10-01T10:00:00Z', endedAt: '2026-10-01T10:10:00Z', elapsed: 600, mistakes: 0,
     progress: outcome === 'completed' ? 100 : 40, puzzle: grid, solution: grid, finalBoard: grid,
-    se: 2, hodokuScore: 200, hodokuLevel: 'medium', hardest: 'Hidden Single',
+    se: 2, hodokuScore: 200, hodokuLevel: 'medium', hardest: 'Hidden Single', ...fields,
   })
 }

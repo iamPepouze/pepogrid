@@ -32,6 +32,7 @@ Break the work into **tracer bullet** tickets.
 - A completed slice is demoable or verifiable on its own
 - Each slice is sized to fit in a single fresh context window
 - Any prefactoring should be done first
+- A test named in a ticket sits in the file the repo's `CODING_STANDARDS.md` test-layout rules name, when it has one
 
 </vertical-slice-rules>
 

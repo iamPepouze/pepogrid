@@ -60,7 +60,7 @@ The outcome of a game whose grid has been filled to match the solution.
 _Avoid_: Completed, won, finished
 
 **Abandoned**:
-The outcome of a game replaced by a new one after the player had placed at least one digit, right or wrong; notes alone do not count.
+The outcome of a game replaced by a new one while at least one digit the player placed, right or wrong, is on the board; notes alone do not count, and neither do digits all erased or undone before replacing.
 _Avoid_: Quit, lost
 
 **Result**:
@@ -78,6 +78,10 @@ _Avoid_: Win rate
 **Streak**:
 A run of consecutive solved results at one difficulty, broken by an abandoned one.
 _Avoid_: Winning streak
+
+**Flawless**:
+A solved result with no mistakes.
+_Avoid_: Perfect game, clean solve
 
 **Matching-number highlight**:
 An optional tint on every cell holding the digit of the selected cell.

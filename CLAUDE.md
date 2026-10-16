@@ -20,6 +20,7 @@ Re-apply these after updating the skills in `skills-lock.json`:
 
 - `retro`: drop `disable-model-invocation`, so a retro asked for in words can run.
 - `code-review`: move the smell baseline into `SMELLS.md`, and give the Standards sub-agent its path instead of the pasted list.
+- `to-spec` and `to-tickets`: place named tests by `CODING_STANDARDS.md`'s test-layout rules.
 
 ## Workflow
 

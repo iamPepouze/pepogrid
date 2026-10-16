@@ -6,6 +6,25 @@ import { chromium } from 'playwright-core'
 export const PORT = 5199
 export const URL = `http://localhost:${PORT}/pepogrid/`
 
+let resultCount = 0
+
+/**
+ * A stored result (`GameResult` in src/stores/results.ts) with plausible defaults that `fields`
+ * override, for seeding `pepogrid.results`. Each call gets a fresh id and ends a minute after the last.
+ * @param {Record<string, unknown>} fields
+ */
+export function result(fields = {}) {
+  const n = resultCount++
+  const grid = '0'.repeat(81)
+  const outcome = fields.outcome ?? 'completed'
+  return {
+    id: `seed-${n}`, difficulty: 'easy', outcome,
+    startedAt: new Date(Date.UTC(2026, 9, 1, 9, n)).toISOString(), endedAt: new Date(Date.UTC(2026, 9, 1, 10, n)).toISOString(),
+    elapsed: 600, mistakes: 0, progress: outcome === 'completed' ? 100 : 40, puzzle: grid, solution: grid, finalBoard: grid,
+    se: 1.2, hodokuScore: 100, hodokuLevel: 'easy', hardest: 'Hidden Single', ...fields,
+  }
+}
+
 /** The saved game (`pepogrid.game`, see src/stores/game.ts), or null before one exists. */
 const readSave = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('pepogrid.game') ?? 'null'))
 
@@ -13,7 +32,7 @@ const readSave = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('
  * `touch` emulates a phone (no hover, coarse pointer), which gets the touch layout; without it the
  * page sees a mouse at any viewport size. `colorScheme` is the device theme the default *System*
  * setting follows. `storage` seeds localStorage, keyed as the stores persist
- * (`pepogrid.results`: `{ results: [...] }`, `pepogrid.settings`: `{ theme, ... }`), and the game
+ * (`pepogrid.results`: `{ results: [...] }` built with `result()`, `pepogrid.settings`: `{ theme, ... }`), and the game
  * opens on it; objects are stored as JSON.
  * @param {{ reducedMotion?: 'reduce' | 'no-preference', viewport?: { width: number, height: number }, touch?: boolean, colorScheme?: 'light' | 'dark', storage?: Record<string, unknown> }} options
  */

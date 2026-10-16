@@ -40,6 +40,50 @@ describe('StatisticsView', () => {
     expect(panel).toMatch(/Solve rate\s*67%/)
   })
 
+  /** The text of the panel's section headed `heading`, one space between its pieces of text. */
+  function section(view: ReturnType<typeof mountView>, heading: string) {
+    const body = view.findAll('[role="tabpanel"] h3').find((h) => h.text() === heading)?.element.nextElementSibling
+    if (!body) return undefined
+    const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT)
+    const texts: string[] = []
+    while (walker.nextNode()) texts.push(walker.currentNode.textContent!.trim())
+    return texts.filter(Boolean).join(' ')
+  }
+
+  it('shows the selected difficulty’s times, mistakes, streaks, ratings, families and recent games', () => {
+    seedResult('hard', 'completed', { endedAt: '2026-10-01T10:00:00Z', elapsed: 300, mistakes: 2, se: 3.0, hodokuScore: 300, hardest: 'Pointing' })
+    seedResult('hard', 'abandoned', { endedAt: '2026-10-02T10:00:00Z', elapsed: 120, mistakes: 1, se: 3.5, hodokuScore: 900, progress: 46, hardest: 'Naked Pair' })
+    seedResult('hard', 'completed', { endedAt: '2026-10-03T10:00:00Z', elapsed: 4000, mistakes: 0, se: 4.0, hodokuScore: 500, hardest: 'Naked Pair' })
+    seedResult('easy', 'completed', { elapsed: 10 })
+    const view = mountView('hard')
+
+    expect(section(view, 'Solved games')).toBe('Best time 05:00 Average time 35:50 Average mistakes 1.0 Flawless 1')
+    expect(section(view, 'Streaks')).toBe('Current 1 Best 1')
+    expect(section(view, 'Ratings')).toBe('SE 3.5 3.0–4.0 HoDoKu 400 300–500')
+    expect(view.find('[role="tabpanel"]').text()).toContain('Abandoned at 46% on average')
+    expect(section(view, 'Technique families')).toBe('Subsets 1/2 Intersections 1/1')
+
+    const recent = view.findAll('.recent li').map((li) => li.text().replace(/\s+/g, ' '))
+    expect(recent).toHaveLength(3)
+    expect(recent[0]).toMatch(/ · Solved · 1:06:40 · 0 mistakes · SE 4\.0$/)
+    expect(recent[1]).toMatch(/ · Abandoned at 46% · 02:00 · 1 mistake · SE 3\.5$/)
+    expect(recent[2]).toMatch(/ · Solved · 05:00 · 2 mistakes · SE 3\.0$/)
+  })
+
+  it('shows a dash for figures that need a solved game, and leaves out what doesn’t apply', async () => {
+    seedResult('master', 'abandoned')
+    seedResult('easy', 'completed')
+    const view = mountView('master')
+
+    expect(section(view, 'Solved games')).toBe('Best time — Average time — Average mistakes — Flawless —')
+    expect(section(view, 'Ratings')).toBe('SE — HoDoKu —')
+
+    await view.findAll('[role="tab"]').find((t) => t.text() === 'Easy')!.trigger('click')
+    const panel = view.find('[role="tabpanel"]').text()
+    expect(panel).not.toContain('Technique families')
+    expect(panel).not.toContain('on average')
+  })
+
   it('says so on a difficulty with no games yet', async () => {
     seedResult('easy', 'completed')
     const view = mountView('easy')
