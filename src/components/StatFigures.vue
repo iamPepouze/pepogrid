@@ -1,23 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { Statistics } from '../lib/statistics'
-
-const props = defineProps<{ stats: Statistics }>()
-
-const percent = (rate: number | null) => (rate === null ? '—' : `${Math.round(rate * 100)}%`)
-
 /** Label and shown value of each figure, in display order. */
-const rows = computed((): [string, string][] => [
-  ['Played', String(props.stats.played)],
-  ['Solved', String(props.stats.solved)],
-  ['Abandoned', String(props.stats.abandoned)],
-  ['Solve rate', percent(props.stats.solveRate)],
-])
+defineProps<{ figures: [string, string][] }>()
 </script>
 
 <template>
   <dl class="figures">
-    <div v-for="[label, value] in rows" :key="label">
+    <div v-for="[label, value] in figures" :key="label">
       <dt>{{ label }}</dt>
       <dd>{{ value }}</dd>
     </div>
@@ -39,7 +27,14 @@ const rows = computed((): [string, string][] => [
   }
 }
 
+/* A label that wraps, like "Average mistakes" on phones, pushes only its own figure's top, so values stay in line. */
+.figures > div {
+  display: flex;
+  flex-direction: column;
+}
+
 dt {
+  margin-bottom: auto;
   color: var(--muted);
   font-size: 0.8rem;
 }

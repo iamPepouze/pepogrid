@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import sample from './__fixtures__/rated-sample.json'
 import { loadBank, pickFromBank } from './bank'
-import { DIFFICULTIES, TIERS, familyOf, tierOf, type HodokuLevel } from './difficulty'
+import { DIFFICULTIES, TIERS, familyOf, tierOf, type Difficulty, type HodokuLevel } from './difficulty'
 import { PEERS, UNITS } from './grid'
 import { rateHodoku, rateSE } from './rater'
-import { statisticsOf, type StatResult } from './statistics'
+import { countsOf, formatDuration, statisticsOf, type StatResult } from './statistics'
 import { countSolutions, randomSolution, solve } from './sudoku'
 import { applyTransform, randomTransform } from './transform'
 
@@ -160,19 +160,112 @@ describe('family rotation', () => {
 })
 
 describe('statistics', () => {
-  const solved = (difficulty: StatResult['difficulty']): StatResult => ({ difficulty, outcome: 'completed' })
-  const abandoned = (difficulty: StatResult['difficulty']): StatResult => ({ difficulty, outcome: 'abandoned' })
+  /** End times one minute apart, in the order the results are built. */
+  let minute = 0
+  const nextEnd = () => new Date(Date.UTC(2026, 9, 1) + minute++ * 60_000).toISOString()
+  const result = (difficulty: Difficulty, outcome: StatResult['outcome'], fields: Partial<StatResult>): StatResult => ({
+    difficulty, outcome, endedAt: nextEnd(), elapsed: 600, mistakes: 0, progress: outcome === 'completed' ? 100 : 40,
+    se: 2, hodokuScore: 200, hardest: 'Hidden Single', ...fields,
+  })
+  const solved = (difficulty: Difficulty, fields: Partial<StatResult> = {}) => result(difficulty, 'completed', fields)
+  const abandoned = (difficulty: Difficulty, fields: Partial<StatResult> = {}) => result(difficulty, 'abandoned', fields)
 
   it('counts played, solved and abandoned results and the solve rate at one difficulty', () => {
     const results = [solved('hard'), abandoned('hard'), solved('hard'), solved('easy'), solved('hard')]
-    expect(statisticsOf(results, 'hard')).toEqual({ played: 4, solved: 3, abandoned: 1, solveRate: 0.75 })
+    expect(countsOf(results, 'hard')).toEqual({ played: 4, solved: 3, abandoned: 1, solveRate: 0.75 })
   })
 
   it('counts across every difficulty when none is given', () => {
-    expect(statisticsOf([solved('easy'), abandoned('master'), solved('medium'), abandoned('easy')])).toEqual({ played: 4, solved: 2, abandoned: 2, solveRate: 0.5 })
+    expect(countsOf([solved('easy'), abandoned('master'), solved('medium'), abandoned('easy')])).toEqual({ played: 4, solved: 2, abandoned: 2, solveRate: 0.5 })
   })
 
   it('has no solve rate without results', () => {
-    expect(statisticsOf([solved('easy')], 'master')).toEqual({ played: 0, solved: 0, abandoned: 0, solveRate: null })
+    expect(countsOf([solved('easy')], 'master')).toEqual({ played: 0, solved: 0, abandoned: 0, solveRate: null })
+  })
+
+  it('times and counts mistakes over solved results only', () => {
+    const results = [
+      solved('hard', { elapsed: 300, mistakes: 2 }),
+      abandoned('hard', { elapsed: 100, mistakes: 5 }),
+      solved('hard', { elapsed: 500, mistakes: 0 }),
+      solved('easy', { elapsed: 50, mistakes: 0 }),
+    ]
+    expect(statisticsOf(results, 'hard')).toMatchObject({ bestTime: 300, averageTime: 400, averageMistakes: 1, flawless: 1 })
+  })
+
+  it('rates over solved results only, on any difficulty', () => {
+    const results = [
+      solved('easy', { se: 1.2, hodokuScore: 100 }),
+      abandoned('easy', { se: 1.5, hodokuScore: 900 }),
+      solved('easy', { se: 1.0, hodokuScore: 140 }),
+      solved('easy', { se: 1.4, hodokuScore: 120 }),
+    ]
+    const { se, hodoku } = statisticsOf(results, 'easy')
+    expect(se).toEqual({ average: expect.closeTo(1.2), min: 1.0, max: 1.4 })
+    expect(hodoku).toEqual({ average: 120, min: 100, max: 140 })
+  })
+
+  it('has no time, mistake or rating figures without a solved result', () => {
+    expect(statisticsOf([abandoned('master'), abandoned('master')], 'master')).toMatchObject({
+      bestTime: null, averageTime: null, averageMistakes: null, flawless: null, se: null, hodoku: null,
+    })
+  })
+
+  it('streaks over solved results in end-time order, broken by an abandon', () => {
+    const at = (day: number) => ({ endedAt: `2026-10-${String(day).padStart(2, '0')}T12:00:00.000Z` })
+    // Stored out of end-time order: by date the run is S S S A S S, with an Easy abandon between that doesn't count.
+    const results = [
+      solved('hard', at(5)), solved('hard', at(1)), abandoned('hard', at(4)), solved('hard', at(6)),
+      solved('hard', at(2)), abandoned('easy', at(3)), solved('hard', at(3)),
+    ]
+    expect(statisticsOf(results, 'hard')).toMatchObject({ currentStreak: 2, bestStreak: 3 })
+  })
+
+  it('has no current streak once the latest result is an abandon', () => {
+    expect(statisticsOf([solved('medium'), solved('medium'), abandoned('medium')], 'medium')).toMatchObject({ currentStreak: 0, bestStreak: 2 })
+  })
+
+  it('lists the technique families played, as solved of played, most played first, grouped as the difficulty groups them', () => {
+    const results = [
+      solved('expert', { hardest: 'Unique Rectangle type 1' }),
+      solved('expert', { hardest: 'XY-Wing' }),
+      abandoned('expert', { hardest: 'Turbot Fish' }),
+      abandoned('expert', { hardest: 'X-Wing' }),
+      solved('expert', { hardest: 'Naked Pair' }),
+      abandoned('expert', { hardest: 'Turbot Fish' }),
+      solved('hard', { hardest: 'X-Wing' }),
+    ]
+    expect(statisticsOf(results, 'expert').families).toEqual([
+      { family: 'Wings & subsets', solved: 2, played: 3 },
+      { family: 'Cycles', solved: 0, played: 2 },
+      { family: 'Uniqueness', solved: 1, played: 1 },
+    ])
+    expect(statisticsOf(results, 'hard').families).toEqual([{ family: 'Fish', solved: 1, played: 1 }])
+  })
+
+  it('lists no technique families on Easy', () => {
+    expect(statisticsOf([solved('easy')], 'easy').families).toEqual([])
+  })
+
+  it('averages progress over abandoned results only', () => {
+    const results = [abandoned('hard', { progress: 20 }), solved('hard'), abandoned('hard', { progress: 50 }), abandoned('easy', { progress: 90 })]
+    expect(statisticsOf(results, 'hard').averageProgress).toBe(35)
+    expect(statisticsOf([solved('hard')], 'hard').averageProgress).toBeNull()
+  })
+
+  it('keeps the 10 latest results, newest first', () => {
+    const results = Array.from({ length: 12 }, (_, i) => (i % 3 ? solved : abandoned)('medium', { elapsed: i + 1 }))
+    results.splice(5, 0, solved('hard'))
+    // Stored newest first, against recording order.
+    results.reverse()
+    expect(statisticsOf(results, 'medium').recent.map((r) => r.elapsed)).toEqual([12, 11, 10, 9, 8, 7, 6, 5, 4, 3])
+  })
+
+  it('shows a time as mm:ss, or h:mm:ss from one hour', () => {
+    expect(formatDuration(0)).toBe('00:00')
+    expect(formatDuration(65)).toBe('01:05')
+    expect(formatDuration(3599)).toBe('59:59')
+    expect(formatDuration(3600)).toBe('1:00:00')
+    expect(formatDuration(37_230)).toBe('10:20:30')
   })
 })
