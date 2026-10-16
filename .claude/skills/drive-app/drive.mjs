@@ -10,11 +10,13 @@ export const URL = `http://localhost:${PORT}/pepogrid/`
 const readSave = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('pepogrid.game') ?? 'null'))
 
 /**
- * @param {{ reducedMotion?: 'reduce' | 'no-preference', viewport?: { width: number, height: number } }} options
+ * `touch` emulates a phone (no hover, coarse pointer), which gets the touch layout; without it the
+ * page sees a mouse at any viewport size.
+ * @param {{ reducedMotion?: 'reduce' | 'no-preference', viewport?: { width: number, height: number }, touch?: boolean }} options
  */
-export async function openGame({ reducedMotion = 'no-preference', viewport = { width: 400, height: 800 } } = {}) {
+export async function openGame({ reducedMotion = 'no-preference', viewport = { width: 400, height: 800 }, touch = false } = {}) {
   const browser = await chromium.launch({ channel: 'msedge' })
-  const context = await browser.newContext({ viewport, reducedMotion })
+  const context = await browser.newContext({ viewport, reducedMotion, hasTouch: touch, isMobile: touch })
   const page = await context.newPage()
   const errors = []
   page.on('pageerror', (e) => errors.push(String(e)))
@@ -33,6 +35,16 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
     cell: (i) => page.locator('.cell').nth(i),
     /** Number pad button for digit `d` (1-9). */
     pad: (d) => page.locator('.pad .digit').nth(d - 1),
+    /** Text of every button cut off: content wider than the button, or the button past the viewport's edge. */
+    clipped: () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('button')]
+          .filter((b) => {
+            const { left, right } = b.getBoundingClientRect()
+            return b.scrollWidth > b.clientWidth || left < 0 || right > innerWidth
+          })
+          .map((b) => b.textContent.trim()),
+      ),
     close: () => browser.close(),
   }
 }

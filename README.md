@@ -80,13 +80,13 @@ npm run build      # type-check and build to dist/ (includes the service worker)
 npm run preview    # serve the production build to test the PWA locally
 ```
 
-Each test draws its random puzzles from a fresh seed. A failing test prints `Replay this test with TEST_SEED=<n>`; replay it with the same puzzles by running `TEST_SEED=<n> npm test` in Bash, or `$env:TEST_SEED=<n>; npm test` in PowerShell.
+Each test draws its random puzzles from a fresh seed. A failing test's error ends with `Replay this test with TEST_SEED=<n>`; replay it with the same puzzles by running `TEST_SEED=<n> npm test` in Bash, or `$env:TEST_SEED=<n>; npm test` in PowerShell. A test that passes only for some puzzles is caught by [scripts/test-seeds.sh](scripts/test-seeds.sh), which reruns the tests related to files changed since `origin/main` under seeds 1–20 (`bash scripts/test-seeds.sh`, about 40 seconds).
 
 If a script fails because `vitest`, `vue-tsc` or `eslint` is "not recognized" or "not found", `node_modules` is likely incomplete: run `npm ci` to reinstall it from the lockfile.
 
 Dependency install scripts run only when `allowScripts` in [package.json](package.json) approves them, and [.npmrc](.npmrc) makes an unreviewed one fail the install. Both scripts in the tree are denied: esbuild's only re-fetches or relinks the native binary its optional `@esbuild/<platform>` package already installs, and fsevents (macOS only) rebuilds a binary the package already ships. The policy needs the npm version set in `devEngines`, which recent Node 24 releases bundle; older npm ignores `allowScripts` and runs every script. After adding a dependency that has an install script, run `npm install-scripts approve <pkg>` or `npm install-scripts deny <pkg>` to record a decision.
 
-Changes reach `main` through pull requests, which must pass the `check` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) (`npm run lint`, `npm test`, `npm run build`, plus actionlint on the workflows and shellcheck on `scripts/*.sh`); see [docs/agents/ci.md](docs/agents/ci.md). Every push to `main` reruns `check` and deploys the build to GitHub Pages ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)).
+Changes reach `main` through pull requests, which must pass the `check` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) (`npm run lint`, `npm test`, `scripts/test-seeds.sh`, `npm run build`, plus actionlint on the workflows and shellcheck on `scripts/*.sh`); see [docs/agents/ci.md](docs/agents/ci.md). Every push to `main` reruns `check` and deploys the build to GitHub Pages ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)).
 
 Code follows [CODING_STANDARDS.md](CODING_STANDARDS.md), which `/code-review` checks every change against.
 

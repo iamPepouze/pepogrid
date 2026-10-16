@@ -37,6 +37,12 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+      # Only a PR has changes against main to rerun; a deploy builds main itself.
+      - name: Rerun changed tests under fixed seeds
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags --depth=1 origin main
+          scripts/test-seeds.sh FETCH_HEAD
       - run: npm run build
       - if: inputs.upload-pages
         uses: actions/upload-pages-artifact@v4
