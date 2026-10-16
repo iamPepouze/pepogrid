@@ -126,3 +126,9 @@ button:focus-visible {
   width: 18px;
   height: 18px;
 }
+
+@media (hover: hover) and (pointer: fine) {
+  .icon-button:hover:not(:disabled) {
+    background: var(--peer);
+  }
+}

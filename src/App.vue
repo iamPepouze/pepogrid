@@ -399,8 +399,7 @@ kbd {
     display: block;
   }
 
-  .install:hover,
-  .new-game:hover:not(:disabled) {
+  .install:hover {
     background: var(--peer);
   }
 }
