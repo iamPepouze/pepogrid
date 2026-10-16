@@ -29,11 +29,19 @@ jobs:
         with:
           # Full history: test-seeds.sh diffs against the merge base with origin/main.
           fetch-depth: 0
+      # A deploy runs on main itself, which has no PR branch to name.
+      - name: Check branch name
+        if: github.event_name == 'pull_request'
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: scripts/check-branch-name.sh "$BRANCH"
       # The linter images are pinned in .github/lint/compose.yml, where Dependabot bumps them.
       - name: Lint workflows
         run: docker compose -f .github/lint/compose.yml run --rm actionlint -color
       - name: Lint shell scripts
         run: docker compose -f .github/lint/compose.yml run --rm shellcheck scripts/*.sh
+      - name: Validate dependabot.yml
+        run: docker compose -f .github/lint/compose.yml run --rm dependabot-schema
       - uses: actions/setup-node@v7
         with:
           node-version: 24

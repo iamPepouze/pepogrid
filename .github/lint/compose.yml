@@ -12,3 +12,20 @@ services:
     volumes:
       - ../..:/mnt
     working_dir: /mnt
+
+  # check-jsonschema has no official image, so it is pip-installed from the pin in
+  # requirements.txt, which Dependabot bumps too.
+  dependabot-schema:
+    image: python:3.14.8-slim-trixie
+    volumes:
+      - ../..:/repo
+    working_dir: /repo
+    environment:
+      PIP_ROOT_USER_ACTION: ignore
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        pip install --quiet --no-cache-dir -r .github/lint/requirements.txt &&
+        check-jsonschema --builtin-schema vendor.dependabot .github/dependabot.yml
