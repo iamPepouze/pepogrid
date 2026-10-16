@@ -1,0 +1,2 @@
+# Run by the dependabot-schema service in compose.yml.
+check-jsonschema==0.38.2

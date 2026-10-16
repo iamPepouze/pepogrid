@@ -4,6 +4,8 @@ version: 2
 updates:
   - package-ecosystem: npm
     directory: /
+    commit-message:
+      prefix: chore
     schedule:
       interval: weekly
     cooldown:
@@ -26,6 +28,8 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    commit-message:
+      prefix: chore
     schedule:
       interval: weekly
     cooldown:
@@ -38,6 +42,8 @@ updates:
 
   - package-ecosystem: docker-compose
     directory: /.github/lint
+    commit-message:
+      prefix: chore
     schedule:
       interval: weekly
     cooldown:
@@ -47,3 +53,12 @@ updates:
         applies-to: version-updates
         patterns: ["*"]
         update-types: [minor, patch]
+
+  - package-ecosystem: pip
+    directory: /.github/lint
+    commit-message:
+      prefix: chore
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
