@@ -1,4 +1,4 @@
-# The linter images CI runs, pinned here so Dependabot's docker-compose ecosystem can bump them.
+# The linter images ci.yml runs; why they live here is in docs/agents/ci.md.
 # Relative paths resolve from this file's directory, so ../.. is the repo root.
 services:
   actionlint:

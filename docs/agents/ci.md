@@ -11,8 +11,8 @@ How changes reach `main`, and how to wait on CI from this machine.
 
 - Ecosystems: npm, GitHub Actions, and the linter images CI runs. Those images are pinned in [.github/lint/compose.yml](../../.github/lint/compose.yml), because Dependabot can't read tags inside `docker run` or `docker://` steps. Bump them there, not in `ci.yml`.
 - Version updates run weekly and wait 7 days after a release. Minor and patch bumps share one PR per ecosystem; each major bump gets its own.
-- Security updates are neither delayed nor grouped: one PR per advisory.
-- TypeScript major bumps are ignored while [ADR 0005](../adr/0005-typescript-pinned-to-6.md) holds.
+- Security updates are neither delayed nor grouped: one PR per vulnerable dependency.
+- TypeScript major bumps are ignored while [ADR 0005](../adr/0005-typescript-pinned-to-6.md) holds. TypeScript minor and patch bumps get a PR of their own, apart from the other npm updates, because typescript-eslint's peer range can fail them.
 
 ## Waiting on a run
 

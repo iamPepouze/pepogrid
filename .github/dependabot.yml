@@ -1,6 +1,4 @@
-# Weekly version updates for every ecosystem: minor and patch bumps share one PR,
-# each major bump gets its own. Security updates are left ungrouped and undelayed.
-# See docs/agents/ci.md.
+# The rules behind this file are in docs/agents/ci.md.
 version: 2
 
 updates:
@@ -11,6 +9,12 @@ updates:
     cooldown:
       default-days: 7
     groups:
+      # Listed first, since a dependency joins the first group it matches: a TypeScript
+      # minor that breaks typescript-eslint's peer range then fails only its own PR.
+      typescript:
+        applies-to: version-updates
+        patterns: [typescript]
+        update-types: [minor, patch]
       npm-minor-patch:
         applies-to: version-updates
         patterns: ["*"]
@@ -32,7 +36,6 @@ updates:
         patterns: ["*"]
         update-types: [minor, patch]
 
-  # The linter images in .github/lint/compose.yml, which ci.yml runs.
   - package-ecosystem: docker-compose
     directory: /.github/lint
     schedule:
