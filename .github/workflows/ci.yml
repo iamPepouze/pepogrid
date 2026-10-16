@@ -25,7 +25,7 @@ jobs:
     name: check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # Full history: test-seeds.sh diffs against the merge base with origin/main.
           fetch-depth: 0
