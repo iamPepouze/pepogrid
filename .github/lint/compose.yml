@@ -1,0 +1,14 @@
+# The linter images ci.yml runs; why they live here is in docs/agents/ci.md.
+# Relative paths resolve from this file's directory, so ../.. is the repo root.
+services:
+  actionlint:
+    image: rhysd/actionlint:1.7.12
+    volumes:
+      - ../..:/repo
+    working_dir: /repo
+
+  shellcheck:
+    image: koalaman/shellcheck:v0.11.0
+    volumes:
+      - ../..:/mnt
+    working_dir: /mnt

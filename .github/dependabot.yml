@@ -1,0 +1,49 @@
+# The rules behind this file are in docs/agents/ci.md.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      # Listed first, since a dependency joins the first group it matches: a TypeScript
+      # minor that breaks typescript-eslint's peer range then fails only its own PR.
+      typescript:
+        applies-to: version-updates
+        patterns: [typescript]
+        update-types: [minor, patch]
+      npm-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]
+    ignore:
+      # TypeScript stays on 6 until vue-tsc supports 7: docs/adr/0005-typescript-pinned-to-6.md
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker-compose
+    directory: /.github/lint
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      lint-images-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]

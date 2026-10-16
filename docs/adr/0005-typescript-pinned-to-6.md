@@ -5,3 +5,5 @@ TypeScript is pinned to `^6` although 7 is out, because vue-tsc (needed to type-
 ## Consequences
 
 typescript-eslint (behind `npm run lint`) declares its own TypeScript ceiling (`<6.1.0` as of 8.71.2), so even a minor TypeScript bump must check that peer range, not just vue-tsc.
+
+Dependabot ignores TypeScript major bumps (`.github/dependabot.yml`); drop that rule along with the pin. TypeScript minor bumps still arrive, in a PR of their own so that one failing `check` against the typescript-eslint ceiling doesn't hold back the other npm updates.
