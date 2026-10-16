@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { Plus } from '@lucide/vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import AppDialog from './components/AppDialog.vue'
 import DifficultyMenu from './components/DifficultyMenu.vue'
 import GameControls from './components/GameControls.vue'
 import NumberPad from './components/NumberPad.vue'
@@ -20,12 +22,37 @@ const { canInstall, install } = useInstall()
 /** Ratings of the current puzzle, shown only for the tiers that display them. */
 const shownRating = computed(() => (TIERS[game.difficulty].showRating ? game.rating : null))
 
+/** What the open dialog shows, and how to report the player's answer; null while none is open. */
+interface Prompt {
+  title: string
+  message: string
+  confirmLabel: string
+  cancelLabel?: string
+  resolve: (confirmed: boolean) => void
+}
+
+const prompt = ref<Prompt | null>(null)
+
+/** Opens the in-app dialog and resolves with whether the player confirmed. A newer prompt cancels the open one. */
+function ask(options: Omit<Prompt, 'resolve'>) {
+  prompt.value?.resolve(false)
+  return new Promise<boolean>((resolve) => {
+    prompt.value = { ...options, resolve }
+  })
+}
+
+function closePrompt(confirmed: boolean) {
+  const open = prompt.value
+  prompt.value = null
+  open?.resolve(confirmed)
+}
+
 async function loadGame(difficulty: Difficulty, options?: { recordAbandoned?: boolean }) {
   try {
     await game.newGame(difficulty, options)
   } catch (error) {
     console.error(error)
-    window.alert(`Couldn't load a ${LABELS[difficulty]} puzzle. Check your connection and try again.`)
+    await ask({ title: `Couldn't load a ${LABELS[difficulty]} puzzle`, message: 'Check your connection and try again.', confirmLabel: 'OK' })
   }
 }
 
@@ -35,12 +62,18 @@ const time = computed(() => {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 })
 
-function startGame(difficulty: Difficulty) {
+async function startGame(difficulty: Difficulty) {
   const unfinished = game.hasProgress && !game.completed
-  if (unfinished && !window.confirm(`Start a new ${LABELS[difficulty]} game? Your current progress will be lost.`)) {
-    return
+  if (unfinished) {
+    const confirmed = await ask({
+      title: `Start a new ${LABELS[difficulty]} game?`,
+      message: `Your current ${LABELS[game.difficulty]} game will be lost.`,
+      confirmLabel: 'New game',
+      cancelLabel: 'Cancel',
+    })
+    if (!confirmed) return
   }
-  loadGame(difficulty)
+  await loadGame(difficulty)
 }
 
 const ARROWS: Record<string, [number, number]> = {
@@ -154,6 +187,16 @@ onBeforeUnmount(() => {
       </div>
       <button v-if="canInstall" type="button" class="install" @click="install">Install</button>
       <SettingsMenu />
+      <button
+        type="button"
+        class="new-game"
+        aria-label="New game"
+        title="New game"
+        :disabled="game.loading"
+        @click="startGame(game.difficulty)"
+      >
+        <Plus class="icon" aria-hidden="true" />
+      </button>
       <DifficultyMenu :current="game.difficulty" :disabled="game.loading" @select="startGame" />
     </header>
 
@@ -181,7 +224,7 @@ onBeforeUnmount(() => {
         <SudokuBoard />
       </div>
 
-      <GameControls class="controls-area" @new-game="startGame(game.difficulty)" />
+      <GameControls class="controls-area" />
       <NumberPad class="pad-area" />
 
       <p class="hints">
@@ -189,6 +232,15 @@ onBeforeUnmount(() => {
         <kbd>F</kbd> fill notes · <kbd>Del</kbd> erase · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo · arrows move
       </p>
     </main>
+
+    <AppDialog
+      v-if="prompt"
+      :title="prompt.title"
+      :message="prompt.message"
+      :confirm-label="prompt.confirmLabel"
+      :cancel-label="prompt.cancelLabel"
+      @close="closePrompt"
+    />
   </div>
 </template>
 
@@ -247,6 +299,30 @@ onBeforeUnmount(() => {
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+.new-game {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--button-border);
+  border-radius: 10px;
+  background: var(--button-bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.new-game:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.new-game .icon {
+  width: 20px;
+  height: 20px;
 }
 
 .game {
@@ -356,7 +432,8 @@ kbd {
     display: block;
   }
 
-  .install:hover {
+  .install:hover,
+  .new-game:hover:not(:disabled) {
     background: var(--peer);
   }
 }

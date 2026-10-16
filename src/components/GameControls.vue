@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { Eraser, Pencil, Plus, Undo2, WandSparkles } from '@lucide/vue'
+import { Eraser, Pencil, Undo2, WandSparkles } from '@lucide/vue'
 import { useGameStore } from '../stores/game'
 
 const game = useGameStore()
-
-defineEmits<{ newGame: [] }>()
 </script>
 
 <template>
@@ -33,17 +31,13 @@ defineEmits<{ newGame: [] }>()
       <WandSparkles class="icon" aria-hidden="true" />
       <span>Fill notes</span>
     </button>
-    <button type="button" class="control full-row" @click="$emit('newGame')">
-      <Plus class="icon" aria-hidden="true" />
-      <span>New game</span>
-    </button>
   </div>
 </template>
 
 <style scoped>
 .controls {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
 
@@ -110,7 +104,7 @@ defineEmits<{ newGame: [] }>()
     background: var(--peer);
   }
 
-  /* Icon left of the label, in the side panel or once five such buttons fit in a row. */
+  /* Icon left of the label, in the side panel or once four such buttons fit in a row. */
   @media (orientation: landscape) and (min-width: 600px), (min-width: 760px) {
     .control {
       flex-direction: row;
@@ -134,14 +128,10 @@ defineEmits<{ newGame: [] }>()
     }
   }
 
-  /* The side panel is too narrow for inline labels in one row: two columns, with New game alone on the last. */
+  /* The side panel is too narrow for inline labels in one row: a 2×2 grid. */
   @media (orientation: landscape) and (min-width: 600px) {
     .controls {
       grid-template-columns: repeat(2, 1fr);
-    }
-
-    .full-row {
-      grid-column: 1 / -1;
     }
   }
 }
