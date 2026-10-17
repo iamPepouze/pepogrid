@@ -60,6 +60,16 @@ describe('KeyTechniqueView', () => {
     expect(cell(view, 2, 4).attributes('aria-label')).toBe('Row 2, column 4: 3, placed, highlighted')
   })
 
+  it('opens the technique’s section first and keeps the family’s other sections collapsed below it', () => {
+    const view = mountView('Direct Hidden Triplet')
+    expect(view.find('h3').text()).toBe('Direct Hidden Triplet')
+    const others = view.findAll('details')
+    expect(others.map((d) => d.find('summary').text())).toEqual(['Direct Hidden Pair'])
+    expect(others[0].attributes('open')).toBeUndefined()
+    expect(others[0].text()).toContain('Look for two digits that have the same two cells')
+    expect(others[0].find('.lesson-grid').exists()).toBe(true)
+  })
+
   it('says a lesson is coming for a technique without one', () => {
     const view = mountView('Forcing Chain')
     expect(view.find('.technique').text()).toBe('Forcing Chain')
