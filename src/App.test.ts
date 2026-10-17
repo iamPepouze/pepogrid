@@ -1,10 +1,20 @@
 // @vitest-environment happy-dom
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
+import type { RegisterSWOptions } from 'virtual:pwa-register'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.vue'
 import { useGameStore } from './stores/game'
 import { fill, nonGivensOf, seedResult } from './stores/testing'
+
+/** The service worker registration, faked: `sw.options` holds what App's update composable passed in. */
+const sw = vi.hoisted(() => ({ options: {} as RegisterSWOptions, update: vi.fn(async () => {}) }))
+vi.mock('virtual:pwa-register', () => ({
+  registerSW(options: RegisterSWOptions) {
+    sw.options = options
+    return sw.update
+  },
+}))
 
 enableAutoUnmount(afterEach)
 
@@ -307,5 +317,18 @@ describe('App', () => {
       await app.find(statisticsButton).trigger('click')
       expect(app.find('[role="tab"][aria-selected="true"]').text()).toBe('Hard')
     })
+  })
+
+  it('shows Update in the header once a new version is waiting, and loads it on tap', async () => {
+    // A returning player: the installed version controls the page.
+    Object.defineProperty(navigator, 'serviceWorker', { value: { controller: {} }, configurable: true })
+    const app = await mountApp()
+    const updateButton = () => app.findAll('.topbar button').find((b) => b.text() === 'Update')
+    expect(updateButton()).toBeUndefined()
+
+    sw.options.onNeedRefresh!()
+    await flushPromises()
+    await updateButton()!.trigger('click')
+    expect(sw.update).toHaveBeenCalledOnce()
   })
 })

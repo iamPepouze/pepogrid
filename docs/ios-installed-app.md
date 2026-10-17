@@ -50,13 +50,14 @@ Each claim carries a label:
 ## Updates
 
 - Documented, for the service worker lifecycle: a new worker found on page load installs in the background. It activates only once no page uses the old worker, and a refresh isn't enough ([MDN: Using Service Workers](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers), [web.dev: service worker lifecycle](https://web.dev/articles/service-worker-lifecycle)).
-- Documented: [vite.config.ts](../vite.config.ts)'s prompt mode never calls `skipWaiting()` on its own. The app has to call `updateSW()`, and PepoGrid never does ([vite-plugin-pwa: prompt for update](https://vite-pwa-org.netlify.app/guide/prompt-for-update)).
-- What happens on iOS after a deploy:
+- Documented: [vite.config.ts](../vite.config.ts)'s prompt mode never calls `skipWaiting()` on its own. The app has to call `updateSW()` ([vite-plugin-pwa: prompt for update](https://vite-pwa-org.netlify.app/guide/prompt-for-update)). PepoGrid calls it only when the player taps the header's **Update** button, which [useUpdate.ts](../src/composables/useUpdate.ts) shows once a new version is waiting. The tap reloads the page, and the saved game resumes.
+- What happens on iOS after a deploy, if the player never taps Update:
   1. On the first full launch, the old version runs and the new one installs.
   2. Closing the app from the app switcher frees the old worker.
   3. On the second full launch, the new version runs.
-- Inferred: resuming the app from the background doesn't load the page, so it neither checks for an update nor applies one.
-- To check a fix on a device: deploy, launch, close the app from the app switcher, and launch again.
+- Inferred: resuming the app from the background doesn't load the page, so on its own it neither checks for an update nor applies one. useUpdate.ts therefore checks whenever the page becomes visible again, so a version deployed since launch shows the Update button without a relaunch.
+- Observed in Edge, with a changed `sw.js` served under `vite preview`: the check on resume found the new version, Update appeared, and tapping it reloaded into the new version with the game intact. `updateSW()` reloads only when control passes to the new worker, which never happens on a first visit, where no worker controls the page, so there useUpdate.ts reloads the page itself. The page then loads from the network.
+- To check a fix on a device without the button: deploy, launch, close the app from the app switcher, and launch again. With it: deploy, bring the open app back from the background, and tap Update.
 
 ## Haptics
 

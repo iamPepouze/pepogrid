@@ -10,6 +10,7 @@ import StatisticsView from './components/StatisticsView.vue'
 import SudokuBoard from './components/SudokuBoard.vue'
 import { useInstall } from './composables/useInstall'
 import { useTheme } from './composables/useTheme'
+import { useUpdate } from './composables/useUpdate'
 import { HODOKU_LABELS, LABELS, TIERS, type Difficulty } from './lib/difficulty'
 import { formatDuration } from './lib/statistics'
 import { useGameStore } from './stores/game'
@@ -22,6 +23,7 @@ if (!game.isValid()) loadGame('easy', { recordAbandoned: false })
 
 useTheme()
 const { canInstall, install } = useInstall()
+const { canUpdate, update } = useUpdate()
 
 /** Ratings of the current puzzle, shown only for the difficulties that display them. */
 const shownRating = computed(() => (TIERS[game.difficulty].showRating ? game.rating : null))
@@ -204,7 +206,7 @@ onMounted(() => {
     if (document.visibilityState === 'visible' && !statisticsOpen.value) game.tick()
   }, 1000)
 
-  // Refit when the window resizes or content changes height (win banner, install button).
+  // Refit when the window resizes or content changes height (win banner, Install or Update button).
   resizeObserver = new ResizeObserver(fitBoard)
   for (const el of [appEl.value, headerEl.value, gameEl.value]) if (el) resizeObserver.observe(el)
   SIDE_BY_SIDE.addEventListener('change', fitBoard)
@@ -226,7 +228,8 @@ onBeforeUnmount(() => {
         <h1>PepoGrid</h1>
         <p class="tagline">Your grid, your chill.</p>
       </div>
-      <button v-if="canInstall" type="button" class="install" @click="install">Install</button>
+      <button v-if="canUpdate" type="button" class="pill" @click="update">Update</button>
+      <button v-if="canInstall" type="button" class="pill" @click="install">Install</button>
       <SettingsMenu />
       <button
         ref="statisticsButton"
@@ -360,7 +363,8 @@ onBeforeUnmount(() => {
   color: var(--muted);
 }
 
-.install {
+/* Install and Update: shown only when they apply. */
+.pill {
   padding: 5px 10px;
   border: 1px solid var(--accent);
   border-radius: 999px;
@@ -484,7 +488,7 @@ kbd {
     display: block;
   }
 
-  .install:hover {
+  .pill:hover {
     background: var(--peer);
   }
 }
