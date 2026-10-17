@@ -3,7 +3,7 @@ import sample from './__fixtures__/rated-sample.json'
 import { loadBank, pickFromBank } from './bank'
 import { DIFFICULTIES, TIERS, familyOf, techniqueFamily, tierOf, type Difficulty, type HodokuLevel } from './difficulty'
 import { PEERS, UNITS, bit } from './grid'
-import { LESSONS, lessonFor, positionOf } from './lessons'
+import { LESSONS, gridAt, lessonFor, positionOf } from './lessons'
 import { rateHodoku, rateSE } from './rater'
 import { capReached, countsOf, formatDuration, statisticsOf, type StatResult } from './statistics'
 import { countSolutions, randomSolution, solve } from './sudoku'
@@ -169,20 +169,17 @@ describe('key technique lessons', () => {
             if (v) expect(v, `${where}: cell ${i}`).toBe(solution[i])
             else expect(position.candidates[i] & bit(solution[i]), `${where}: cell ${i} lacks its solution digit`).not.toBe(0)
           })
-          for (const step of example.steps) {
-            const cells = [...step.focus, ...(step.marks ?? []).map(([i]) => i), ...(step.eliminations ?? []).map(([i]) => i)]
-            expect(cells.every((i) => Number.isInteger(i) && i >= 0 && i < 81), `${where}: ${step.caption}`).toBe(true)
-            for (const [i, d] of step.marks ?? []) expect(position.candidates[i] & bit(d), `${where}: mark ${i}/${d}`).not.toBe(0)
-            for (const [i, d] of step.eliminations ?? []) {
-              expect(position.candidates[i] & bit(d), `${where}: elimination ${i}/${d}`).not.toBe(0)
-              expect(d, `${where}: eliminates the solution at ${i}`).not.toBe(solution[i])
-            }
-            if (step.placement) {
-              const [i, d] = step.placement
-              expect(position.values[i], `${where}: places on a filled cell`).toBe(0)
-              expect(d, `${where}: places a wrong digit at ${i}`).toBe(solution[i])
-            }
-          }
+          example.steps.forEach((step, k) => {
+            // Each step is checked against the grid it is drawn on: earlier steps' effects applied.
+            const grid = gridAt(example, k)
+            const at = `${where}, step ${k + 1}`
+            const candidates = [...(step.marks ?? []), ...(step.eliminations ?? []), ...(step.placement ? [step.placement] : [])]
+            const cells = [...step.focus, ...(step.highlight ?? []), ...candidates.map(([i]) => i)]
+            expect(cells.every((i) => Number.isInteger(i) && i >= 0 && i < 81), `${at}: a cell outside the grid`).toBe(true)
+            for (const [i, d] of candidates) expect(grid[i].candidates & bit(d), `${at}: ${d} is no candidate of cell ${i}`).not.toBe(0)
+            for (const [i, d] of step.eliminations ?? []) expect(d, `${at}: eliminates the solution at ${i}`).not.toBe(solution[i])
+            if (step.placement) expect(step.placement[1], `${at}: places a wrong digit`).toBe(solution[step.placement[0]])
+          })
         }
       }
     }

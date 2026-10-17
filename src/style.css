@@ -127,6 +127,37 @@ button.surface:disabled {
   cursor: default;
 }
 
+/*
+ * A cell of a 9×9 grid (the board, a lesson's example): thin lines between cells, thick ones
+ * between boxes, none on the outer edge, which the grid draws. A grid's 81 cells are its only children, in order.
+ */
+.grid-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  border: 0;
+  border-right: 1px solid var(--line-thin);
+  border-bottom: 1px solid var(--line-thin);
+}
+
+.grid-cell:is(:nth-child(9n + 3), :nth-child(9n + 6)) {
+  border-right: 2px solid var(--line-thick);
+}
+
+.grid-cell:is(:nth-child(n + 19):nth-child(-n + 27), :nth-child(n + 46):nth-child(-n + 54)) {
+  border-bottom: 2px solid var(--line-thick);
+}
+
+.grid-cell:nth-child(9n) {
+  border-right: 0;
+}
+
+.grid-cell:nth-child(n + 73) {
+  border-bottom: 0;
+}
+
 /* A view that stands in for the game (Statistics, the key technique): a column under a heading. */
 .view {
   display: flex;

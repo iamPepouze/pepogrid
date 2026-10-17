@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { boardAt, type LessonExample } from '../lib/lessons'
+import { gridAt, type LessonExample } from '../lib/lessons'
 import LessonGrid from './LessonGrid.vue'
 
 const props = defineProps<{ example: LessonExample }>()
@@ -8,7 +8,7 @@ const props = defineProps<{ example: LessonExample }>()
 /** The step on show, from 0. */
 const index = ref(0)
 const last = computed(() => props.example.steps.length - 1)
-const cells = computed(() => boardAt(props.example, index.value))
+const cells = computed(() => gridAt(props.example, index.value))
 </script>
 
 <template>
@@ -17,7 +17,7 @@ const cells = computed(() => boardAt(props.example, index.value))
     <p class="caption" aria-live="polite">{{ example.steps[index].caption }}</p>
     <div class="stepper">
       <button type="button" class="surface" :disabled="index === 0" @click="index--">Previous</button>
-      <span class="counter">Step {{ index + 1 }} of {{ last + 1 }}</span>
+      <span class="counter" aria-live="polite">Step {{ index + 1 }} of {{ last + 1 }}</span>
       <button type="button" class="surface" :disabled="index === last" @click="index++">Next</button>
     </div>
   </div>

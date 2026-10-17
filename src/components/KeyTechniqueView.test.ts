@@ -35,8 +35,10 @@ describe('KeyTechniqueView', () => {
     expect(button(view, 'Next').element.disabled).toBe(false)
   })
 
-  it('announces each step’s caption', () => {
-    expect(mountView('Hidden Single').find('.caption').attributes('aria-live')).toBe('polite')
+  it('announces each step’s caption and counter', () => {
+    const view = mountView('Hidden Single')
+    expect(view.find('.caption').attributes('aria-live')).toBe('polite')
+    expect(view.find('.counter').attributes('aria-live')).toBe('polite')
   })
 
   it('fades the cells outside the step and labels what each cell shows', async () => {

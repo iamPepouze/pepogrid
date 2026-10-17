@@ -5,7 +5,7 @@
  */
 import positions from '../data/lesson-positions.json'
 import { techniqueFamily } from './difficulty'
-import { PEERS, bit } from './grid'
+import { BOXES, PEERS, bit } from './grid'
 
 /** A real position for a lesson, as scripts/bank/lesson-positions.ts saves it. */
 export interface LessonPosition {
@@ -28,9 +28,9 @@ export interface LessonStep {
   caption: string
   /** Cells the step is about, shown at full strength; the rest fade. */
   focus: number[]
-  /** Cells the reasoning turns on, drawn in the accent colour. */
+  /** Cells the reasoning turns on, drawn shaded. */
   highlight?: number[]
-  /** Candidates the step points at. */
+  /** Candidates the step points at, drawn in the accent colour. */
   marks?: Candidate[]
   /** Candidates the step rules out; later steps no longer show them. */
   eliminations?: Candidate[]
@@ -59,10 +59,10 @@ export interface Lesson {
   sections: LessonSection[]
 }
 
-/** Cell index from a 1-based row and column, as captions name them. */
+/** Cell index from a 1-based row and column, as the captions name them, so each step reads like its caption. */
 const at = (row: number, col: number) => (row - 1) * 9 + col - 1
 
-const TOP_MIDDLE_BOX = [at(1, 4), at(1, 5), at(1, 6), at(2, 4), at(2, 5), at(2, 6), at(3, 4), at(3, 5), at(3, 6)]
+const TOP_MIDDLE_BOX = BOXES[1]
 
 export const LESSONS: readonly Lesson[] = [
   {
@@ -130,15 +130,21 @@ export interface LessonCell {
   digit: number
   /** True when this step places the digit. */
   placed: boolean
+  /** Bitmask of the cell's candidates at this step, the ones it marks or strikes included. */
   candidates: number
+  /** Bitmask of the candidates this step points at. */
   marked: number
+  /** Bitmask of the candidates this step rules out. */
   struck: number
   faded: boolean
   highlighted: boolean
 }
 
-/** The grid of `example` at step `index`: earlier steps' placements and eliminations applied, this step's shown. */
-export function boardAt(example: LessonExample, index: number): LessonCell[] {
+/**
+ * The grid of `example` at step `index`: earlier steps' placements and eliminations applied, this step's
+ * marked, struck or placed. A cell this step fills keeps its candidates, so its marks still check against them.
+ */
+export function gridAt(example: LessonExample, index: number): LessonCell[] {
   const { values, candidates } = positionOf(example)
   for (const step of example.steps.slice(0, index)) {
     for (const [i, d] of step.eliminations ?? []) candidates[i] &= ~bit(d)
@@ -158,7 +164,7 @@ export function boardAt(example: LessonExample, index: number): LessonCell[] {
     return {
       digit: placed ? step.placement![1] : digit,
       placed,
-      candidates: placed ? 0 : candidates[i],
+      candidates: candidates[i],
       marked: masks(step.marks),
       struck: masks(step.eliminations),
       faded: !focus.has(i),

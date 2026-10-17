@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { digitsOf } from '../lib/grid'
+import { bit, colOf, digitsOf, rowOf } from '../lib/grid'
 import type { LessonCell } from '../lib/lessons'
 
 defineProps<{ cells: LessonCell[] }>()
 
 /** What a screen reader hears for a cell: where it is, what it holds, and how the step treats it. */
 function labelOf(cell: LessonCell, i: number) {
-  const where = `Row ${Math.floor(i / 9) + 1}, column ${(i % 9) + 1}`
+  const where = `Row ${rowOf(i) + 1}, column ${colOf(i) + 1}`
   const holds = cell.digit ? String(cell.digit) : `candidates ${digitsOf(cell.candidates).join(' ')}`
   const struck = digitsOf(cell.struck)
   const notes = [
@@ -17,11 +17,6 @@ function labelOf(cell: LessonCell, i: number) {
   ].filter(Boolean)
   return [`${where}: ${holds}`, ...notes].join(', ')
 }
-
-const bordered = (i: number) => ({
-  'box-right': i % 3 === 2 && i % 9 !== 8,
-  'box-bottom': Math.floor(i / 9) % 3 === 2 && i < 72,
-})
 </script>
 
 <template>
@@ -29,8 +24,8 @@ const bordered = (i: number) => ({
     <div
       v-for="(cell, i) in cells"
       :key="i"
-      class="cell"
-      :class="{ ...bordered(i), faded: cell.faded, highlighted: cell.highlighted, placed: cell.placed }"
+      class="cell grid-cell"
+      :class="{ faded: cell.faded, highlighted: cell.highlighted, placed: cell.placed }"
       role="img"
       :aria-label="labelOf(cell, i)"
     >
@@ -39,8 +34,8 @@ const bordered = (i: number) => ({
         <span
           v-for="d in 9"
           :key="d"
-          :class="{ marked: cell.marked & (1 << d), struck: cell.struck & (1 << d) }"
-        >{{ cell.candidates & (1 << d) ? d : '' }}</span>
+          :class="{ marked: cell.marked & bit(d), struck: cell.struck & bit(d) }"
+        >{{ cell.candidates & bit(d) ? d : '' }}</span>
       </span>
     </div>
   </div>
@@ -60,30 +55,7 @@ const bordered = (i: number) => ({
 }
 
 .cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 1;
-  min-width: 0;
-  border-right: 1px solid var(--line-thin);
-  border-bottom: 1px solid var(--line-thin);
   color: var(--given-digit);
-}
-
-.cell:nth-child(9n) {
-  border-right: 0;
-}
-
-.cell:nth-child(n + 73) {
-  border-bottom: 0;
-}
-
-.cell.box-right {
-  border-right: 2px solid var(--line-thick);
-}
-
-.cell.box-bottom {
-  border-bottom: 2px solid var(--line-thick);
 }
 
 .cell.highlighted {

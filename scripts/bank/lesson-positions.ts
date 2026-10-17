@@ -7,15 +7,12 @@
  *   npx tsx scripts/bank/lesson-positions.ts <technique> <id> [skip=0]
  * `skip` passes over that many matching steps first, to try another position.
  */
-import { execFile } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { promisify } from 'node:util'
+import { loadBank } from '../../src/lib/bank'
 import { DIFFICULTIES } from '../../src/lib/difficulty'
 import type { LessonPosition } from '../../src/lib/lessons'
-import { JAVA, ROOT, SE121_TECHS, TOOLS, WORK } from './tools'
-
-const run = promisify(execFile)
+import { ROOT, WORK, runSerate } from './tools'
 
 /** Puzzles rated per Java start: enough to amortise the start, few enough to stop soon after a match. */
 const BATCH = 50
@@ -27,30 +24,23 @@ let skip = Number(skipArg)
 const OUTPUT = join(ROOT, 'src/data/lesson-positions.json')
 
 /** Bank puzzles whose hardest technique is `technique`, easiest difficulty first. */
-function puzzlesFor(technique: string): string[] {
-  return DIFFICULTIES.flatMap((tier) => {
-    const bank = JSON.parse(readFileSync(join(ROOT, `src/data/bank-${tier}.json`), 'utf8')) as [string, number, number, string][]
-    return bank.filter((e) => e[3] === technique).map((e) => e[0])
-  })
+async function puzzlesFor(technique: string): Promise<string[]> {
+  const banks = await Promise.all(DIFFICULTIES.map(loadBank))
+  return banks.flat().filter((e) => e[3] === technique).map((e) => e[0])
 }
 
-/** Lines serate prints: `P <puzzle>` per puzzle, then `B <candidates>` / `A <technique>|<summary>|<grid>` around each step. */
+/** Lines serate prints: `P <puzzle>` per puzzle, then `B <candidates> <grid>` before and `A <technique>|<summary>` after each step. */
 async function steps(puzzles: string[]): Promise<string[]> {
   const input = join(WORK, 'lesson-positions.txt')
   writeFileSync(input, puzzles.join('\n') + '\n')
-  const { stdout } = await run(
-    JAVA,
-    ['-Xrs', '-Xmx512m', '-cp', join(TOOLS, 'SukakuExplainer.jar'), 'diuf.sudoku.test.serate', `--techs=${SE121_TECHS}`,
-      '--format=', '--start=P %g', '--before=B %m %i', '--after=A %R|%s', `--input=${input}`],
-    { maxBuffer: 1 << 28 },
-  )
+  const stdout = await runSerate(['--format=', '--start=P %g', '--before=B %m %i', '--after=A %R|%s', `--input=${input}`])
   return stdout.split(/\r?\n/)
 }
 
 /** `%m` gives nine characters per cell, each digit or '.', so a cell's candidates are its digits. */
 const candidatesOf = (m: string) => Array.from({ length: 81 }, (_, i) => m.slice(i * 9, i * 9 + 9).replaceAll('.', ''))
 
-const puzzles = puzzlesFor(technique)
+const puzzles = await puzzlesFor(technique)
 if (!puzzles.length) throw new Error(`no bank puzzle has ${technique} as its hardest technique`)
 
 let found: LessonPosition | undefined
