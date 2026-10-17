@@ -93,6 +93,25 @@ const SWORDFISH_COLUMN_7 = [at(1, 7), at(5, 7), at(8, 7)]
 const SWORDFISH_CELLS = [...SWORDFISH_COLUMN_6, ...SWORDFISH_COLUMN_7, at(1, 8), at(8, 8)]
 const XY_PIVOT = at(1, 2)
 const XY_WINGS = [at(1, 4), at(3, 3)]
+const CENTER_BOX = BOXES[4]
+const BOTTOM_LEFT_BOX = BOXES[6]
+/** Every cell, for steps about the whole grid, which fade nothing. */
+const WHOLE_GRID = Array.from({ length: 81 }, (_, i) => i)
+const XYZ_PIVOT = at(8, 6)
+const XYZ_WINGS = [at(3, 6), at(8, 5)]
+const NAKED_QUAD_CELLS = [at(7, 1), at(7, 2), at(7, 3), at(8, 3)]
+/** Each uniqueness lesson’s rectangle or loop cells, in order round the pattern. */
+const RECTANGLE_1_CELLS = [at(1, 2), at(1, 4), at(2, 4), at(2, 2)]
+const RECTANGLE_2_CELLS = [at(3, 1), at(3, 3), at(7, 3), at(7, 1)]
+const RECTANGLE_3_CELLS = [at(1, 2), at(1, 6), at(2, 6), at(2, 2)]
+const RECTANGLE_4_CELLS = [at(5, 3), at(5, 9), at(6, 9), at(6, 3)]
+const LOOP_1_CELLS = [at(2, 7), at(2, 8), at(4, 8), at(4, 4), at(6, 4), at(6, 7)]
+const LOOP_2_CELLS = [at(3, 2), at(3, 3), at(4, 3), at(4, 1), at(7, 1), at(7, 2)]
+const LOOP_3_CELLS = [at(1, 2), at(3, 2), at(3, 4), at(2, 4), at(2, 8), at(1, 8)]
+const LOOP_4_CELLS = [at(7, 2), at(8, 2), at(8, 4), at(9, 4), at(9, 8), at(7, 8)]
+const APE_CELLS = [at(3, 2), at(3, 3)]
+/** The X-Cycle lesson’s cells, in the order its steps follow the 3s round the loop. */
+const X_CYCLE_CELLS = [at(1, 6), at(3, 4), at(3, 2), at(2, 1), at(6, 1), at(6, 6)]
 
 export const LESSONS: readonly Lesson[] = [
   {
@@ -414,6 +433,36 @@ export const LESSONS: readonly Lesson[] = [
         ],
       },
       {
+        title: 'Naked Quad',
+        techniques: ['Naked Quad'],
+        text: 'Four cells of a unit whose candidates, together, are only four digits form a naked quad. The four digits fill those cells, in some order, so no other cell of the unit can hold them. As with a triplet, a cell needn’t have all four.',
+        examples: [
+          {
+            position: 'naked-quad',
+            steps: [
+              {
+                caption: 'The bottom-left box has nine empty cells. Look at row 7’s three and row 8, column 3: between them, they hold only a 1, a 2, a 5 or a 9.',
+                focus: BOTTOM_LEFT_BOX,
+                highlight: NAKED_QUAD_CELLS,
+                marks: [...each([at(7, 1)], [1, 2]), ...each([at(7, 2)], [5, 9]), ...each([at(7, 3)], [1, 2, 5, 9]), ...each([at(8, 3)], [2, 9])],
+              },
+              {
+                caption: 'Four cells, four digits: the 1, the 2, the 5 and the 9 fill these cells, in some order. That’s a naked quad.',
+                focus: BOTTOM_LEFT_BOX,
+                highlight: NAKED_QUAD_CELLS,
+                marks: [...each([at(7, 1)], [1, 2]), ...each([at(7, 2)], [5, 9]), ...each([at(7, 3)], [1, 2, 5, 9]), ...each([at(8, 3)], [2, 9])],
+              },
+              {
+                caption: 'With those four digits taken, no other cell in the box can hold them: the 9 in row 8, column 2 and the 1 and the 2 in row 9, column 3 go.',
+                focus: BOTTOM_LEFT_BOX,
+                highlight: NAKED_QUAD_CELLS,
+                eliminations: [[at(8, 2), 9], ...each([at(9, 3)], [1, 2])],
+              },
+            ],
+          },
+        ],
+      },
+      {
         title: 'Hidden Pair',
         techniques: ['Hidden Pair'],
         text: 'Look for two digits a unit needs whose only places in it are the same two cells. Those cells must hold the pair, in some order, so any other candidate in them goes. The pair was hiding among those candidates.',
@@ -559,7 +608,7 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     family: 'Wings',
-    text: 'A wing is a pivot cell and two wings: peers of the pivot with two candidates each. Whatever the pivot holds, one of the wings ends up with the digit they share, so a cell that is a peer of both wings can’t hold it.',
+    text: 'A wing is a pivot cell and two wings: peers of the pivot with two candidates each, sharing one digit. Whatever the pivot holds, that digit ends up in one of the pattern’s cells, so a cell that is a peer of every cell that could hold it can’t.',
     sections: [
       {
         title: 'XY-Wing',
@@ -599,6 +648,579 @@ export const LESSONS: readonly Lesson[] = [
                 highlight: XY_WINGS,
                 marks: each(XY_WINGS, [2]),
                 eliminations: [[at(3, 5), 2]],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'XYZ-Wing',
+        techniques: ['XYZ-Wing'],
+        text: 'An XYZ-Wing is an XY-Wing whose pivot can also hold the shared digit: the pivot has X, Y and Z, one wing X and Z, the other Y and Z. Whatever the pivot holds, Z ends up in the pivot or a wing, so Z goes from every cell that is a peer of all three.',
+        examples: [
+          {
+            position: 'xyz-wing',
+            steps: [
+              {
+                caption: 'Row 8, column 6 can hold a 6, an 8 or a 9. It is the pivot.',
+                focus: [XYZ_PIVOT, ...XYZ_WINGS],
+                highlight: [XYZ_PIVOT],
+                marks: each([XYZ_PIVOT], [6, 8, 9]),
+              },
+              {
+                caption: 'If the pivot is 6, row 3, column 6, in the same column, can’t be 6, so it is left with its 8.',
+                focus: [XYZ_PIVOT, ...XYZ_WINGS],
+                highlight: [XYZ_PIVOT, at(3, 6)],
+                marks: [[XYZ_PIVOT, 6], [at(3, 6), 8]],
+              },
+              {
+                caption: 'If the pivot is 9, row 8, column 5, in the same row, can’t be 9, so it is left with its 8.',
+                focus: [XYZ_PIVOT, ...XYZ_WINGS],
+                highlight: [XYZ_PIVOT, at(8, 5)],
+                marks: [[XYZ_PIVOT, 9], [at(8, 5), 8]],
+              },
+              {
+                caption: 'And if the pivot is neither, it is the 8 itself. Either way, one of the three cells is an 8. That’s an XYZ-Wing.',
+                focus: [XYZ_PIVOT, ...XYZ_WINGS],
+                highlight: [XYZ_PIVOT, ...XYZ_WINGS],
+                marks: each([XYZ_PIVOT, ...XYZ_WINGS], [8]),
+              },
+              {
+                caption: 'Row 7, column 6 is a peer of all three: it shares column 6 with the pivot and one wing, and the bottom-middle box with the pivot and the other. Whichever of them is the 8, this cell can’t be, so its 8 goes.',
+                focus: [...col(6), ...BOTTOM_MIDDLE_BOX],
+                highlight: [XYZ_PIVOT, ...XYZ_WINGS],
+                marks: each([XYZ_PIVOT, ...XYZ_WINGS], [8]),
+                eliminations: [[at(7, 6), 8]],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    family: 'Uniqueness',
+    text: 'A puzzle has exactly one solution. When some cells could only hold two digits, in either of two orders, with every row, column and box they touch holding both digits either way, nothing could tell the two orders apart: the puzzle would have two solutions. So whatever would complete such a pattern can’t happen.',
+    sections: [
+      {
+        title: 'Unique Rectangle type 1',
+        techniques: ['Unique Rectangle type 1'],
+        text: 'Look for four cells at the corners of a rectangle, in two rows, two columns and two boxes, where three corners hold only the same two candidates. If the fourth held only those two as well, the digits could swap round the corners. So the fourth corner can’t hold either of them.',
+        examples: [
+          {
+            position: 'unique-rectangle-1',
+            steps: [
+              {
+                caption: 'Rows 1 and 2, columns 2 and 4: these cells are the corners of a rectangle in two boxes. Three of them can only hold a 2 or a 4.',
+                focus: [...TOP_LEFT_BOX, ...TOP_MIDDLE_BOX],
+                highlight: RECTANGLE_1_CELLS,
+                marks: each([at(1, 2), at(1, 4), at(2, 4)], [2, 4]),
+              },
+              {
+                caption: 'If row 2, column 2 held only a 2 or a 4 too, the 2s and the 4s would sit diagonally, one way or the other. Each row, column and box would hold one of each either way, so the puzzle would have two solutions.',
+                focus: [...TOP_LEFT_BOX, ...TOP_MIDDLE_BOX],
+                highlight: RECTANGLE_1_CELLS,
+                marks: each(RECTANGLE_1_CELLS, [2, 4]),
+              },
+              {
+                caption: 'It has only one, so row 2, column 2 can’t be 2 or 4: both go, leaving its 3. That’s a unique rectangle, type 1.',
+                focus: [...TOP_LEFT_BOX, ...TOP_MIDDLE_BOX],
+                highlight: RECTANGLE_1_CELLS,
+                eliminations: each([at(2, 2)], [2, 4]),
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Unique Rectangle type 2',
+        techniques: ['Unique Rectangle type 2'],
+        text: 'Two corners of the rectangle hold only the pair. The other two, sharing a unit, hold the pair and the same extra candidate. One of them must be that extra digit, or the pair could swap round the corners, so it goes from every cell that is a peer of both.',
+        examples: [
+          {
+            position: 'unique-rectangle-2',
+            steps: [
+              {
+                caption: 'Rows 3 and 7, columns 1 and 3: these cells are the corners of a rectangle in two boxes. All four can hold a 2 or a 6, and the two in row 3 nothing else.',
+                focus: [...TOP_LEFT_BOX, ...BOTTOM_LEFT_BOX],
+                highlight: RECTANGLE_2_CELLS,
+                marks: each(RECTANGLE_2_CELLS, [2, 6]),
+              },
+              {
+                caption: 'The two in row 7 can also hold a 1. If neither were 1, all four would be left with the 2 and the 6, which could swap: two solutions. So one of them is the 1.',
+                focus: [...TOP_LEFT_BOX, ...BOTTOM_LEFT_BOX],
+                highlight: [at(7, 1), at(7, 3)],
+                marks: each([at(7, 1), at(7, 3)], [1]),
+              },
+              {
+                caption: 'Whichever it is, a cell that is a peer of both can’t be 1: the 1s in row 7, columns 4 and 7, and in row 8, column 3 go. That’s a unique rectangle, type 2.',
+                focus: [...TOP_LEFT_BOX, ...BOTTOM_LEFT_BOX, ...row(7)],
+                highlight: [at(7, 1), at(7, 3)],
+                marks: each([at(7, 1), at(7, 3)], [1]),
+                eliminations: [[at(7, 4), 1], [at(7, 7), 1], [at(8, 3), 1]],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Unique Rectangle type 3',
+        techniques: ['Unique Rectangle type 3'],
+        text: 'Two corners of the rectangle hold only the pair. The other two, sharing a unit, have extra candidates, and one of them must hold an extra digit, or the pair could swap. In their shared unit, that cell is taken: the extras act like one cell holding only them, which can form a subset with other cells of the unit, and the pair’s digits have one place fewer, which can make a hidden subset.',
+        examples: [
+          {
+            position: 'unique-rectangle-3',
+            steps: [
+              {
+                caption: 'Rows 1 and 2, columns 2 and 6: these cells are the corners of a rectangle in two boxes. All four can hold a 3 or a 5, and the two in column 6 nothing else.',
+                focus: [...TOP_LEFT_BOX, ...TOP_MIDDLE_BOX],
+                highlight: RECTANGLE_3_CELLS,
+                marks: each(RECTANGLE_3_CELLS, [3, 5]),
+              },
+              {
+                caption: 'The two in column 2 have more: a 1 and a 7 in row 1, a 6 in row 2. One of them must hold one of those, or the 3s and the 5s could swap round the corners.',
+                focus: [...TOP_LEFT_BOX, ...TOP_MIDDLE_BOX],
+                highlight: [at(1, 2), at(2, 2)],
+                marks: [...each([at(1, 2)], [1, 7]), [at(2, 2), 6]],
+              },
+              {
+                caption: 'Now the top-left box’s 3 and 5: both can only go in column 2, rows 1 to 3. One of the first two cells is taken, so the 3 and the 5 take the other one and row 3: a hidden pair.',
+                focus: TOP_LEFT_BOX,
+                highlight: [at(1, 2), at(2, 2), at(3, 2)],
+                marks: each([at(1, 2), at(2, 2), at(3, 2)], [3, 5]),
+              },
+              {
+                caption: 'So row 3, column 2 is a 3 or a 5, and its 7 goes. That’s a unique rectangle, type 3.',
+                focus: TOP_LEFT_BOX,
+                highlight: [at(1, 2), at(2, 2), at(3, 2)],
+                eliminations: [[at(3, 2), 7]],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Unique Rectangle type 4',
+        techniques: ['Unique Rectangle type 4'],
+        text: 'Two corners of the rectangle hold only the pair. The other two, sharing a unit, hold more. When one digit of the pair has no other place in that unit, one of the two cells holds it, so neither can hold the pair’s other digit: that would complete the rectangle.',
+        examples: [
+          {
+            position: 'unique-rectangle-4',
+            steps: [
+              {
+                caption: 'Rows 5 and 6, columns 3 and 9: these cells are the corners of a rectangle in two boxes. All four can hold a 3 or a 5, and the two in row 6 nothing else.',
+                focus: [...MIDDLE_LEFT_BOX, ...MIDDLE_RIGHT_BOX],
+                highlight: RECTANGLE_4_CELLS,
+                marks: each(RECTANGLE_4_CELLS, [3, 5]),
+              },
+              {
+                caption: 'Row 5’s 3 can only go in its two corners, columns 3 and 9, so one of them is the 3.',
+                focus: [...MIDDLE_LEFT_BOX, ...MIDDLE_RIGHT_BOX, ...row(5)],
+                highlight: [at(5, 3), at(5, 9)],
+                marks: each([at(5, 3), at(5, 9)], [3]),
+              },
+              {
+                caption: 'If the other were 5, all four corners would hold only 3s and 5s, which could swap: two solutions. So neither can be 5, and both 5s go. That’s a unique rectangle, type 4.',
+                focus: [...MIDDLE_LEFT_BOX, ...MIDDLE_RIGHT_BOX, ...row(5)],
+                highlight: [at(5, 3), at(5, 9)],
+                marks: each([at(5, 3), at(5, 9)], [3]),
+                eliminations: each([at(5, 3), at(5, 9)], [5]),
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Unique Loop type 1',
+        techniques: ['Unique Loop 6 type 1', 'Unique Loop 8 type 1', 'Unique Loop 10 type 1'],
+        text: 'A unique loop is a rectangle with more corners: a closed path of 6, 8 or 10 cells where each row, column and box it touches holds exactly two of them. When every cell but one holds only the same two candidates, the digits could alternate round the loop either way, so the last cell can’t hold either.',
+        examples: [
+          {
+            position: 'unique-loop-1',
+            steps: [
+              {
+                caption: 'These six cells form a closed loop through rows 2, 4 and 6. Each row, column and box it touches holds two of them.',
+                focus: LOOP_1_CELLS,
+                highlight: LOOP_1_CELLS,
+              },
+              {
+                caption: 'Five of them can only hold a 4 or a 7. Row 2, column 8 can also hold a 9.',
+                focus: LOOP_1_CELLS,
+                highlight: LOOP_1_CELLS,
+                marks: each([at(2, 7), at(4, 8), at(4, 4), at(6, 4), at(6, 7)], [4, 7]),
+              },
+              {
+                caption: 'If row 2, column 8 held only a 4 or a 7 too, the digits would alternate round the loop, 4, 7, 4, 7, one way or the other. Each row, column and box would hold one of each either way, so the puzzle would have two solutions.',
+                focus: LOOP_1_CELLS,
+                highlight: LOOP_1_CELLS,
+                marks: each(LOOP_1_CELLS, [4, 7]),
+              },
+              {
+                caption: 'It has only one, so row 2, column 8 can’t be 4 or 7: both go, leaving its 9. That’s a unique loop, type 1.',
+                focus: LOOP_1_CELLS,
+                highlight: LOOP_1_CELLS,
+                eliminations: each([at(2, 8)], [4, 7]),
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Unique Loop type 2',
+        techniques: ['Unique Loop 6 type 2', 'Unique Loop 8 type 2', 'Unique Loop 10 type 2'],
+        text: 'As with a rectangle of type 2, the loop’s cells hold the pair, and some of them the same extra candidate. One of those must be the extra digit, or the pair could alternate round the loop, so it goes from every cell that is a peer of all of them. Loops of 8 and 10 cells work the same way.',
+        examples: [
+          {
+            position: 'unique-loop-2',
+            steps: [
+              {
+                caption: 'These six cells form a closed loop through rows 3, 4 and 7, each row, column and box it touches holding two of them. All six can hold a 3 or a 6.',
+                focus: LOOP_2_CELLS,
+                highlight: LOOP_2_CELLS,
+                marks: each(LOOP_2_CELLS, [3, 6]),
+              },
+              {
+                caption: 'Two of them, row 4, column 3 and row 7, column 2, can also hold a 7. If neither were 7, the 3s and the 6s could alternate round the loop either way: two solutions. So one of them is the 7.',
+                focus: LOOP_2_CELLS,
+                highlight: [at(4, 3), at(7, 2)],
+                marks: each([at(4, 3), at(7, 2)], [7]),
+              },
+              {
+                caption: 'Whichever it is, a cell that is a peer of both can’t be 7: the 7s in row 5, column 2 and in row 7, column 3 go. That’s a unique loop, type 2.',
+                focus: [...LOOP_2_CELLS, at(5, 2), at(7, 3)],
+                highlight: [at(4, 3), at(7, 2)],
+                marks: each([at(4, 3), at(7, 2)], [7]),
+                eliminations: each([at(5, 2), at(7, 3)], [7]),
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Unique Loop type 3',
+        techniques: ['Unique Loop 6 type 3', 'Unique Loop 8 type 3'],
+        text: 'As with a rectangle of type 3, two cells of the loop that share a unit have extra candidates, and one of them must hold an extra digit. In their shared unit, that cell is taken, which can make a subset with other cells of the unit. Loops of 8 cells work the same way.',
+        examples: [
+          {
+            position: 'unique-loop-3',
+            steps: [
+              {
+                caption: 'These six cells form a closed loop through rows 1 to 3, each row, column and box it touches holding two of them. All six can hold a 2 or a 7, and four of them nothing else.',
+                focus: LOOP_3_CELLS,
+                highlight: LOOP_3_CELLS,
+                marks: each(LOOP_3_CELLS, [2, 7]),
+              },
+              {
+                caption: 'Column 8’s two can also hold a 3 or a 9. One of them must hold one of those, or the 2s and the 7s could alternate round the loop either way.',
+                focus: LOOP_3_CELLS,
+                highlight: [at(1, 8), at(2, 8)],
+                marks: each([at(1, 8), at(2, 8)], [3, 9]),
+              },
+              {
+                caption: 'Now column 8’s 2 and 7: they can only go in rows 1, 2 and 8. One of the first two cells is taken, so the 2 and the 7 take the other one and row 8: a hidden pair.',
+                focus: col(8),
+                highlight: [at(1, 8), at(2, 8), at(8, 8)],
+                marks: [...each([at(1, 8), at(2, 8)], [2, 7]), [at(8, 8), 7]],
+              },
+              {
+                caption: 'So row 8, column 8 is a 2 or a 7. It has no 2, so it is the 7, and its 3 and 4 go. That’s a unique loop, type 3.',
+                focus: col(8),
+                highlight: [at(1, 8), at(2, 8), at(8, 8)],
+                marks: [[at(8, 8), 7]],
+                eliminations: each([at(8, 8)], [3, 4]),
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Unique Loop type 4',
+        techniques: ['Unique Loop 6 type 4'],
+        text: 'As with a rectangle of type 4, two cells of the loop that share a unit hold more than the pair. When one digit of the pair has no other place in that unit, one of the two holds it, so neither can hold the pair’s other digit. Loops of 8 and 10 cells work the same way.',
+        examples: [
+          {
+            position: 'unique-loop-4',
+            steps: [
+              {
+                caption: 'These six cells form a closed loop through rows 7 to 9, each row, column and box it touches holding two of them. All six can hold a 7 or a 9, and four of them nothing else.',
+                focus: LOOP_4_CELLS,
+                highlight: LOOP_4_CELLS,
+                marks: each(LOOP_4_CELLS, [7, 9]),
+              },
+              {
+                caption: 'Column 8’s 9 can only go in two of them, rows 7 and 9, so one of those is the 9.',
+                focus: [...LOOP_4_CELLS, ...col(8)],
+                highlight: [at(7, 8), at(9, 8)],
+                marks: each([at(7, 8), at(9, 8)], [9]),
+              },
+              {
+                caption: 'If the other were 7, every cell of the loop would hold only 7s and 9s, which could alternate either way: two solutions. So neither can be 7, and both 7s go. That’s a unique loop, type 4.',
+                focus: [...LOOP_4_CELLS, ...col(8)],
+                highlight: [at(7, 8), at(9, 8)],
+                marks: each([at(7, 8), at(9, 8)], [9]),
+                eliminations: each([at(7, 8), at(9, 8)], [7]),
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    family: 'BUG',
+    text: 'A BUG, or bivalue universal grave, is a grid where every empty cell has exactly two candidates and every candidate has exactly two places in each of its units. Such a grid has no solution or several, never exactly one. So when a few extra candidates are all that stand between the grid and a BUG, one of them must be true.',
+    sections: [
+      {
+        title: 'BUG type 1',
+        techniques: ['BUG type 1'],
+        text: 'Every empty cell has two candidates but one, which has three. Its extra digit is the one with three places in the cell’s units. Without it the grid would be a BUG, so the cell must be that digit.',
+        examples: [
+          {
+            position: 'bug-1',
+            steps: [
+              {
+                caption: 'Every empty cell here has exactly two candidates, except row 1, column 2, which has three: a 1, an 8 and a 9.',
+                focus: WHOLE_GRID,
+                highlight: [at(1, 2)],
+                marks: each([at(1, 2)], [1, 8, 9]),
+              },
+              {
+                caption: 'Look at its 9. Row 1, column 2 and the top-left box each have three places for a 9, one too many. Every other candidate has exactly two places in each of its units.',
+                focus: [...row(1), ...col(2), ...TOP_LEFT_BOX],
+                highlight: [at(1, 2), at(1, 3), at(1, 8), at(2, 2), at(7, 2)],
+                marks: each([at(1, 2), at(1, 3), at(1, 8), at(2, 2), at(7, 2)], [9]),
+              },
+              {
+                caption: 'Without that 9, the grid would be a BUG, with no solution or several. The puzzle has exactly one, so the 9 must stay: row 1, column 2 is the 9, and its 1 and its 8 go. That’s BUG type 1.',
+                focus: WHOLE_GRID,
+                highlight: [at(1, 2)],
+                marks: [[at(1, 2), 9]],
+                eliminations: each([at(1, 2)], [1, 8]),
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'BUG type 2',
+        techniques: ['BUG type 2'],
+        text: 'A few cells have a third candidate, and it is the same digit in each. Without it the grid would be a BUG, so one of those cells holds the digit, and it goes from every cell that is a peer of all of them.',
+        examples: [
+          {
+            position: 'bug-2',
+            steps: [
+              {
+                caption: 'Every empty cell here has exactly two candidates, except two in row 4: column 4, with a 2, a 3 and an 8, and column 6, with a 1, a 3 and a 5.',
+                focus: WHOLE_GRID,
+                highlight: [at(4, 4), at(4, 6)],
+                marks: [...each([at(4, 4)], [2, 3, 8]), ...each([at(4, 6)], [1, 3, 5])],
+              },
+              {
+                caption: 'Both have a 3 too many: row 4 has four places for a 3, where every other candidate has two in each of its units. Without those two 3s, the grid would be a BUG, with no solution or several.',
+                focus: row(4),
+                highlight: [at(4, 3), at(4, 4), at(4, 6), at(4, 9)],
+                marks: each([at(4, 3), at(4, 4), at(4, 6), at(4, 9)], [3]),
+              },
+              {
+                caption: 'So one of the two is a 3. Whichever it is, a cell that is a peer of both can’t be: the 3s in row 4, columns 3 and 9, in row 5, column 6 and in row 6, column 4 go. That’s BUG type 2.',
+                focus: [...row(4), ...CENTER_BOX],
+                highlight: [at(4, 4), at(4, 6)],
+                marks: each([at(4, 4), at(4, 6)], [3]),
+                eliminations: each([at(4, 3), at(4, 9), at(5, 6), at(6, 4)], [3]),
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'BUG type 3',
+        techniques: ['BUG type 3'],
+        text: 'A few cells of one unit have a third candidate, not always the same digit. Without them the grid would be a BUG, so one of those cells holds its extra digit. Together they act like one cell holding only the extras, which can form a naked subset with other cells of the unit.',
+        examples: [
+          {
+            position: 'bug-3',
+            steps: [
+              {
+                caption: 'Every empty cell here has exactly two candidates, except two in row 4: column 3, with a 1, a 3 and a 9, and column 6, with a 5, an 8 and a 9.',
+                focus: WHOLE_GRID,
+                highlight: [at(4, 3), at(4, 6)],
+                marks: [...each([at(4, 3)], [1, 3, 9]), ...each([at(4, 6)], [5, 8, 9])],
+              },
+              {
+                caption: 'Column 3 has three places for a 3, one too many, and column 6 three for a 9. Every other candidate has two places in each of its units. Without that 3 and that 9, the grid would be a BUG, with no solution or several.',
+                focus: [...col(3), ...col(6)],
+                highlight: [at(2, 3), at(4, 3), at(7, 3), at(4, 6), at(5, 6), at(6, 6)],
+                marks: [...each([at(2, 3), at(4, 3), at(7, 3)], [3]), ...each([at(4, 6), at(5, 6), at(6, 6)], [9])],
+              },
+              {
+                caption: 'So row 4, column 3 is the 3, or row 4, column 6 is the 9. Together, they act like one cell of row 4 that holds a 3 or a 9.',
+                focus: row(4),
+                highlight: [at(4, 3), at(4, 6)],
+                marks: [[at(4, 3), 3], [at(4, 6), 9]],
+              },
+              {
+                caption: 'Row 4, column 1 holds a 3 or a 4, and column 9 a 4 or a 9. With that one cell, that’s three places for three digits, the 3, the 4 and the 9: a naked triplet in row 4.',
+                focus: row(4),
+                highlight: [at(4, 1), at(4, 3), at(4, 6), at(4, 9)],
+                marks: [[at(4, 3), 3], [at(4, 6), 9], ...each([at(4, 1)], [3, 4]), ...each([at(4, 9)], [4, 9])],
+              },
+              {
+                caption: 'So no cell of row 4 outside the triplet can hold them: the 3 in column 2 goes. That’s BUG type 3.',
+                focus: row(4),
+                highlight: [at(4, 1), at(4, 3), at(4, 6), at(4, 9)],
+                eliminations: [[at(4, 2), 3]],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'BUG type 4',
+        techniques: ['BUG type 4'],
+        text: 'Two cells that share a unit have a third candidate each. Without the extras the grid would be a BUG, so one of the two holds its extra digit. When a digit both cells share has no other place in the unit, the other cell holds it, so each cell is left with its extra digit and that shared one.',
+        examples: [
+          {
+            position: 'bug-4',
+            steps: [
+              {
+                caption: 'Every empty cell here has exactly two candidates, except two in column 1: row 7, with a 1, a 4 and a 5, and row 8, with a 1, a 5 and a 7.',
+                focus: WHOLE_GRID,
+                highlight: [at(7, 1), at(8, 1)],
+                marks: [...each([at(7, 1)], [1, 4, 5]), ...each([at(8, 1)], [1, 5, 7])],
+              },
+              {
+                caption: 'Row 7 has three places for a 5, one too many, and column 1 three for a 7. Every other candidate has two places in each of its units. Without the 5 in row 7, column 1 and the 7 in row 8, column 1, the grid would be a BUG, so one of them is true.',
+                focus: [...row(7), ...col(1)],
+                highlight: [at(7, 1), at(7, 5), at(7, 7), at(1, 1), at(5, 1), at(8, 1)],
+                marks: [...each([at(7, 1), at(7, 5), at(7, 7)], [5]), ...each([at(1, 1), at(5, 1), at(8, 1)], [7])],
+              },
+              {
+                caption: 'The bottom-left box’s 1 can only go in these two cells. So whichever of them holds its extra digit, the other is the 1.',
+                focus: BOTTOM_LEFT_BOX,
+                highlight: [at(7, 1), at(8, 1)],
+                marks: [[at(7, 1), 5], [at(8, 1), 7], ...each([at(7, 1), at(8, 1)], [1])],
+              },
+              {
+                caption: 'So row 7, column 1 is a 1 or a 5, and row 8, column 1 a 1 or a 7: the 4 in one and the 5 in the other go. That’s BUG type 4.',
+                focus: BOTTOM_LEFT_BOX,
+                highlight: [at(7, 1), at(8, 1)],
+                marks: [[at(7, 1), 5], [at(8, 1), 7], ...each([at(7, 1), at(8, 1)], [1])],
+                eliminations: [[at(7, 1), 4], [at(8, 1), 5]],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    family: 'Exclusion',
+    text: 'Exclusion tries the digits a few cells that share a unit could hold together. A combination is ruled out when it repeats a digit, or when it would leave a cell that is a peer of all of them with no candidate. A candidate that appears in no combination left goes.',
+    sections: [
+      {
+        title: 'Aligned Pair Exclusion',
+        techniques: ['Aligned Pair Exclusion'],
+        text: 'Take two cells that share a unit and list the pairs of digits they could hold. Rule out a pair when another cell that is a peer of both holds only those two digits: it would be left empty. When every pair with a given candidate of one cell is ruled out, that candidate goes.',
+        examples: [
+          {
+            position: 'aligned-pair-exclusion',
+            steps: [
+              {
+                caption: 'Row 3, columns 2 and 3 share a row and a box, so they can’t hold the same digit. Suppose column 2 were a 2: column 3 would then be a 5, a 6 or a 7. Try each.',
+                focus: [...row(3), ...TOP_LEFT_BOX],
+                highlight: APE_CELLS,
+                marks: [[at(3, 2), 2], ...each([at(3, 3)], [5, 6, 7])],
+              },
+              {
+                caption: 'A 2 and a 5 can’t be: row 3, column 8 holds only a 2 or a 5, and it shares row 3 with both cells. It would be left with nothing.',
+                focus: [...row(3), ...TOP_LEFT_BOX],
+                highlight: [...APE_CELLS, at(3, 8)],
+                marks: [[at(3, 2), 2], [at(3, 3), 5], ...each([at(3, 8)], [2, 5])],
+              },
+              {
+                caption: 'A 2 and a 6 can’t be either: row 3, column 4 holds only a 2 or a 6.',
+                focus: [...row(3), ...TOP_LEFT_BOX],
+                highlight: [...APE_CELLS, at(3, 4)],
+                marks: [[at(3, 2), 2], [at(3, 3), 6], ...each([at(3, 4)], [2, 6])],
+              },
+              {
+                caption: 'Nor a 2 and a 7: row 2, column 2 holds only a 2 or a 7, and it shares the top-left box with both cells.',
+                focus: [...row(3), ...TOP_LEFT_BOX],
+                highlight: [...APE_CELLS, at(2, 2)],
+                marks: [[at(3, 2), 2], [at(3, 3), 7], ...each([at(2, 2)], [2, 7])],
+              },
+              {
+                caption: 'Every pair with a 2 in row 3, column 2 is ruled out, so its 2 goes. That’s an aligned pair exclusion.',
+                focus: [...row(3), ...TOP_LEFT_BOX],
+                highlight: APE_CELLS,
+                eliminations: [[at(3, 2), 2]],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    family: 'Cycles',
+    text: 'A cycle follows digits round a closed loop of cells, one link at a time: if this cell holds the digit, that one can’t, or if this one can’t, that one must. When the loop closes with every link working both ways, its cells take the digits in one of exactly two ways. Whatever holds in both goes for the rest of the grid.',
+    sections: [
+      {
+        title: 'Bidirectional X-Cycle',
+        techniques: ['Bidirectional X-Cycle'],
+        text: 'An X-Cycle follows one digit. Its links alternate: two cells of a unit where the digit has only those two places, so one must hold it, then two cells of a unit that can’t both hold it. Round the loop, the digit takes every other cell, one way or the other. In each unit of a “can’t both” link, one of the two cells is the digit either way, so the rest of the unit can’t be.',
+        examples: [
+          {
+            position: 'bidirectional-x-cycle',
+            steps: [
+              {
+                caption: 'Follow the 3s round a loop. Suppose row 1, column 6 is a 3. Then row 3, column 4, in the same box, can’t be.',
+                focus: [...X_CYCLE_CELLS, ...TOP_MIDDLE_BOX],
+                highlight: X_CYCLE_CELLS.slice(0, 2),
+                marks: [[at(1, 6), 3]],
+              },
+              {
+                caption: 'Row 3’s 3 has only two places, columns 2 and 4, so it is in column 2.',
+                focus: [...X_CYCLE_CELLS, ...row(3)],
+                highlight: X_CYCLE_CELLS.slice(0, 3),
+                marks: [[at(1, 6), 3], [at(3, 2), 3]],
+              },
+              {
+                caption: 'Then row 2, column 1, in the same box as row 3, column 2, can’t be 3.',
+                focus: [...X_CYCLE_CELLS, ...TOP_LEFT_BOX],
+                highlight: X_CYCLE_CELLS.slice(0, 4),
+                marks: [[at(1, 6), 3], [at(3, 2), 3]],
+              },
+              {
+                caption: 'Column 1’s 3 has only two places, rows 2 and 6, so it is in row 6.',
+                focus: [...X_CYCLE_CELLS, ...col(1)],
+                highlight: X_CYCLE_CELLS.slice(0, 5),
+                marks: [[at(1, 6), 3], [at(3, 2), 3], [at(6, 1), 3]],
+              },
+              {
+                caption: 'Then row 6, column 6, in the same row, can’t be 3.',
+                focus: [...X_CYCLE_CELLS, ...row(6)],
+                highlight: X_CYCLE_CELLS,
+                marks: [[at(1, 6), 3], [at(3, 2), 3], [at(6, 1), 3]],
+              },
+              {
+                caption: 'Column 6’s 3 has only two places, rows 1 and 6, so it is in row 1: back where the loop started, and it holds.',
+                focus: [...X_CYCLE_CELLS, ...col(6)],
+                highlight: X_CYCLE_CELLS,
+                marks: [[at(1, 6), 3], [at(3, 2), 3], [at(6, 1), 3]],
+              },
+              {
+                caption: 'Suppose instead row 1, column 6 isn’t a 3: every link flips, and the other three cells take the 3s. Either way, the 3s take every other cell of the loop. That’s a bidirectional X-Cycle.',
+                focus: X_CYCLE_CELLS,
+                highlight: X_CYCLE_CELLS,
+                marks: [[at(3, 4), 3], [at(2, 1), 3], [at(6, 6), 3]],
+              },
+              {
+                caption: 'The top-middle box, the top-left box and row 6 each hold two cells of the loop that can’t both be 3, and one of them is the 3 either way. So the rest of those units can’t be 3: their other 3s go.',
+                focus: [...X_CYCLE_CELLS, ...TOP_MIDDLE_BOX, ...TOP_LEFT_BOX, ...row(6)],
+                highlight: X_CYCLE_CELLS,
+                marks: each(X_CYCLE_CELLS, [3]),
+                eliminations: each([at(1, 2), at(1, 4), at(2, 2), at(2, 4), at(2, 5), at(6, 2), at(6, 5), at(6, 9)], [3]),
               },
             ],
           },
