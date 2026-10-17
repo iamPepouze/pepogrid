@@ -62,25 +62,29 @@ export function tierOf(rating: Pick<Rating, 'se' | 'hodokuLevel'>): Difficulty |
   return tier && TIERS[tier].hodoku === rating.hodokuLevel ? tier : null
 }
 
+/** The technique family an SE technique belongs to, whatever the tier; the key technique's lessons follow it. */
+export function techniqueFamily(technique: string): string {
+  if (technique === 'Hidden Single') return 'Singles'
+  if (technique === 'Naked Single') return 'Naked Single'
+  if (technique.startsWith('Direct Hidden')) return 'Hidden subsets'
+  if (/Pointing|Claiming/.test(technique)) return 'Intersections'
+  if (/^(X-Wing|Swordfish|Jellyfish)$/.test(technique)) return 'Fish'
+  if (/^(Naked|Hidden) (Pair|Triplet|Quad)$/.test(technique)) return 'Subsets'
+  if (technique.endsWith('Wing')) return 'Wings'
+  if (/^Unique (Rectangle|Loop)/.test(technique)) return 'Uniqueness'
+  if (technique.startsWith('BUG')) return 'BUG'
+  if (technique.endsWith('Exclusion')) return 'Exclusion'
+  if (technique.includes('Forcing')) return 'Forcing chains'
+  if (/Cycle|Turbot/.test(technique)) return 'Cycles'
+  return 'Other'
+}
+
 /**
  * Technique family of a puzzle's hardest step (SE technique names), used to
  * rotate what consecutive games of a tier hinge on.
  */
 export function familyOf(tier: Difficulty, hardest: string): string {
-  let family: string
-  if (hardest === 'Hidden Single') family = 'Singles'
-  else if (hardest === 'Naked Single') family = 'Naked Single'
-  else if (hardest.startsWith('Direct Hidden')) family = 'Hidden subsets'
-  else if (/Pointing|Claiming/.test(hardest)) family = 'Intersections'
-  else if (/^(X-Wing|Swordfish|Jellyfish)$/.test(hardest)) family = 'Fish'
-  else if (/^(Naked|Hidden) (Pair|Triplet|Quad)$/.test(hardest)) family = 'Subsets'
-  else if (hardest.endsWith('Wing')) family = 'Wings'
-  else if (/^Unique (Rectangle|Loop)/.test(hardest)) family = 'Uniqueness'
-  else if (hardest.startsWith('BUG')) family = 'BUG'
-  else if (hardest.endsWith('Exclusion')) family = 'Exclusion'
-  else if (hardest.includes('Forcing')) family = 'Forcing chains'
-  else if (/Cycle|Turbot/.test(hardest)) family = 'Cycles'
-  else family = 'Other'
+  const family = techniqueFamily(hardest)
   // Expert has only a handful of these, so they rotate as one family.
   if (tier === 'expert' && ['Wings', 'Subsets', 'Fish'].includes(family)) return 'Wings & subsets'
   return family

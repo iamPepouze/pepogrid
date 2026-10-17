@@ -21,7 +21,7 @@ A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and
   Puzzles come from a bundled bank of 1000 per difficulty, rated offline by the real tools. Each game disguises its puzzle with a random digit relabelling, row/column shuffles and transposition, and a difficulty's puzzles don't repeat until all have been played. Expert and Master show the SE rating in the status bar, and the full ratings once solved.
 - **Notes (pencil marks).** Use the *Notes* button or press `N` to toggle notes mode. To add a single note, press `Shift` + digit, or long-press a number pad button on touch screens. Placing a number clears that digit from the notes in its row, column and box.
 - **Fill notes.** The *Fill notes* button or `F` replaces every empty cell's notes with the digits not yet placed in its row, column or box, wrong ones included, so it gives nothing away. One Undo brings back the notes you had. The button greys out when it would change nothing.
-- **Key technique.** The *Technique* button swaps the game for the key technique: the hardest technique this puzzle needs, which is not necessarily what the next move needs. The first time in a game, an in-app dialog asks first, since the reveal is noted on the game's result; after that the button opens it straight away, also after a refresh. *Back* returns to the game as it was. Lessons explaining each technique are coming. The button is disabled while a puzzle loads and once the game is solved.
+- **Key technique.** The *Technique* button swaps the game for the key technique: the hardest technique this puzzle needs, which is not necessarily what the next move needs. The first time in a game, an in-app dialog asks first, since the reveal is noted on the game's result; after that the button opens it straight away, also after a refresh. *Back* returns to the game as it was. Below the name, a lesson explains the technique's family and steps through a real example (*Previous* / *Next*), with the cells that matter highlighted and the rest faded. Hidden singles have a lesson so far; other techniques say one is coming. The button is disabled while a puzzle loads and once the game is solved.
 - **Error checking.** Digits that don't match the solution are shown in red. Cells that clash in a row, column or box are tinted red. A mistake counter tracks wrong entries.
 - **Timer, Undo, Erase.** The timer shows mm:ss, or h:mm:ss from one hour, as Statistics does. It pauses while the tab is hidden or Statistics or the key technique is open.
 - **Auto-save.** The game in progress, including the selected cell, notes mode and undo history, is saved after every change. A browser refresh resumes exactly where you were.
@@ -73,6 +73,17 @@ npx tsx scripts/bank/calibrate.ts 2000   # check the built-in rater against the 
 ```
 
 Candidates are pre-filtered by a built-in rater ([src/lib/rater.ts](src/lib/rater.ts)). It emulates SE exactly up to 4.2 and HoDoKu up to XYZ-Wing, and the real tools decide what goes into the bank. A build takes one to two hours, mostly spent finding Expert puzzles: random puzzles in the SE 4.3–6.5 range are almost always HoDoKu *Hard* rather than *Unfair*.
+
+## Lessons
+
+The key technique's lessons live in [src/lib/lessons.ts](src/lib/lessons.ts): one per technique family, with a section per technique. Their prose and steps are written by hand. Each example's position comes from a real bank puzzle, just before Sudoku Explainer applies the technique, and is saved in `src/data/lesson-positions.json`. To add or replace one (after `setup-tools.mjs`, as above):
+
+```sh
+npx tsx scripts/bank/lesson-positions.ts "Hidden Single" hidden-single     # save the first Hidden Single step as `hidden-single`
+npx tsx scripts/bank/lesson-positions.ts "Hidden Single" hidden-single 5   # skip 5 matches to try another position
+```
+
+The script prints Sudoku Explainer's summary of the step (e.g. `Hidden Single: r2c4: 3 in block`) to write the steps from. A test checks every step against the puzzle's solution, but not what its caption claims: read the lesson in the app before committing it.
 
 ## Development
 

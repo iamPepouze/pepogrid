@@ -87,6 +87,10 @@ _Avoid_: Perfect game, clean solve
 The in-game view that reveals the puzzle's hardest technique and teaches its technique family through step-by-step examples; the result records that it was revealed. It never points at a next move.
 _Avoid_: Hint, tip, help
 
+**Lesson**:
+The key technique's explanation of one technique family, with a section per technique and examples stepped through on real positions.
+_Avoid_: Guide, tutorial
+
 **Matching-number highlight**:
 An optional tint on every cell holding the digit of the selected cell.
 

@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import sample from './__fixtures__/rated-sample.json'
 import { loadBank, pickFromBank } from './bank'
-import { DIFFICULTIES, TIERS, familyOf, tierOf, type Difficulty, type HodokuLevel } from './difficulty'
-import { PEERS, UNITS } from './grid'
+import { DIFFICULTIES, TIERS, familyOf, techniqueFamily, tierOf, type Difficulty, type HodokuLevel } from './difficulty'
+import { PEERS, UNITS, bit } from './grid'
+import { LESSONS, lessonFor, positionOf } from './lessons'
 import { rateHodoku, rateSE } from './rater'
 import { capReached, countsOf, formatDuration, statisticsOf, type StatResult } from './statistics'
 import { countSolutions, randomSolution, solve } from './sudoku'
@@ -133,6 +134,58 @@ describe('technique families', () => {
     expect(familyOf('master', 'Forcing X-Chain')).toBe('Forcing chains')
     expect(familyOf('master', 'Turbot Fish')).toBe('Cycles')
     expect(familyOf('master', 'Aligned Triplet Exclusion')).toBe('Exclusion')
+  })
+
+  it('keeps a technique’s own family apart from the Expert merge used for rotation', () => {
+    expect(techniqueFamily('XYZ-Wing')).toBe('Wings')
+    expect(techniqueFamily('Naked Quad')).toBe('Subsets')
+    expect(techniqueFamily('X-Wing')).toBe('Fish')
+  })
+})
+
+describe('key technique lessons', () => {
+  it('gives every technique in the Easy bank a lesson section with an example', async () => {
+    for (const [, , , hardest] of await loadBank('easy')) {
+      const found = lessonFor(hardest)
+      expect(found?.section.examples.length, hardest).toBeGreaterThan(0)
+      expect(found?.lesson.family).toBe(techniqueFamily(hardest))
+    }
+  })
+
+  it('has no lesson for a technique not written up yet', () => {
+    expect(lessonFor('Forcing Chain')).toBeNull()
+  })
+
+  it('keeps every example step consistent with its puzzle’s solution', () => {
+    for (const lesson of LESSONS) {
+      for (const section of lesson.sections) {
+        for (const example of section.examples) {
+          const position = positionOf(example)
+          const where = `${section.title}, ${example.position}`
+          expect(section.techniques, where).toContain(position.technique)
+          const solution = solve([...position.puzzle].map(Number))!
+          expect(solution, where).not.toBeNull()
+          position.values.forEach((v, i) => {
+            if (v) expect(v, `${where}: cell ${i}`).toBe(solution[i])
+            else expect(position.candidates[i] & bit(solution[i]), `${where}: cell ${i} lacks its solution digit`).not.toBe(0)
+          })
+          for (const step of example.steps) {
+            const cells = [...step.focus, ...(step.marks ?? []).map(([i]) => i), ...(step.eliminations ?? []).map(([i]) => i)]
+            expect(cells.every((i) => Number.isInteger(i) && i >= 0 && i < 81), `${where}: ${step.caption}`).toBe(true)
+            for (const [i, d] of step.marks ?? []) expect(position.candidates[i] & bit(d), `${where}: mark ${i}/${d}`).not.toBe(0)
+            for (const [i, d] of step.eliminations ?? []) {
+              expect(position.candidates[i] & bit(d), `${where}: elimination ${i}/${d}`).not.toBe(0)
+              expect(d, `${where}: eliminates the solution at ${i}`).not.toBe(solution[i])
+            }
+            if (step.placement) {
+              const [i, d] = step.placement
+              expect(position.values[i], `${where}: places on a filled cell`).toBe(0)
+              expect(d, `${where}: places a wrong digit at ${i}`).toBe(solution[i])
+            }
+          }
+        }
+      }
+    }
   })
 })
 

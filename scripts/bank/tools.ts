@@ -39,7 +39,7 @@ function findJava(): string {
   return 'java'
 }
 
-const JAVA = findJava()
+export const JAVA = findJava()
 
 /** Java processes run at once; each needs a few hundred MB, so stay well below the core count. */
 export const PARALLELISM = Math.max(1, Math.min(availableParallelism() - 2, 12))
