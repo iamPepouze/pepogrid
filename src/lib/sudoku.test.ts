@@ -3,7 +3,7 @@ import sample from './__fixtures__/rated-sample.json'
 import { loadBank, pickFromBank } from './bank'
 import { DIFFICULTIES, TIERS, familyOf, techniqueFamily, tierOf, type Difficulty, type HodokuLevel } from './difficulty'
 import { PEERS, UNITS, bit } from './grid'
-import { LESSONS, gridAt, lessonFor, positionOf } from './lessons'
+import { LESSONS, gridAt, lessonFor, positionOf, summaryTechnique } from './lessons'
 import { rateHodoku, rateSE } from './rater'
 import { capReached, countsOf, formatDuration, statisticsOf, type StatResult } from './statistics'
 import { countSolutions, randomSolution, solve } from './sudoku'
@@ -164,7 +164,7 @@ describe('key technique lessons', () => {
           const where = `${section.title}, ${example.position}`
           expect(section.techniques, where).toContain(position.technique)
           // Sudoku Explainer's summary opens with the step's own technique, so a position saved from the wrong step fails here.
-          expect(position.summary.split(':')[0], `${where}: saved from another technique’s step`).toBe(position.technique)
+          expect(summaryTechnique(position.summary),`${where}: saved from another technique’s step`).toBe(position.technique)
           const solution = solve([...position.puzzle].map(Number))!
           expect(solution, where).not.toBeNull()
           position.values.forEach((v, i) => {

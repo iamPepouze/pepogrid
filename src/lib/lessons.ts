@@ -21,6 +21,9 @@ export interface LessonPosition {
   candidates: string[]
 }
 
+/** The technique a Sudoku Explainer summary is about: the text before its first colon (`X-Wing: Cells …`). */
+export const summaryTechnique = (summary: string) => summary.split(':')[0].trim()
+
 /** A digit in a cell: a candidate, or a digit placed there. */
 export type CellDigit = [cell: number, digit: number]
 
@@ -83,8 +86,11 @@ const MIDDLE_LEFT_BOX = BOXES[3]
 const MIDDLE_RIGHT_BOX = BOXES[5]
 const BOTTOM_MIDDLE_BOX = BOXES[7]
 const NAKED_SINGLE_CELL = at(2, 8)
-const X_WING = [at(3, 4), at(6, 4), at(3, 7), at(6, 7)]
-const SWORDFISH = [at(5, 6), at(8, 6), at(1, 7), at(5, 7), at(8, 7), at(1, 8), at(8, 8)]
+const X_WING_CELLS = [at(3, 4), at(6, 4), at(3, 7), at(6, 7)]
+/** The cells that can hold the Swordfish lesson’s 9, column by column. */
+const SWORDFISH_COLUMN_6 = [at(5, 6), at(8, 6)]
+const SWORDFISH_COLUMN_7 = [at(1, 7), at(5, 7), at(8, 7)]
+const SWORDFISH_CELLS = [...SWORDFISH_COLUMN_6, ...SWORDFISH_COLUMN_7, at(1, 8), at(8, 8)]
 const XY_PIVOT = at(1, 2)
 const XY_WINGS = [at(1, 4), at(3, 3)]
 
@@ -486,20 +492,20 @@ export const LESSONS: readonly Lesson[] = [
               {
                 caption: 'Column 7 needs an 8 too, and it can also only go in rows 3 or 6.',
                 focus: [...col(4), ...col(7)],
-                highlight: X_WING,
-                marks: each(X_WING, [8]),
+                highlight: X_WING_CELLS,
+                marks: each(X_WING_CELLS, [8]),
               },
               {
                 caption: 'The two 8s can’t share a row, so one is in row 3 and the other in row 6. Either way, rows 3 and 6 get their 8 in columns 4 and 7. That’s an X-Wing.',
                 focus: [...col(4), ...col(7), ...row(3), ...row(6)],
-                highlight: X_WING,
-                marks: each(X_WING, [8]),
+                highlight: X_WING_CELLS,
+                marks: each(X_WING_CELLS, [8]),
               },
               {
                 caption: 'So no other cell of rows 3 and 6 can be 8: the 8s in columns 6, 8 and 9 go.',
                 focus: [...col(4), ...col(7), ...row(3), ...row(6)],
-                highlight: X_WING,
-                marks: each(X_WING, [8]),
+                highlight: X_WING_CELLS,
+                marks: each(X_WING_CELLS, [8]),
                 eliminations: [...each([at(3, 6), at(3, 9)], [8]), ...each([at(6, 6), at(6, 8), at(6, 9)], [8])],
               },
             ],
@@ -517,32 +523,32 @@ export const LESSONS: readonly Lesson[] = [
               {
                 caption: 'Column 6 still needs a 9, and only rows 5 and 8 can hold it.',
                 focus: col(6),
-                highlight: [at(5, 6), at(8, 6)],
-                marks: each([at(5, 6), at(8, 6)], [9]),
+                highlight: SWORDFISH_COLUMN_6,
+                marks: each(SWORDFISH_COLUMN_6, [9]),
               },
               {
                 caption: 'Column 7’s 9 can go in rows 1, 5 or 8.',
                 focus: [...col(6), ...col(7)],
-                highlight: [at(5, 6), at(8, 6), at(1, 7), at(5, 7), at(8, 7)],
-                marks: each([at(5, 6), at(8, 6), at(1, 7), at(5, 7), at(8, 7)], [9]),
+                highlight: [...SWORDFISH_COLUMN_6, ...SWORDFISH_COLUMN_7],
+                marks: each([...SWORDFISH_COLUMN_6, ...SWORDFISH_COLUMN_7], [9]),
               },
               {
                 caption: 'And column 8’s 9 only in rows 1 or 8. Three columns, and all their places for a 9 lie in rows 1, 5 and 8.',
                 focus: [...col(6), ...col(7), ...col(8)],
-                highlight: SWORDFISH,
-                marks: each(SWORDFISH, [9]),
+                highlight: SWORDFISH_CELLS,
+                marks: each(SWORDFISH_CELLS, [9]),
               },
               {
-                caption: 'The three 9s can’t share a row, so they take one row each: rows 1, 5 and 8 get their 9 in these columns. That’s a swordfish.',
+                caption: 'The three 9s can’t share a row, so they take one row each: rows 1, 5 and 8 get their 9 in these columns. That’s a Swordfish.',
                 focus: [...col(6), ...col(7), ...col(8), ...row(1), ...row(5), ...row(8)],
-                highlight: SWORDFISH,
-                marks: each(SWORDFISH, [9]),
+                highlight: SWORDFISH_CELLS,
+                marks: each(SWORDFISH_CELLS, [9]),
               },
               {
                 caption: 'So no other cell of rows 1, 5 and 8 can be 9: the 9s in columns 4, 5 and 9 go.',
                 focus: [...col(6), ...col(7), ...col(8), ...row(1), ...row(5), ...row(8)],
-                highlight: SWORDFISH,
-                marks: each(SWORDFISH, [9]),
+                highlight: SWORDFISH_CELLS,
+                marks: each(SWORDFISH_CELLS, [9]),
                 eliminations: each([at(1, 9), at(5, 4), at(5, 5), at(5, 9), at(8, 9)], [9]),
               },
             ],
@@ -558,7 +564,7 @@ export const LESSONS: readonly Lesson[] = [
       {
         title: 'XY-Wing',
         techniques: ['XY-Wing'],
-        text: 'The pivot has two candidates, X and Y. One wing has X and Z, the other Y and Z. If the pivot is X, the first wing is left with Z; if it is Y, the second one is. Either way a wing holds Z, so Z goes from every cell that sees both wings.',
+        text: 'The pivot has two candidates, X and Y. One wing has X and Z, the other Y and Z. If the pivot is X, the first wing is left with Z; if it is Y, the second one is. Either way a wing holds Z, so Z goes from every cell that is a peer of both wings.',
         examples: [
           {
             position: 'xy-wing',

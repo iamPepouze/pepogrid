@@ -13,7 +13,7 @@ import { join } from 'node:path'
 import { loadBank } from '../../src/lib/bank'
 import { DIFFICULTIES } from '../../src/lib/difficulty'
 import { PEERS, colOf, rowOf } from '../../src/lib/grid'
-import type { LessonPosition } from '../../src/lib/lessons'
+import { type LessonPosition, summaryTechnique } from '../../src/lib/lessons'
 import { ROOT, WORK, runSerate } from './tools'
 
 /** Puzzles rated per Java start: enough to amortise the start, few enough to stop soon after a match. */
@@ -91,7 +91,7 @@ for (let k = 0; k < puzzles.length && !found; k += BATCH) {
     } else if (line.startsWith('A ') && !found) {
       stepIndex++
       const summary = line.slice(2)
-      if (summary.split(':')[0].trim() !== technique || skip-- > 0) continue
+      if (summaryTechnique(summary) !== technique || skip-- > 0) continue
       const { candidates, values } = parsePosition(before)
       // Filled cells keep no candidates, so the lesson draws their digit instead.
       found = { technique, summary: summary.trim(), puzzle, values, candidates: candidates.map((c, i) => (values[i] === '0' ? c : '')) }
