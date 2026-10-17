@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { registerSW } from 'virtual:pwa-register'
 
+/** True once a new version has downloaded and waits to take over. */
 const waiting = ref(false)
 
 const updateSW = registerSW({
@@ -26,10 +27,12 @@ const updateSW = registerSW({
 export function useUpdate() {
   /** Activates the waiting version and reloads; the saved game resumes as it was. */
   async function update() {
-    // updateSW() reloads only when control passes to the new worker. A page no worker controls
-    // (a first visit) never sees that, but it loads from the network, so a plain reload is enough.
-    if (navigator.serviceWorker?.controller) await updateSW()
-    else location.reload()
+    // updateSW() asks the waiting worker to take over, but reloads only when control passes from
+    // an old worker. A page no worker controls (a first visit) never sees that, so it reloads here,
+    // and the new worker serves the reload.
+    const controlled = Boolean(navigator.serviceWorker?.controller)
+    await updateSW()
+    if (!controlled) location.reload()
   }
 
   return { canUpdate: waiting, update }

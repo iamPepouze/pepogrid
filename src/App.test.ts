@@ -2,7 +2,7 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import type { RegisterSWOptions } from 'virtual:pwa-register'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import App from './App.vue'
 import { useGameStore } from './stores/game'
 import { fill, nonGivensOf, seedResult } from './stores/testing'
@@ -321,7 +321,12 @@ describe('App', () => {
 
   it('shows Update in the header once a new version is waiting, and loads it on tap', async () => {
     // A returning player: the installed version controls the page.
+    const real = Object.getOwnPropertyDescriptor(navigator, 'serviceWorker')
     Object.defineProperty(navigator, 'serviceWorker', { value: { controller: {} }, configurable: true })
+    onTestFinished(() => {
+      if (real) Object.defineProperty(navigator, 'serviceWorker', real)
+      else delete (navigator as { serviceWorker?: unknown }).serviceWorker
+    })
     const app = await mountApp()
     const updateButton = () => app.findAll('.topbar button').find((b) => b.text() === 'Update')
     expect(updateButton()).toBeUndefined()

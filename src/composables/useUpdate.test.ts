@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import type { RegisterSWOptions } from 'virtual:pwa-register'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 /** The service worker registration, faked: `sw.options` holds what the composable passed in. */
 const sw = vi.hoisted(() => ({ options: {} as RegisterSWOptions, update: vi.fn(async () => {}) }))
@@ -24,6 +24,8 @@ function setVisibility(state: DocumentVisibilityState) {
   document.dispatchEvent(new Event('visibilitychange'))
 }
 
+const realServiceWorker = Object.getOwnPropertyDescriptor(navigator, 'serviceWorker')
+
 /** The worker controlling the page, or null on a first visit. */
 function setController(controller: object | null) {
   Object.defineProperty(navigator, 'serviceWorker', { value: { controller }, configurable: true })
@@ -31,6 +33,10 @@ function setController(controller: object | null) {
 
 describe('useUpdate', () => {
   beforeEach(() => setVisibility('visible'))
+  afterEach(() => {
+    if (realServiceWorker) Object.defineProperty(navigator, 'serviceWorker', realServiceWorker)
+    else delete (navigator as { serviceWorker?: unknown }).serviceWorker
+  })
 
   it('offers an update once a new version is waiting', async () => {
     const { canUpdate, options } = await load()
@@ -47,14 +53,16 @@ describe('useUpdate', () => {
     expect(sw.update).toHaveBeenCalledOnce()
   })
 
-  it('reloads when no worker controls the page yet, since the page then loads from the network', async () => {
+  it('activates the new version and reloads itself when no worker controls the page yet', async () => {
     setController(null)
     const reload = vi.fn()
-    vi.spyOn(window, 'location', 'get').mockReturnValue({ ...window.location, reload })
+    const location = vi.spyOn(window, 'location', 'get').mockReturnValue({ ...window.location, reload })
     const { update, options } = await load()
     options.onNeedRefresh!()
     await update()
+    expect(sw.update).toHaveBeenCalledOnce()
     expect(reload).toHaveBeenCalledOnce()
+    location.mockRestore()
   })
 
   it('checks for a new version when the app comes back into view', async () => {
