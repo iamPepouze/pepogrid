@@ -314,7 +314,10 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   height: 100dvh;
-  /* Room below the status bar too: at just the inset, the header touches the iPhone's Dynamic Island area. */
+  /*
+   * Room below the status bar too: at just the inset, the header touches the iPhone's Dynamic Island area.
+   * The installed iOS app gets more, below its edge blur (the last rule in this style).
+   */
   padding: calc(env(safe-area-inset-top) + 12px) max(12px, env(safe-area-inset-right))
     max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
 }
@@ -542,6 +545,19 @@ kbd {
 
   .tagline {
     display: block;
+  }
+}
+
+/*
+ * Since iOS 26, the installed app gets a blur over its top edge, with no switch to turn it off:
+ * the header sits below it, about 40px of blur plus 8px. An iPhone in landscape (at most 440px
+ * tall) has no status bar, so no blur. Last, to win over the desktop-sized query on an iPad.
+ */
+@media (display-mode: standalone) and (min-height: 500px) {
+  @supports (-webkit-touch-callout: none) {
+    .app {
+      padding-top: calc(env(safe-area-inset-top) + 48px);
+    }
   }
 }
 </style>
