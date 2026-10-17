@@ -11,10 +11,12 @@ export default defineConfig({
   plugins: [
     vue(),
     VitePWA({
-      // 'prompt' without any prompt UI: a new version installs in the background
-      // and takes over on the next launch, never reloading a game in progress.
+      // 'prompt': a new version installs in the background and takes over on the next launch,
+      // or sooner when the player taps the header's Update button (src/composables/useUpdate.ts).
+      // Nothing reloads a game in progress on its own.
       registerType: 'prompt',
-      injectRegister: 'script',
+      // useUpdate.ts registers the worker itself.
+      injectRegister: false,
       includeAssets: ['favicon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
         name: 'PepoGrid',
