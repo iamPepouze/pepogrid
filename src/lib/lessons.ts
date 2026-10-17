@@ -93,10 +93,10 @@ const SWORDFISH_COLUMN_7 = [at(1, 7), at(5, 7), at(8, 7)]
 const SWORDFISH_CELLS = [...SWORDFISH_COLUMN_6, ...SWORDFISH_COLUMN_7, at(1, 8), at(8, 8)]
 const XY_PIVOT = at(1, 2)
 const XY_WINGS = [at(1, 4), at(3, 3)]
-const CENTER_BOX = BOXES[4]
+const MIDDLE_BOX = BOXES[4]
 const BOTTOM_LEFT_BOX = BOXES[6]
 /** Every cell, for steps about the whole grid, which fade nothing. */
-const WHOLE_GRID = Array.from({ length: 81 }, (_, i) => i)
+const ALL_CELLS = Array.from({ length: 81 }, (_, i) => i)
 const XYZ_PIVOT = at(8, 6)
 const XYZ_WINGS = [at(3, 6), at(8, 5)]
 const NAKED_QUAD_CELLS = [at(7, 1), at(7, 2), at(7, 3), at(8, 3)]
@@ -109,7 +109,7 @@ const LOOP_1_CELLS = [at(2, 7), at(2, 8), at(4, 8), at(4, 4), at(6, 4), at(6, 7)
 const LOOP_2_CELLS = [at(3, 2), at(3, 3), at(4, 3), at(4, 1), at(7, 1), at(7, 2)]
 const LOOP_3_CELLS = [at(1, 2), at(3, 2), at(3, 4), at(2, 4), at(2, 8), at(1, 8)]
 const LOOP_4_CELLS = [at(7, 2), at(8, 2), at(8, 4), at(9, 4), at(9, 8), at(7, 8)]
-const APE_CELLS = [at(3, 2), at(3, 3)]
+const ALIGNED_PAIR_CELLS = [at(3, 2), at(3, 3)]
 /** The X-Cycle lesson’s cells, in the order its steps follow the 3s round the loop. */
 const X_CYCLE_CELLS = [at(1, 6), at(3, 4), at(3, 2), at(2, 1), at(6, 1), at(6, 6)]
 
@@ -441,13 +441,12 @@ export const LESSONS: readonly Lesson[] = [
             position: 'naked-quad',
             steps: [
               {
-                caption: 'The bottom-left box has nine empty cells. Look at row 7’s three and row 8, column 3: between them, they hold only a 1, a 2, a 5 or a 9.',
+                caption: 'The bottom-left box has nine empty cells. Look at four of them: row 7’s three and row 8, column 3.',
                 focus: BOTTOM_LEFT_BOX,
                 highlight: NAKED_QUAD_CELLS,
-                marks: [...each([at(7, 1)], [1, 2]), ...each([at(7, 2)], [5, 9]), ...each([at(7, 3)], [1, 2, 5, 9]), ...each([at(8, 3)], [2, 9])],
               },
               {
-                caption: 'Four cells, four digits: the 1, the 2, the 5 and the 9 fill these cells, in some order. That’s a naked quad.',
+                caption: 'Between them, they hold only a 1, a 2, a 5 or a 9. Four cells, four digits: these digits fill these cells, in some order. That’s a naked quad.',
                 focus: BOTTOM_LEFT_BOX,
                 highlight: NAKED_QUAD_CELLS,
                 marks: [...each([at(7, 1)], [1, 2]), ...each([at(7, 2)], [5, 9]), ...each([at(7, 3)], [1, 2, 5, 9]), ...each([at(8, 3)], [2, 9])],
@@ -608,7 +607,7 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     family: 'Wings',
-    text: 'A wing is a pivot cell and two wings: peers of the pivot with two candidates each, sharing one digit. Whatever the pivot holds, that digit ends up in one of the pattern’s cells, so a cell that is a peer of every cell that could hold it can’t.',
+    text: 'A wing is a pivot cell and two wings: peers of the pivot with two candidates each, sharing one digit. Whatever the pivot holds, that digit ends up in one of the pattern’s cells, so a cell that is a peer of every cell that could hold it can’t hold it either.',
     sections: [
       {
         title: 'XY-Wing',
@@ -898,8 +897,8 @@ export const LESSONS: readonly Lesson[] = [
       },
       {
         title: 'Unique Loop type 3',
-        techniques: ['Unique Loop 6 type 3', 'Unique Loop 8 type 3'],
-        text: 'As with a rectangle of type 3, two cells of the loop that share a unit have extra candidates, and one of them must hold an extra digit. In their shared unit, that cell is taken, which can make a subset with other cells of the unit. Loops of 8 cells work the same way.',
+        techniques: ['Unique Loop 6 type 3', 'Unique Loop 8 type 3', 'Unique Loop 10 type 3'],
+        text: 'As with a rectangle of type 3, two cells of the loop that share a unit have extra candidates, and one of them must hold an extra digit. In their shared unit, that cell is taken: the extras can form a naked subset with other cells, or the pair’s digits, with one place fewer, a hidden subset. Loops of 8 and 10 cells work the same way.',
         examples: [
           {
             position: 'unique-loop-3',
@@ -935,7 +934,7 @@ export const LESSONS: readonly Lesson[] = [
       },
       {
         title: 'Unique Loop type 4',
-        techniques: ['Unique Loop 6 type 4'],
+        techniques: ['Unique Loop 6 type 4', 'Unique Loop 8 type 4', 'Unique Loop 10 type 4'],
         text: 'As with a rectangle of type 4, two cells of the loop that share a unit hold more than the pair. When one digit of the pair has no other place in that unit, one of the two holds it, so neither can hold the pair’s other digit. Loops of 8 and 10 cells work the same way.',
         examples: [
           {
@@ -980,19 +979,19 @@ export const LESSONS: readonly Lesson[] = [
             steps: [
               {
                 caption: 'Every empty cell here has exactly two candidates, except row 1, column 2, which has three: a 1, an 8 and a 9.',
-                focus: WHOLE_GRID,
+                focus: ALL_CELLS,
                 highlight: [at(1, 2)],
                 marks: each([at(1, 2)], [1, 8, 9]),
               },
               {
-                caption: 'Look at its 9. Row 1, column 2 and the top-left box each have three places for a 9, one too many. Every other candidate has exactly two places in each of its units.',
+                caption: 'Look at its 9. The cell’s three units, row 1, column 2 and the top-left box, each have three places for a 9, one too many.',
                 focus: [...row(1), ...col(2), ...TOP_LEFT_BOX],
                 highlight: [at(1, 2), at(1, 3), at(1, 8), at(2, 2), at(7, 2)],
                 marks: each([at(1, 2), at(1, 3), at(1, 8), at(2, 2), at(7, 2)], [9]),
               },
               {
-                caption: 'Without that 9, the grid would be a BUG, with no solution or several. The puzzle has exactly one, so the 9 must stay: row 1, column 2 is the 9, and its 1 and its 8 go. That’s BUG type 1.',
-                focus: WHOLE_GRID,
+                caption: 'Without that 9, every candidate would have exactly two places in each of its units: the grid would be a BUG, with no solution or several. The puzzle has exactly one, so the 9 must stay: row 1, column 2 is the 9, and its 1 and its 8 go. That’s BUG type 1.',
+                focus: ALL_CELLS,
                 highlight: [at(1, 2)],
                 marks: [[at(1, 2), 9]],
                 eliminations: each([at(1, 2)], [1, 8]),
@@ -1011,19 +1010,19 @@ export const LESSONS: readonly Lesson[] = [
             steps: [
               {
                 caption: 'Every empty cell here has exactly two candidates, except two in row 4: column 4, with a 2, a 3 and an 8, and column 6, with a 1, a 3 and a 5.',
-                focus: WHOLE_GRID,
+                focus: ALL_CELLS,
                 highlight: [at(4, 4), at(4, 6)],
                 marks: [...each([at(4, 4)], [2, 3, 8]), ...each([at(4, 6)], [1, 3, 5])],
               },
               {
-                caption: 'Both have a 3 too many: row 4 has four places for a 3, where every other candidate has two in each of its units. Without those two 3s, the grid would be a BUG, with no solution or several.',
+                caption: 'Both have a 3 too many: row 4 has four places for a 3. Without those two 3s, every candidate would have exactly two places in each of its units: the grid would be a BUG, with no solution or several.',
                 focus: row(4),
                 highlight: [at(4, 3), at(4, 4), at(4, 6), at(4, 9)],
                 marks: each([at(4, 3), at(4, 4), at(4, 6), at(4, 9)], [3]),
               },
               {
                 caption: 'So one of the two is a 3. Whichever it is, a cell that is a peer of both can’t be: the 3s in row 4, columns 3 and 9, in row 5, column 6 and in row 6, column 4 go. That’s BUG type 2.',
-                focus: [...row(4), ...CENTER_BOX],
+                focus: [...row(4), ...MIDDLE_BOX],
                 highlight: [at(4, 4), at(4, 6)],
                 marks: each([at(4, 4), at(4, 6)], [3]),
                 eliminations: each([at(4, 3), at(4, 9), at(5, 6), at(6, 4)], [3]),
@@ -1042,12 +1041,12 @@ export const LESSONS: readonly Lesson[] = [
             steps: [
               {
                 caption: 'Every empty cell here has exactly two candidates, except two in row 4: column 3, with a 1, a 3 and a 9, and column 6, with a 5, an 8 and a 9.',
-                focus: WHOLE_GRID,
+                focus: ALL_CELLS,
                 highlight: [at(4, 3), at(4, 6)],
                 marks: [...each([at(4, 3)], [1, 3, 9]), ...each([at(4, 6)], [5, 8, 9])],
               },
               {
-                caption: 'Column 3 has three places for a 3, one too many, and column 6 three for a 9. Every other candidate has two places in each of its units. Without that 3 and that 9, the grid would be a BUG, with no solution or several.',
+                caption: 'Column 3 has three places for a 3, one too many, and column 6 three for a 9. Without that 3 and that 9, every candidate would have exactly two places in each of its units: the grid would be a BUG, with no solution or several.',
                 focus: [...col(3), ...col(6)],
                 highlight: [at(2, 3), at(4, 3), at(7, 3), at(4, 6), at(5, 6), at(6, 6)],
                 marks: [...each([at(2, 3), at(4, 3), at(7, 3)], [3]), ...each([at(4, 6), at(5, 6), at(6, 6)], [9])],
@@ -1084,12 +1083,12 @@ export const LESSONS: readonly Lesson[] = [
             steps: [
               {
                 caption: 'Every empty cell here has exactly two candidates, except two in column 1: row 7, with a 1, a 4 and a 5, and row 8, with a 1, a 5 and a 7.',
-                focus: WHOLE_GRID,
+                focus: ALL_CELLS,
                 highlight: [at(7, 1), at(8, 1)],
                 marks: [...each([at(7, 1)], [1, 4, 5]), ...each([at(8, 1)], [1, 5, 7])],
               },
               {
-                caption: 'Row 7 has three places for a 5, one too many, and column 1 three for a 7. Every other candidate has two places in each of its units. Without the 5 in row 7, column 1 and the 7 in row 8, column 1, the grid would be a BUG, so one of them is true.',
+                caption: 'Row 7 has three places for a 5, one too many, and column 1 three for a 7. Without the 5 in row 7, column 1 and the 7 in row 8, column 1, every candidate would have exactly two places in each of its units: the grid would be a BUG. So one of them is true.',
                 focus: [...row(7), ...col(1)],
                 highlight: [at(7, 1), at(7, 5), at(7, 7), at(1, 1), at(5, 1), at(8, 1)],
                 marks: [...each([at(7, 1), at(7, 5), at(7, 7)], [5]), ...each([at(1, 1), at(5, 1), at(8, 1)], [7])],
@@ -1128,31 +1127,31 @@ export const LESSONS: readonly Lesson[] = [
               {
                 caption: 'Row 3, columns 2 and 3 share a row and a box, so they can’t hold the same digit. Suppose column 2 were a 2: column 3 would then be a 5, a 6 or a 7. Try each.',
                 focus: [...row(3), ...TOP_LEFT_BOX],
-                highlight: APE_CELLS,
+                highlight: ALIGNED_PAIR_CELLS,
                 marks: [[at(3, 2), 2], ...each([at(3, 3)], [5, 6, 7])],
               },
               {
                 caption: 'A 2 and a 5 can’t be: row 3, column 8 holds only a 2 or a 5, and it shares row 3 with both cells. It would be left with nothing.',
                 focus: [...row(3), ...TOP_LEFT_BOX],
-                highlight: [...APE_CELLS, at(3, 8)],
+                highlight: [...ALIGNED_PAIR_CELLS, at(3, 8)],
                 marks: [[at(3, 2), 2], [at(3, 3), 5], ...each([at(3, 8)], [2, 5])],
               },
               {
                 caption: 'A 2 and a 6 can’t be either: row 3, column 4 holds only a 2 or a 6.',
                 focus: [...row(3), ...TOP_LEFT_BOX],
-                highlight: [...APE_CELLS, at(3, 4)],
+                highlight: [...ALIGNED_PAIR_CELLS, at(3, 4)],
                 marks: [[at(3, 2), 2], [at(3, 3), 6], ...each([at(3, 4)], [2, 6])],
               },
               {
                 caption: 'Nor a 2 and a 7: row 2, column 2 holds only a 2 or a 7, and it shares the top-left box with both cells.',
                 focus: [...row(3), ...TOP_LEFT_BOX],
-                highlight: [...APE_CELLS, at(2, 2)],
+                highlight: [...ALIGNED_PAIR_CELLS, at(2, 2)],
                 marks: [[at(3, 2), 2], [at(3, 3), 7], ...each([at(2, 2)], [2, 7])],
               },
               {
                 caption: 'Every pair with a 2 in row 3, column 2 is ruled out, so its 2 goes. That’s an aligned pair exclusion.',
                 focus: [...row(3), ...TOP_LEFT_BOX],
-                highlight: APE_CELLS,
+                highlight: ALIGNED_PAIR_CELLS,
                 eliminations: [[at(3, 2), 2]],
               },
             ],
