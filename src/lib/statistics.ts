@@ -27,6 +27,8 @@ export interface StatResult {
   hodokuScore: number
   /** Technique behind the SE rating. */
   hardest: string
+  /** Whether the key technique was revealed; missing on older results. */
+  keyTechniqueRevealed?: boolean
 }
 
 export interface Counts {
@@ -45,6 +47,8 @@ export interface Statistics extends Counts {
   averageMistakes: number | null
   /** Solved results with no mistakes. */
   flawless: number | null
+  /** Solved results whose key technique was revealed. */
+  revealed: number | null
   se: Spread | null
   hodoku: Spread | null
   /** Solved results in a row up to the latest result, 0 when it is an abandon. */
@@ -59,11 +63,12 @@ export interface Statistics extends Counts {
   recent: StatResult[]
 }
 
-/** A technique family's solved and played results at one difficulty. */
+/** A technique family's solved and played results at one difficulty, and how many of the solved ones were revealed. */
 export interface FamilyRecord {
   family: string
   solved: number
   played: number
+  revealed: number
 }
 
 /** The mean, smallest and largest of a set of values, such as solved results' SE ratings. */
@@ -72,6 +77,9 @@ export interface Spread {
   min: number
   max: number
 }
+
+/** Only a stored `true` counts: a missing or hand-edited value reads as not revealed. */
+const isRevealedSolve = (r: StatResult) => r.outcome === 'completed' && r.keyTechniqueRevealed === true
 
 const mean = (values: readonly number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
 
@@ -107,9 +115,10 @@ function familiesOf(results: readonly StatResult[], difficulty: Difficulty): Fam
   const records = new Map<string, FamilyRecord>()
   for (const r of results) {
     const family = familyOf(difficulty, r.hardest)
-    const record = records.get(family) ?? { family, solved: 0, played: 0 }
+    const record = records.get(family) ?? { family, solved: 0, played: 0, revealed: 0 }
     record.played++
     if (r.outcome === 'completed') record.solved++
+    if (isRevealedSolve(r)) record.revealed++
     records.set(family, record)
   }
   return [...records.values()].sort((a, b) => b.played - a.played || a.family.localeCompare(b.family))
@@ -134,6 +143,7 @@ export function statisticsOf(results: readonly StatResult[], difficulty: Difficu
     averageTime: time?.average ?? null,
     averageMistakes: mistakes?.average ?? null,
     flawless: mistakes ? solved.filter((r) => r.mistakes === 0).length : null,
+    revealed: solved.length ? solved.filter(isRevealedSolve).length : null,
     se: spreadOf(solved.map((r) => r.se)),
     hodoku: spreadOf(solved.map((r) => r.hodokuScore)),
     currentStreak,

@@ -239,11 +239,42 @@ describe('statistics', () => {
       solved('hard', { hardest: 'X-Wing' }),
     ]
     expect(statisticsOf(results, 'expert').families).toEqual([
-      { family: 'Wings & subsets', solved: 2, played: 3 },
-      { family: 'Cycles', solved: 0, played: 2 },
-      { family: 'Uniqueness', solved: 1, played: 1 },
+      { family: 'Wings & subsets', solved: 2, played: 3, revealed: 0 },
+      { family: 'Cycles', solved: 0, played: 2, revealed: 0 },
+      { family: 'Uniqueness', solved: 1, played: 1, revealed: 0 },
     ])
-    expect(statisticsOf(results, 'hard').families).toEqual([{ family: 'Fish', solved: 1, played: 1 }])
+    expect(statisticsOf(results, 'hard').families).toEqual([{ family: 'Fish', solved: 1, played: 1, revealed: 0 }])
+  })
+
+  it('counts solved results whose key technique was revealed, missing or odd values as not', () => {
+    const results = [
+      solved('hard', { keyTechniqueRevealed: true }),
+      abandoned('hard', { keyTechniqueRevealed: true }),
+      solved('hard', { keyTechniqueRevealed: false }),
+      solved('hard'),
+      solved('hard', { keyTechniqueRevealed: 'yes' as unknown as boolean }),
+      solved('easy', { keyTechniqueRevealed: true }),
+    ]
+    expect(statisticsOf(results, 'hard').revealed).toBe(1)
+    expect(statisticsOf([abandoned('hard', { keyTechniqueRevealed: true })], 'hard').revealed).toBeNull()
+  })
+
+  it('leaves flawless, streaks and solve rate alone when the key technique was revealed', () => {
+    const results = [solved('hard', { keyTechniqueRevealed: true }), solved('hard', { keyTechniqueRevealed: true })]
+    expect(statisticsOf(results, 'hard')).toMatchObject({ flawless: 2, currentStreak: 2, bestStreak: 2, solveRate: 1 })
+  })
+
+  it('counts each technique family’s solved results whose key technique was revealed', () => {
+    const results = [
+      solved('hard', { hardest: 'X-Wing', keyTechniqueRevealed: true }),
+      abandoned('hard', { hardest: 'X-Wing', keyTechniqueRevealed: true }),
+      solved('hard', { hardest: 'X-Wing' }),
+      solved('hard', { hardest: 'XY-Wing' }),
+    ]
+    expect(statisticsOf(results, 'hard').families).toEqual([
+      { family: 'Fish', solved: 2, played: 3, revealed: 1 },
+      { family: 'Wings', solved: 1, played: 1, revealed: 0 },
+    ])
   })
 
   it('lists no technique families on Easy', () => {
