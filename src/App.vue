@@ -319,6 +319,18 @@ onBeforeUnmount(() => {
     max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
 }
 
+/*
+ * Since iOS 26, the installed app gets a blur over its top edge, about 40pt below the status bar
+ * and stronger on iOS 27, with no switch to turn it off: the header sits below it. Landscape has no status bar.
+ */
+@media (display-mode: standalone) and (orientation: portrait) {
+  @supports (-webkit-touch-callout: none) {
+    .app {
+      padding-top: calc(env(safe-area-inset-top) + 48px);
+    }
+  }
+}
+
 /* The header and the game only: a bare `> *` would also size any child component's root, such as a dialog. */
 .app > :is(.topbar, .game) {
   flex-shrink: 0;
