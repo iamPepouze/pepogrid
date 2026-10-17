@@ -42,6 +42,7 @@ const solvedFigures = computed((): Figure[] => [
   { label: 'Average time', value: shown(stats.value.averageTime, formatDuration) },
   { label: 'Average mistakes', value: shown(stats.value.averageMistakes, tenths) },
   { label: 'Flawless', value: shown(stats.value.flawless, String) },
+  { label: 'Revealed', value: shown(stats.value.revealed, String) },
 ])
 
 const streakFigures = computed((): Figure[] => [
@@ -139,7 +140,7 @@ async function onTabKeydown(e: KeyboardEvent) {
             <dt>{{ r.label }}</dt>
             <dd>
               <span class="stat-value">{{ r.average }}</span>
-              <span v-if="r.range" class="range">{{ r.range }}</span>
+              <span v-if="r.range" class="muted-note">{{ r.range }}</span>
             </dd>
           </div>
         </dl>
@@ -150,7 +151,10 @@ async function onTabKeydown(e: KeyboardEvent) {
           <dl class="list">
             <div v-for="f in stats.families" :key="f.family">
               <dt>{{ f.family }}</dt>
-              <dd class="stat-value">{{ f.solved }}/{{ f.played }}</dd>
+              <dd>
+                <span class="stat-value">{{ f.solved }}/{{ f.played }}</span>
+                <span v-if="f.revealed" class="muted-note">· {{ f.revealed }} revealed</span>
+              </dd>
             </div>
           </dl>
         </template>
@@ -243,7 +247,8 @@ async function onTabKeydown(e: KeyboardEvent) {
   margin: 0;
 }
 
-.range {
+/* A muted note beside a value: a rating's range, a family's revealed solves. */
+.muted-note {
   color: var(--muted);
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;

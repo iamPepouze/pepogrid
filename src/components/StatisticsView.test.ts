@@ -53,15 +53,15 @@ describe('StatisticsView', () => {
   it('shows the selected difficulty’s times, mistakes, streaks, ratings, families and recent games', () => {
     seedResult('hard', 'completed', { endedAt: '2026-10-01T10:00:00Z', elapsed: 300, mistakes: 2, se: 3.0, hodokuScore: 300, hardest: 'Pointing' })
     seedResult('hard', 'abandoned', { endedAt: '2026-10-02T10:00:00Z', elapsed: 120, mistakes: 1, se: 3.5, hodokuScore: 900, progress: 46, hardest: 'Naked Pair' })
-    seedResult('hard', 'completed', { endedAt: '2026-10-03T10:00:00Z', elapsed: 4000, mistakes: 0, se: 4.0, hodokuScore: 500, hardest: 'Naked Pair' })
+    seedResult('hard', 'completed', { endedAt: '2026-10-03T10:00:00Z', elapsed: 4000, mistakes: 0, se: 4.0, hodokuScore: 500, hardest: 'Naked Pair', keyTechniqueRevealed: true })
     seedResult('easy', 'completed', { elapsed: 10 })
     const view = mountView('hard')
 
-    expect(section(view, 'Solved games')).toBe('Best time 05:00 Average time 35:50 Average mistakes 1.0 Flawless 1')
+    expect(section(view, 'Solved games')).toBe('Best time 05:00 Average time 35:50 Average mistakes 1.0 Flawless 1 Revealed 1')
     expect(section(view, 'Streaks')).toBe('Current 1 Best 1')
     expect(section(view, 'Ratings')).toBe('SE 3.5 3.0–4.0 HoDoKu 400 300–500')
     expect(view.find('[role="tabpanel"]').text()).toContain('Abandoned at 46% on average')
-    expect(section(view, 'Technique families')).toBe('Subsets 1/2 Intersections 1/1')
+    expect(section(view, 'Technique families')).toBe('Subsets 1/2 · 1 revealed Intersections 1/1')
 
     const recent = view.findAll('.recent li').map((li) => li.text().replace(/\s+/g, ' '))
     expect(recent).toHaveLength(3)
@@ -75,7 +75,7 @@ describe('StatisticsView', () => {
     seedResult('easy', 'completed')
     const view = mountView('master')
 
-    expect(section(view, 'Solved games')).toBe('Best time — Average time — Average mistakes — Flawless —')
+    expect(section(view, 'Solved games')).toBe('Best time — Average time — Average mistakes — Flawless — Revealed —')
     expect(section(view, 'Ratings')).toBe('SE — HoDoKu —')
 
     await view.findAll('[role="tab"]').find((t) => t.text() === 'Easy')!.trigger('click')
