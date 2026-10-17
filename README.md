@@ -83,7 +83,7 @@ npx tsx scripts/bank/lesson-positions.ts "Hidden Single" hidden-single     # sav
 npx tsx scripts/bank/lesson-positions.ts "Hidden Single" hidden-single 5   # skip 5 matches to try another position
 ```
 
-The script prints Sudoku Explainer's summary of the step (e.g. `Hidden Single: r2c4: 3 in block`) to write the steps from. A test checks every step against the puzzle's solution, but not what its caption claims: read the lesson in the app before committing it.
+The script prints what to write the steps from: Sudoku Explainer's summary (e.g. `X-Wing: Cells r3c4,r3c7,r6c4,r6c7: 8 in 2 columns and 2 rows`), its explanation, and what the step does (`Places: nothing`, `Removes: r3c6-8, r3c9-8, …`), which become a step's `placement` and `eliminations`. A test checks every step against the puzzle's solution, and checks each of a step's `sources` (the placed digits its caption rests on) is where the step says. It can't read the caption itself, so read the lesson in the app before committing it.
 
 ## Development
 
