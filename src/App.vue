@@ -320,8 +320,9 @@ onBeforeUnmount(() => {
 }
 
 /*
- * Since iOS 26, the installed app gets a blur over its top edge, about 40pt below the status bar
- * and stronger on iOS 27, with no switch to turn it off: the header sits below it. Landscape has no status bar.
+ * Since iOS 26, the installed app on iPhone gets a blur over its top edge, stronger on iOS 27, with no
+ * switch to turn it off. The header sits below it: about 40pt of blur plus 8px of room.
+ * Landscape has no status bar, so no blur.
  */
 @media (display-mode: standalone) and (orientation: portrait) {
   @supports (-webkit-touch-callout: none) {
