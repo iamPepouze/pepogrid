@@ -40,6 +40,7 @@ export const sees = (a: number, b: number) => SEES[a][b]
 
 export const ALL_DIGITS = 0b1111111110
 
+// eslint-disable-next-line no-restricted-syntax -- the one place a digit's bitmask is spelled out.
 export const bit = (d: number) => 1 << d
 
 export function popcount(mask: number): number {

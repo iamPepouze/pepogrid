@@ -6,6 +6,11 @@ import tseslint from 'typescript-eslint'
 /** Matches an import source src/lib may not use: anything but src/lib itself and the bank data. */
 const LIB_FORBIDDEN_SOURCE = '^(?!\\./|\\.\\./data/)'
 const LIB_IMPORTS_MESSAGE = 'src/lib imports only src/lib and the bank data in src/data.'
+/** A digit's bitmask spelled out (`1 << d`): CODING_STANDARDS.md G2 has it go through `bit(d)`. Other shifts (positions, subsets) stay allowed. */
+const DIGIT_SHIFT = {
+  selector: "BinaryExpression[operator='<<'][left.value=1][right.name=/^(d|digit)$/]",
+  message: "Use bit(d) from src/lib/grid.ts for a digit's bitmask.",
+}
 const BROWSER_GLOBALS = ['window', 'document', 'navigator', 'localStorage', 'sessionStorage', 'location', 'HTMLElement']
 
 export default defineConfig(
@@ -24,7 +29,9 @@ export default defineConfig(
       '@stylistic/comma-dangle': ['error', 'always-multiline'],
     },
   },
+  { files: ['src/**/*.{ts,vue}'], rules: { 'no-restricted-syntax': ['error', DIGIT_SHIFT] } },
   // src/lib is pure TypeScript, shared with the bank scripts and the tests.
+  // Its no-restricted-syntax replaces the one above, so it repeats DIGIT_SHIFT.
   {
     files: ['src/lib/**/*.ts'],
     ignores: ['src/lib/**/*.test.ts'],
@@ -35,7 +42,7 @@ export default defineConfig(
       'no-restricted-syntax': ['error', {
         selector: `ImportExpression[source.value=/${LIB_FORBIDDEN_SOURCE.replaceAll('/', '\\/')}/]`,
         message: LIB_IMPORTS_MESSAGE,
-      }],
+      }, DIGIT_SHIFT],
       'no-restricted-globals': ['error', ...BROWSER_GLOBALS.map((name) => ({ name, message: 'src/lib stays free of browser APIs.' }))],
     },
   },

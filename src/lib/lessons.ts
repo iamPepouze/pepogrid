@@ -30,6 +30,11 @@ export interface LessonStep {
   focus: number[]
   /** Cells the reasoning turns on, drawn shaded. */
   highlight?: number[]
+  /**
+   * Placed digits the caption rests on ("row 1 already has a 3"), drawn shaded like `highlight`.
+   * The tests check each cell holds its digit, so a caption naming the wrong cell fails them.
+   */
+  sources?: Candidate[]
   /** Candidates the step points at, drawn in the accent colour. */
   marks?: Candidate[]
   /** Candidates the step rules out; later steps no longer show them. */
@@ -84,12 +89,14 @@ export const LESSONS: readonly Lesson[] = [
               {
                 caption: 'Row 1 already has a 3, at its far left, so the box’s empty cell in row 1 can’t be 3.',
                 focus: [...TOP_MIDDLE_BOX, at(1, 1)],
-                highlight: [at(1, 1), at(1, 5)],
+                highlight: [at(1, 5)],
+                sources: [[at(1, 1), 3]],
               },
               {
                 caption: 'Columns 5 and 6 each have a 3 lower down, so the box’s cells in those columns, in row 2, can’t be 3 either.',
                 focus: [...TOP_MIDDLE_BOX, at(6, 5), at(7, 6)],
-                highlight: [at(6, 5), at(7, 6), at(2, 5), at(2, 6)],
+                highlight: [at(2, 5), at(2, 6)],
+                sources: [[at(6, 5), 3], [at(7, 6), 3]],
               },
               {
                 caption: 'Only row 2, column 4 is left, so the 3 goes there, though that cell could also hold a 6. That’s a hidden single.',
@@ -157,7 +164,7 @@ export function gridAt(example: LessonExample, index: number): LessonCell[] {
   }
   const step = example.steps[index]
   const focus = new Set(step.focus)
-  const highlight = new Set(step.highlight)
+  const highlight = new Set([...(step.highlight ?? []), ...(step.sources ?? []).map(([i]) => i)])
   return values.map((digit, i) => {
     const placed = step.placement?.[0] === i
     const masks = (list: Candidate[] = []) => list.reduce((m, [cell, d]) => (cell === i ? m | bit(d) : m), 0)

@@ -25,7 +25,7 @@ A change that sets or changes a convention updates this file in the same change.
 ### Grid model
 
 - **G1 Grids are flat.** A grid is an 81-number array in row-major order, `0` for empty (`Grid` in [grid.ts](src/lib/grid.ts)). Persisted results store it as an 81-character string (`gridToString`).
-- **G2 Digit sets are bitmasks.** Notes and candidates are masks where `bit(d)` (d in 1–9) marks digit `d`.
+- **G2 Digit sets are bitmasks.** Notes and candidates are masks where `bit(d)` (d in 1–9) marks digit `d`. ESLint flags a digit's mask spelled `1 << d`.
 - **G3 Prefer the grid.ts helpers.** Use `PEERS`, `UNITS`, `ROWS`/`COLS`/`BOXES`, `rowOf`/`colOf`/`boxOf`, `unitsOf`, `popcount` and `digitsOf` instead of recomputing geometry or bit counts inline.
 
 ### Stores
