@@ -71,8 +71,6 @@ function glowDelay(i: number) {
 }
 
 function cellClass(i: number) {
-  const c = colOf(i)
-  const r = rowOf(i)
   const inGlow = glow.value?.cells.includes(i) ?? false
   const newlyLocked = glow.value?.locked.includes(i) ?? false
   return {
@@ -86,10 +84,6 @@ function cellClass(i: number) {
     pending: newlyLocked && !glowStarted.value,
     glow: inGlow && glowStarted.value,
     settling: newlyLocked && glowStarted.value,
-    'box-right': c % 3 === 2 && c !== 8,
-    'box-bottom': r % 3 === 2 && r !== 8,
-    'last-col': c === 8,
-    'last-row': r === 8,
   }
 }
 
@@ -108,7 +102,7 @@ function cellLabel(i: number) {
       v-for="i in cells"
       :key="i"
       type="button"
-      class="cell"
+      class="cell grid-cell"
       :class="cellClass(i)"
       :style="glowDelay(i)"
       :aria-label="cellLabel(i)"
@@ -137,15 +131,7 @@ function cellLabel(i: number) {
 
 .cell {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 1;
-  min-width: 0;
   padding: 0;
-  border: 0;
-  border-right: 1px solid var(--line-thin);
-  border-bottom: 1px solid var(--line-thin);
   background: var(--cell);
   color: var(--user-digit);
   font: inherit;
@@ -155,22 +141,6 @@ function cellLabel(i: number) {
 .board:focus,
 .cell:focus {
   outline: none;
-}
-
-.cell.box-right {
-  border-right: 2px solid var(--line-thick);
-}
-
-.cell.box-bottom {
-  border-bottom: 2px solid var(--line-thick);
-}
-
-.cell.last-col {
-  border-right: 0;
-}
-
-.cell.last-row {
-  border-bottom: 0;
 }
 
 .cell.peer {

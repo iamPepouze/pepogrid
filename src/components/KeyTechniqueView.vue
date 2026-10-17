@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ArrowLeft } from '@lucide/vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { lessonFor } from '../lib/lessons'
+import LessonExample from './LessonExample.vue'
 
-defineProps<{ technique: string }>()
+const props = defineProps<{ technique: string }>()
 const emit = defineEmits<{ back: [] }>()
 
 const backButton = ref<HTMLButtonElement | null>(null)
@@ -11,6 +13,9 @@ defineExpose({
   /** Focuses Back: the Technique button that opened the view is hidden behind it. */
   focusBack: () => backButton.value?.focus(),
 })
+
+/** The lesson and section teaching the technique, or null while it has none. */
+const found = computed(() => lessonFor(props.technique))
 </script>
 
 <template>
@@ -26,8 +31,15 @@ defineExpose({
     <div class="card surface">
       <p class="lead">This puzzle’s hardest technique is</p>
       <p class="technique">{{ technique }}</p>
-      <p class="note">A lesson on this technique is coming.</p>
+      <p v-if="found" class="note">{{ found.lesson.text }}</p>
+      <p v-else class="note">A lesson on this technique is coming.</p>
     </div>
+
+    <section v-if="found" class="card surface section" aria-labelledby="lesson-section-title">
+      <h3 id="lesson-section-title">{{ found.section.title }}</h3>
+      <p>{{ found.section.text }}</p>
+      <LessonExample v-for="example in found.section.examples" :key="example.position" :example="example" />
+    </section>
   </section>
 </template>
 
@@ -40,6 +52,21 @@ defineExpose({
 .note {
   margin: 0;
   color: var(--muted);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.section p {
+  margin: 0;
 }
 
 .technique {

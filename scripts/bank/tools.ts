@@ -59,6 +59,16 @@ function chunk<T>(items: T[], parts: number): T[][] {
   return Array.from({ length: Math.ceil(items.length / size) }, (_, k) => items.slice(k * size, (k + 1) * size))
 }
 
+/** Runs SukakuExplainer's serate in SE 1.2.1 mode with `options` (--format, --input…), resolving with what it prints. */
+export async function runSerate(options: string[]): Promise<string> {
+  const { stdout } = await run(
+    JAVA,
+    ['-Xrs', '-Xmx512m', '-cp', join(TOOLS, 'SukakuExplainer.jar'), 'diuf.sudoku.test.serate', `--techs=${SE121_TECHS}`, ...options],
+    { maxBuffer: 1 << 28 },
+  )
+  return stdout
+}
+
 /** Rates puzzles (81-char strings) with SukakuExplainer in SE 1.2.1 mode. */
 export async function serate(puzzles: string[], tag: string): Promise<Map<string, SeRating>> {
   const results = new Map<string, SeRating>()
@@ -67,22 +77,7 @@ export async function serate(puzzles: string[], tag: string): Promise<Map<string
       const input = join(WORK, `${tag}-se-${k}.txt`)
       const output = join(WORK, `${tag}-se-${k}.out.txt`)
       writeFileSync(input, part.join('\n') + '\n')
-      await run(
-        JAVA,
-        [
-          '-Xrs',
-          '-Xmx512m',
-          '-cp',
-          join(TOOLS, 'SukakuExplainer.jar'),
-          'diuf.sudoku.test.serate',
-          `--techs=${SE121_TECHS}`,
-          '--format=%g|%r|%R',
-          `--input=${input}`,
-          `--output=${output}`,
-          '--threads=1',
-        ],
-        { maxBuffer: 1 << 26 },
-      )
+      await runSerate(['--format=%g|%r|%R', `--input=${input}`, `--output=${output}`, '--threads=1'])
       for (const line of readFileSync(output, 'utf8').split(/\r?\n/)) {
         const [puzzle, rating, name] = line.split('|')
         if (puzzle?.length === 81) results.set(puzzle.replace(/\./g, '0'), { se: Number(rating), hardest: name })
