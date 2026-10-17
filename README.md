@@ -104,4 +104,4 @@ Copyright (c) 2026 Pepouze ([github.com/iamPepouze](https://github.com/iamPepouz
 
 PepoGrid is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE): you may use, modify and share it for any noncommercial purpose, keeping the copyright notice. Commercial use of any kind, including selling it or running it with ads, is not permitted.
 
-The skills in [.claude/skills/](.claude/skills/) are by Matt Pocock and remain under the [MIT License](.claude/skills/LICENSE).
+The skills in [.claude/skills/](.claude/skills/) listed in [skills-lock.json](skills-lock.json) are by Matt Pocock and remain under the [MIT License](.claude/skills/LICENSE); the others are this repo's own.
