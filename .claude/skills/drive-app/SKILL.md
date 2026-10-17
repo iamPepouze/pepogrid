@@ -28,7 +28,7 @@ description: "Drive PepoGrid in a real browser. Use to see a UI change working, 
    await app.close()
    ```
 
-   `playwright-core` resolves through `drive.mjs`, so the script runs from anywhere. Without `touch: true`, the page sees a mouse at every width, so a phone-sized viewport alone still renders the desktop styles. For a layout change, open the game three times: at 320 and 400 px wide with `touch: true` (the narrowest phone and a typical one), and at 1200 × 800 without. A colour change also runs once with `colorScheme: 'dark'`. A view that shows saved data takes it through `storage`, so the first load already has it; build stored results with `drive.mjs`'s `result(fields)`.
+   `playwright-core` resolves through `drive.mjs`, so the script runs from anywhere. Without `touch: true`, the page sees a mouse at every width, so a phone-sized viewport alone still renders the desktop styles. For a layout change, open the game three times: at 320 and 400 px wide with `touch: true` (the narrowest phone and a typical one), and at 1200 × 800 without. A colour change also runs once with `colorScheme: 'dark'`. A rule for the installed iOS app never applies in Chromium: [ios-installed-app.md](../../../docs/ios-installed-app.md) says what can still be checked here. A view that shows saved data takes it through `storage`, so the first load already has it; build stored results with `drive.mjs`'s `result(fields)`.
 
    The step is done when the script has printed `app.errors` (an empty list), and `app.clipped()` (an empty list) at all three sizes for a layout change, and saved a screenshot of every state the change touches. A re-run after a follow-up fix screenshots only the states that fix touches, clipped to the element.
 

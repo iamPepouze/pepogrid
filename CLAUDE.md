@@ -14,6 +14,10 @@ The five default labels: needs-triage, needs-info, ready-for-agent, ready-for-hu
 
 Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root, created when first needed. See `docs/agents/domain.md`.
 
+### Installed iOS app
+
+Before grilling or changing anything for the installed iOS app (layout, status bar, dialogs, updates, haptics), read `docs/ios-installed-app.md`.
+
 ### Local edits to vendored skills
 
 Re-apply these after updating the skills in `skills-lock.json`:
@@ -21,6 +25,7 @@ Re-apply these after updating the skills in `skills-lock.json`:
 - `retro`: drop `disable-model-invocation`, so a retro asked for in words can run.
 - `code-review`: move the smell baseline into `SMELLS.md`, and give the Standards sub-agent its path instead of the pasted list.
 - `to-spec` and `to-tickets`: place named tests by `CODING_STANDARDS.md`'s test-layout rules.
+- `pr`: an **On device** bullet in Evidence, from the branch file's `device-check:` line.
 
 ## Workflow
 
