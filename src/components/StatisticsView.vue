@@ -140,7 +140,7 @@ async function onTabKeydown(e: KeyboardEvent) {
             <dt>{{ r.label }}</dt>
             <dd>
               <span class="stat-value">{{ r.average }}</span>
-              <span v-if="r.range" class="aside">{{ r.range }}</span>
+              <span v-if="r.range" class="muted-note">{{ r.range }}</span>
             </dd>
           </div>
         </dl>
@@ -153,7 +153,7 @@ async function onTabKeydown(e: KeyboardEvent) {
               <dt>{{ f.family }}</dt>
               <dd>
                 <span class="stat-value">{{ f.solved }}/{{ f.played }}</span>
-                <span v-if="f.revealed" class="aside">· {{ f.revealed }} revealed</span>
+                <span v-if="f.revealed" class="muted-note">· {{ f.revealed }} revealed</span>
               </dd>
             </div>
           </dl>
@@ -248,7 +248,7 @@ async function onTabKeydown(e: KeyboardEvent) {
 }
 
 /* A muted note beside a value: a rating's range, a family's revealed solves. */
-.aside {
+.muted-note {
   color: var(--muted);
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;

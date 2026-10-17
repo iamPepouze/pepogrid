@@ -277,6 +277,15 @@ describe('statistics', () => {
     ])
   })
 
+  it('counts revealed solves in the family the difficulty groups them into', () => {
+    const results = [
+      solved('expert', { hardest: 'XYZ-Wing', keyTechniqueRevealed: true }),
+      solved('expert', { hardest: 'Naked Quad', keyTechniqueRevealed: true }),
+      solved('expert', { hardest: 'Naked Quad' }),
+    ]
+    expect(statisticsOf(results, 'expert').families).toEqual([{ family: 'Wings & subsets', solved: 3, played: 3, revealed: 2 }])
+  })
+
   it('lists no technique families on Easy', () => {
     expect(statisticsOf([solved('easy')], 'easy').families).toEqual([])
   })

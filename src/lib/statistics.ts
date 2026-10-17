@@ -79,7 +79,7 @@ export interface Spread {
 }
 
 /** Only a stored `true` counts: a missing or hand-edited value reads as not revealed. */
-const isRevealedSolve = (r: StatResult) => r.outcome === 'completed' && r.keyTechniqueRevealed === true
+const isRevealed = (r: StatResult) => r.keyTechniqueRevealed === true
 
 const mean = (values: readonly number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
 
@@ -117,8 +117,10 @@ function familiesOf(results: readonly StatResult[], difficulty: Difficulty): Fam
     const family = familyOf(difficulty, r.hardest)
     const record = records.get(family) ?? { family, solved: 0, played: 0, revealed: 0 }
     record.played++
-    if (r.outcome === 'completed') record.solved++
-    if (isRevealedSolve(r)) record.revealed++
+    if (r.outcome === 'completed') {
+      record.solved++
+      if (isRevealed(r)) record.revealed++
+    }
     records.set(family, record)
   }
   return [...records.values()].sort((a, b) => b.played - a.played || a.family.localeCompare(b.family))
@@ -143,7 +145,7 @@ export function statisticsOf(results: readonly StatResult[], difficulty: Difficu
     averageTime: time?.average ?? null,
     averageMistakes: mistakes?.average ?? null,
     flawless: mistakes ? solved.filter((r) => r.mistakes === 0).length : null,
-    revealed: solved.length ? solved.filter(isRevealedSolve).length : null,
+    revealed: solved.length ? solved.filter(isRevealed).length : null,
     se: spreadOf(solved.map((r) => r.se)),
     hodoku: spreadOf(solved.map((r) => r.hodokuScore)),
     currentStreak,
