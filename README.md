@@ -33,7 +33,7 @@ A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and
 - **Complete units.** Once a row, column or box holds the right digit in all nine cells, the same glow runs across it and its placed digits turn from blue to the givens' color as the glow reaches them, so blue marks only what is still in progress. Those cells then lock like givens; only Undo reopens them, and it also stops any glow still running. A placement that completes several units and a digit at once sends a single glow across all of them.
 - **Light, dark or system theme.** Choose it from the gear menu in the header. *System* (the default) follows the device setting. The choice is saved, and the title/status bar color follows the theme.
 - **Haptics.** The phone gives a short vibration on a mistake (Android only; iOS doesn't support web vibration).
-- **Installable PWA.** Works offline. An *Install* button appears in the header when the browser supports it (Chrome, Edge, Android). On iOS, use Share → Add to Home Screen. Updates download in the background and apply the next time the app is launched.
+- **Installable PWA.** Works offline. An *Install* button appears in the header when the browser supports it (Chrome, Edge, Android). On iOS, use Share → Add to Home Screen. Updates download in the background and apply once the app has been fully closed and launched again.
 
 ## Keyboard
 
