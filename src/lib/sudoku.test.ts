@@ -144,7 +144,7 @@ describe('technique families', () => {
 })
 
 describe('key technique lessons', () => {
-  it.each(['easy', 'medium'] as const)('gives every technique in the %s bank a lesson section with an example', async (difficulty) => {
+  it.each(['easy', 'medium', 'hard'] as const)('gives every technique in the %s bank a lesson section with an example', async (difficulty) => {
     for (const [, , , hardest] of await loadBank(difficulty)) {
       const found = lessonFor(hardest)
       expect(found?.section.examples.length, hardest).toBeGreaterThan(0)
@@ -163,6 +163,8 @@ describe('key technique lessons', () => {
           const position = positionOf(example)
           const where = `${section.title}, ${example.position}`
           expect(section.techniques, where).toContain(position.technique)
+          // Sudoku Explainer's summary opens with the step's own technique, so a position saved from the wrong step fails here.
+          expect(position.summary.split(':')[0], `${where}: saved from another technique’s step`).toBe(position.technique)
           const solution = solve([...position.puzzle].map(Number))!
           expect(solution, where).not.toBeNull()
           position.values.forEach((v, i) => {
