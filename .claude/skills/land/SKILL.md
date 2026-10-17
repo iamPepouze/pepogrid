@@ -39,4 +39,4 @@ For every local branch except `main`, list its merged PRs' heads with `gh pr lis
 
 ## 5. Report
 
-List the PR merged (or "none"), the `main` commit now checked out, each branch and branch file deleted, and each branch kept with its reason. End with one line offering `/retro` on the session.
+List the PR merged (or "none"), the `main` commit now checked out, each branch and branch file deleted, and each branch kept with its reason. If this run merged a PR whose title isn't a retro's (`chore: apply the … retro`), end with one line offering `/retro` on the session.
