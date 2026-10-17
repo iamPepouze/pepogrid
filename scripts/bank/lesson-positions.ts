@@ -13,7 +13,7 @@ import { join } from 'node:path'
 import { loadBank } from '../../src/lib/bank'
 import { DIFFICULTIES } from '../../src/lib/difficulty'
 import { PEERS, colOf, rowOf } from '../../src/lib/grid'
-import type { LessonPosition } from '../../src/lib/lessons'
+import { type LessonPosition, summaryTechnique } from '../../src/lib/lessons'
 import { ROOT, WORK, runSerate } from './tools'
 
 /** Puzzles rated per Java start: enough to amortise the start, few enough to stop soon after a match. */
@@ -31,11 +31,15 @@ async function puzzlesFor(technique: string): Promise<string[]> {
   return banks.flat().filter((e) => e[3] === technique).map((e) => e[0])
 }
 
-/** Lines serate prints: `P <puzzle>` per puzzle, then `B <candidates> <grid>` before and `A <technique>|<summary>` after each step. */
+/**
+ * Lines serate prints: `P <puzzle>` per puzzle, then `B <candidates> <grid>` before and `A <summary>`
+ * after each step. The summary opens with the step's own technique (`X-Wing: Cells …`); `%R` would
+ * give the hardest technique so far, which matches every step after the first match too.
+ */
 async function steps(puzzles: string[]): Promise<string[]> {
   const input = join(WORK, 'lesson-positions.txt')
   writeFileSync(input, puzzles.join('\n') + '\n')
-  const stdout = await runSerate(['--format=', '--start=P %g', '--before=B %m %i', '--after=A %R|%s', `--input=${input}`])
+  const stdout = await runSerate(['--format=', '--start=P %g', '--before=B %m %i', '--after=A %s', `--input=${input}`])
   return stdout.split(/\r?\n/)
 }
 
@@ -86,8 +90,8 @@ for (let k = 0; k < puzzles.length && !found; k += BATCH) {
       }
     } else if (line.startsWith('A ') && !found) {
       stepIndex++
-      const [name, summary] = line.slice(2).split('|')
-      if (name.trim() !== technique || skip-- > 0) continue
+      const summary = line.slice(2)
+      if (summaryTechnique(summary) !== technique || skip-- > 0) continue
       const { candidates, values } = parsePosition(before)
       // Filled cells keep no candidates, so the lesson draws their digit instead.
       found = { technique, summary: summary.trim(), puzzle, values, candidates: candidates.map((c, i) => (values[i] === '0' ? c : '')) }

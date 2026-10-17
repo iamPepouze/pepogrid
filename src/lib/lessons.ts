@@ -21,6 +21,9 @@ export interface LessonPosition {
   candidates: string[]
 }
 
+/** The technique a Sudoku Explainer summary is about: the text before its first colon (`X-Wing: Cells …`). */
+export const summaryTechnique = (summary: string) => summary.split(':')[0].trim()
+
 /** A digit in a cell: a candidate, or a digit placed there. */
 export type CellDigit = [cell: number, digit: number]
 
@@ -78,9 +81,18 @@ const each = (cells: number[], digits: number[]): Candidate[] => cells.flatMap((
 
 const TOP_LEFT_BOX = BOXES[0]
 const TOP_MIDDLE_BOX = BOXES[1]
+const TOP_RIGHT_BOX = BOXES[2]
 const MIDDLE_LEFT_BOX = BOXES[3]
 const MIDDLE_RIGHT_BOX = BOXES[5]
+const BOTTOM_MIDDLE_BOX = BOXES[7]
 const NAKED_SINGLE_CELL = at(2, 8)
+const X_WING_CELLS = [at(3, 4), at(6, 4), at(3, 7), at(6, 7)]
+/** The cells that can hold the Swordfish lesson’s 9, column by column. */
+const SWORDFISH_COLUMN_6 = [at(5, 6), at(8, 6)]
+const SWORDFISH_COLUMN_7 = [at(1, 7), at(5, 7), at(8, 7)]
+const SWORDFISH_CELLS = [...SWORDFISH_COLUMN_6, ...SWORDFISH_COLUMN_7, at(1, 8), at(8, 8)]
+const XY_PIVOT = at(1, 2)
+const XY_WINGS = [at(1, 4), at(3, 3)]
 
 export const LESSONS: readonly Lesson[] = [
   {
@@ -244,7 +256,7 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     family: 'Intersections',
-    text: 'A box meets a row or column in three cells. When a box’s only places for a digit all lie in one row or column, that line’s copy of the digit must be in the box, so the rest of the line can’t hold it. That’s pointing.',
+    text: 'A box meets a row or column in three cells. When a box’s only places for a digit all lie in one row or column, that line’s copy of the digit must be in the box, so the rest of the line can’t hold it. That’s pointing. Claiming works the other way round: when a line’s only places for a digit all lie in one box, the rest of the box can’t hold it.',
     sections: [
       {
         title: 'Pointing',
@@ -306,6 +318,292 @@ export const LESSONS: readonly Lesson[] = [
           },
         ],
       },
+      {
+        title: 'Claiming',
+        techniques: ['Claiming'],
+        text: 'Pick a row or column and a digit it still needs. If every cell in the line with that candidate lies in the same box, the line claims the digit for that box: it is ruled out in the rest of the box, outside the line.',
+        examples: [
+          {
+            position: 'claiming',
+            steps: [
+              {
+                caption: 'Row 1 still needs a 4, a 5, a 6 and an 8. Which of its cells can hold the 8?',
+                focus: row(1),
+              },
+              {
+                caption: 'Only two, in columns 7 and 9, and both are in the top-right box. So whichever holds row 1’s 8 is also the box’s 8.',
+                focus: [...row(1), ...TOP_RIGHT_BOX],
+                highlight: [at(1, 7), at(1, 9)],
+                marks: each([at(1, 7), at(1, 9)], [8]),
+              },
+              {
+                caption: 'So no other cell in the box can be 8: the 8s in row 2, column 7 and row 3, column 9 go. That’s claiming: the row claims the 8 for the box.',
+                focus: [...row(1), ...TOP_RIGHT_BOX],
+                highlight: [at(1, 7), at(1, 9)],
+                marks: each([at(1, 7), at(1, 9)], [8]),
+                eliminations: [[at(2, 7), 8], [at(3, 9), 8]],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    family: 'Subsets',
+    text: 'A subset ties a few cells of a unit to as many digits. In a naked subset, the cells’ candidates are only those digits, so the digits fill the cells and the rest of the unit can’t hold them. In a hidden subset, the digits have no other place in the unit, so the cells hold them and their other candidates go.',
+    sections: [
+      {
+        title: 'Naked Pair',
+        techniques: ['Naked Pair'],
+        text: 'Look for two cells in a row, column or box with the same two candidates and no others. One holds each digit, in some order, so no other cell of that unit can hold either.',
+        examples: [
+          {
+            position: 'naked-pair',
+            steps: [
+              {
+                caption: 'Column 8 has five empty cells. Look at rows 3 and 4: each can only hold a 5 or a 7.',
+                focus: col(8),
+                highlight: [at(3, 8), at(4, 8)],
+                marks: each([at(3, 8), at(4, 8)], [5, 7]),
+              },
+              {
+                caption: 'Two cells, two digits: one cell is the 5 and the other the 7, in some order. That’s a naked pair.',
+                focus: col(8),
+                highlight: [at(3, 8), at(4, 8)],
+                marks: each([at(3, 8), at(4, 8)], [5, 7]),
+              },
+              {
+                caption: 'With the 5 and the 7 taken, no other cell in column 8 can hold them: the 5 in row 5 and the 7s in rows 7 and 9 go.',
+                focus: col(8),
+                highlight: [at(3, 8), at(4, 8)],
+                eliminations: [[at(5, 8), 5], [at(7, 8), 7], [at(9, 8), 7]],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Naked Triplet',
+        techniques: ['Naked Triplet'],
+        text: 'Three cells of a unit whose candidates, together, are only three digits form a naked triplet. The three digits fill those cells, in some order, so no other cell of the unit can hold them. A cell needn’t have all three: cells with a 4 or a 5, a 5 or a 6, and a 4 or a 6 are a triplet too.',
+        examples: [
+          {
+            position: 'naked-triplet',
+            steps: [
+              {
+                caption: 'Column 8 has six empty cells. Look at rows 2, 4 and 5: each can only hold a 4, a 5 or a 6.',
+                focus: col(8),
+                highlight: [at(2, 8), at(4, 8), at(5, 8)],
+                marks: each([at(2, 8), at(4, 8), at(5, 8)], [4, 5, 6]),
+              },
+              {
+                caption: 'Three cells, three digits: the 4, the 5 and the 6 fill these cells, in some order. That’s a naked triplet.',
+                focus: col(8),
+                highlight: [at(2, 8), at(4, 8), at(5, 8)],
+                marks: each([at(2, 8), at(4, 8), at(5, 8)], [4, 5, 6]),
+              },
+              {
+                caption: 'With those three digits taken, no other cell in column 8 can hold them: the 4 and the 5 in row 3 go.',
+                focus: col(8),
+                highlight: [at(2, 8), at(4, 8), at(5, 8)],
+                eliminations: each([at(3, 8)], [4, 5]),
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Hidden Pair',
+        techniques: ['Hidden Pair'],
+        text: 'Look for two digits a unit needs whose only places in it are the same two cells. Those cells must hold the pair, in some order, so any other candidate in them goes. The pair was hiding among those candidates.',
+        examples: [
+          {
+            position: 'hidden-pair',
+            steps: [
+              {
+                caption: 'The bottom-middle box still needs a 2, a 3, a 5, a 6, a 7, an 8 and a 9. Where can its 8 and its 9 go?',
+                focus: BOTTOM_MIDDLE_BOX,
+              },
+              {
+                caption: 'Each is a candidate only in row 9, columns 5 and 6. Two digits, two cells: these cells must hold the 8 and the 9, in some order. That’s a hidden pair.',
+                focus: BOTTOM_MIDDLE_BOX,
+                highlight: [at(9, 5), at(9, 6)],
+                marks: each([at(9, 5), at(9, 6)], [8, 9]),
+              },
+              {
+                caption: 'With the 8 and the 9 taking both cells, nothing else fits there: the 3 in column 5 and the 5 in column 6 go.',
+                focus: BOTTOM_MIDDLE_BOX,
+                highlight: [at(9, 5), at(9, 6)],
+                eliminations: [[at(9, 5), 3], [at(9, 6), 5]],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Hidden Triplet',
+        techniques: ['Hidden Triplet'],
+        text: 'Three digits whose only places in a unit are the same three cells form a hidden triplet. The three cells must hold those digits, so their other candidates go. Not every cell needs all three digits as candidates: what counts is that the digits have no other place.',
+        examples: [
+          {
+            position: 'hidden-triplet',
+            steps: [
+              {
+                caption: 'The middle-right box still needs every digit but 2. Where can its 1, its 8 and its 9 go?',
+                focus: MIDDLE_RIGHT_BOX,
+              },
+              {
+                caption: 'All three are candidates only in row 5, column 9 and row 6, columns 8 and 9. Three digits, three cells: these cells must hold them, in some order. That’s a hidden triplet, though row 5, column 9 has no 9.',
+                focus: MIDDLE_RIGHT_BOX,
+                highlight: [at(5, 9), at(6, 8), at(6, 9)],
+                marks: [...each([at(5, 9)], [1, 8]), ...each([at(6, 8), at(6, 9)], [1, 8, 9])],
+              },
+              {
+                caption: 'With the 1, the 8 and the 9 taking those cells, nothing else fits there: the 6 and the 7 in row 5, column 9 go.',
+                focus: MIDDLE_RIGHT_BOX,
+                highlight: [at(5, 9), at(6, 8), at(6, 9)],
+                eliminations: each([at(5, 9)], [6, 7]),
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    family: 'Fish',
+    text: 'A fish works on one digit. When the digit’s only places in a few columns all lie in as many rows, those columns put their copies of the digit in those rows, so no other cell of the rows can hold it. The same goes with rows and columns swapped.',
+    sections: [
+      {
+        title: 'X-Wing',
+        techniques: ['X-Wing'],
+        text: 'Pick a digit and find two columns where it has only two places each, in the same two rows. Each column’s copy is in one of those rows, and the two copies can’t share a row, so they take both rows. No other cell of those rows can hold the digit.',
+        examples: [
+          {
+            position: 'x-wing',
+            steps: [
+              {
+                caption: 'Column 4 still needs an 8, and only two of its cells can hold it: in rows 3 and 6.',
+                focus: col(4),
+                highlight: [at(3, 4), at(6, 4)],
+                marks: each([at(3, 4), at(6, 4)], [8]),
+              },
+              {
+                caption: 'Column 7 needs an 8 too, and it can also only go in rows 3 or 6.',
+                focus: [...col(4), ...col(7)],
+                highlight: X_WING_CELLS,
+                marks: each(X_WING_CELLS, [8]),
+              },
+              {
+                caption: 'The two 8s can’t share a row, so one is in row 3 and the other in row 6. Either way, rows 3 and 6 get their 8 in columns 4 and 7. That’s an X-Wing.',
+                focus: [...col(4), ...col(7), ...row(3), ...row(6)],
+                highlight: X_WING_CELLS,
+                marks: each(X_WING_CELLS, [8]),
+              },
+              {
+                caption: 'So no other cell of rows 3 and 6 can be 8: the 8s in columns 6, 8 and 9 go.',
+                focus: [...col(4), ...col(7), ...row(3), ...row(6)],
+                highlight: X_WING_CELLS,
+                marks: each(X_WING_CELLS, [8]),
+                eliminations: [...each([at(3, 6), at(3, 9)], [8]), ...each([at(6, 6), at(6, 8), at(6, 9)], [8])],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Swordfish',
+        techniques: ['Swordfish'],
+        text: 'A swordfish is an X-Wing with three columns and three rows. The digit’s places in three columns all lie in the same three rows, so the columns’ copies take one row each and no other cell of those rows can hold it. A column may have only two of the three places.',
+        examples: [
+          {
+            position: 'swordfish',
+            steps: [
+              {
+                caption: 'Column 6 still needs a 9, and only rows 5 and 8 can hold it.',
+                focus: col(6),
+                highlight: SWORDFISH_COLUMN_6,
+                marks: each(SWORDFISH_COLUMN_6, [9]),
+              },
+              {
+                caption: 'Column 7’s 9 can go in rows 1, 5 or 8.',
+                focus: [...col(6), ...col(7)],
+                highlight: [...SWORDFISH_COLUMN_6, ...SWORDFISH_COLUMN_7],
+                marks: each([...SWORDFISH_COLUMN_6, ...SWORDFISH_COLUMN_7], [9]),
+              },
+              {
+                caption: 'And column 8’s 9 only in rows 1 or 8. Three columns, and all their places for a 9 lie in rows 1, 5 and 8.',
+                focus: [...col(6), ...col(7), ...col(8)],
+                highlight: SWORDFISH_CELLS,
+                marks: each(SWORDFISH_CELLS, [9]),
+              },
+              {
+                caption: 'The three 9s can’t share a row, so they take one row each: rows 1, 5 and 8 get their 9 in these columns. That’s a Swordfish.',
+                focus: [...col(6), ...col(7), ...col(8), ...row(1), ...row(5), ...row(8)],
+                highlight: SWORDFISH_CELLS,
+                marks: each(SWORDFISH_CELLS, [9]),
+              },
+              {
+                caption: 'So no other cell of rows 1, 5 and 8 can be 9: the 9s in columns 4, 5 and 9 go.',
+                focus: [...col(6), ...col(7), ...col(8), ...row(1), ...row(5), ...row(8)],
+                highlight: SWORDFISH_CELLS,
+                marks: each(SWORDFISH_CELLS, [9]),
+                eliminations: each([at(1, 9), at(5, 4), at(5, 5), at(5, 9), at(8, 9)], [9]),
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    family: 'Wings',
+    text: 'A wing is a pivot cell and two wings: peers of the pivot with two candidates each. Whatever the pivot holds, one of the wings ends up with the digit they share, so a cell that is a peer of both wings can’t hold it.',
+    sections: [
+      {
+        title: 'XY-Wing',
+        techniques: ['XY-Wing'],
+        text: 'The pivot has two candidates, X and Y. One wing has X and Z, the other Y and Z. If the pivot is X, the first wing is left with Z; if it is Y, the second one is. Either way a wing holds Z, so Z goes from every cell that is a peer of both wings.',
+        examples: [
+          {
+            position: 'xy-wing',
+            steps: [
+              {
+                caption: 'Row 1, column 2 can only hold a 1 or a 7. It is the pivot.',
+                focus: [XY_PIVOT, ...XY_WINGS],
+                highlight: [XY_PIVOT],
+                marks: each([XY_PIVOT], [1, 7]),
+              },
+              {
+                caption: 'If the pivot is 1, row 1, column 4, in the same row, can’t be 1, so it is left with its 2.',
+                focus: [XY_PIVOT, ...XY_WINGS],
+                highlight: [XY_PIVOT, at(1, 4)],
+                marks: [[XY_PIVOT, 1], [at(1, 4), 2]],
+              },
+              {
+                caption: 'If the pivot is 7 instead, row 3, column 3, in the same box, can’t be 7, so it is left with its 2.',
+                focus: [XY_PIVOT, ...XY_WINGS],
+                highlight: [XY_PIVOT, at(3, 3)],
+                marks: [[XY_PIVOT, 7], [at(3, 3), 2]],
+              },
+              {
+                caption: 'Either way, one of the two wings is a 2. That’s an XY-Wing: a pivot and two wings.',
+                focus: [XY_PIVOT, ...XY_WINGS],
+                highlight: [XY_PIVOT, ...XY_WINGS],
+                marks: each(XY_WINGS, [2]),
+              },
+              {
+                caption: 'Row 3, column 5 is a peer of both wings: it shares row 3 with one and the top-middle box with the other. Whichever wing is the 2, this cell can’t be, so its 2 goes.',
+                focus: [XY_PIVOT, ...row(3), ...TOP_MIDDLE_BOX],
+                highlight: XY_WINGS,
+                marks: each(XY_WINGS, [2]),
+                eliminations: [[at(3, 5), 2]],
+              },
+            ],
+          },
+        ],
+      },
     ],
   },
 ]
@@ -322,6 +620,7 @@ export function positionOf(example: LessonExample) {
   const p = positions[example.position] as LessonPosition
   return {
     technique: p.technique,
+    summary: p.summary,
     puzzle: p.puzzle,
     values: [...p.values].map(Number),
     candidates: p.candidates.map((digits) => [...digits].reduce((mask, d) => mask | bit(Number(d)), 0)),
