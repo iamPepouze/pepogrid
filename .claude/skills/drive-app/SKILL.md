@@ -1,6 +1,6 @@
 ---
 name: drive-app
-description: "Drive PepoGrid in a real browser. Use to see a UI change working, or to check focus or an animation."
+description: "Drive PepoGrid in a real browser. Use to see a UI change working, or to check focus, an animation or an update."
 ---
 
 ## Steps
@@ -51,3 +51,14 @@ To assert one is running, list `document.getAnimations().map((a) => a.animationN
 ## Focus
 
 Read where focus is with `document.activeElement` in `page.evaluate`, after each step that should move it (open, cancel, confirm). The browser is Chromium, which focuses a button on click; Safari doesn't, so a Safari tap is checked in the component tests, which click without focusing first.
+
+## Updates
+
+The dev server never registers the service worker, so an update check replaces steps 1 and 4 with `drive.mjs`'s `preview()`, after `npm run build`. Its `stop()` ends the server, with no `taskkill`.
+
+1. `let server = await preview()`, then `openGame()`, and wait for `navigator.serviceWorker.ready` in `page.evaluate`.
+2. Choose the visit. For a returning player, `page.reload()` first so a worker controls the page. A first visit skips it. Check both: the update reloads differently in each ([ios-installed-app.md](../../../docs/ios-installed-app.md), Updates).
+3. `server = await deploy(server)` changes `dist/sw.js`. `resume(page)` then stands in for the app coming back from the background.
+4. The Update button appears in the header. After the tap, `page.waitForEvent('load')`, and compare `save()` before and after: the game is kept.
+
+`deploy()` leaves `dist/sw.js` changed. The next `npm run build` restores it.

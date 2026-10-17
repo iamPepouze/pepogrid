@@ -7,7 +7,11 @@ import App from './App.vue'
 import { useGameStore } from './stores/game'
 import { fill, nonGivensOf, seedResult } from './stores/testing'
 
-/** The service worker registration, faked: `sw.options` holds what App's update composable passed in. */
+/**
+ * The service worker registration, faked: `sw.options` holds what App's update composable passed in.
+ * It's saved here, not read from `mock.calls`: Vitest clears call history before each test, and
+ * App registers only once, on import.
+ */
 const sw = vi.hoisted(() => ({ options: {} as RegisterSWOptions, update: vi.fn(async () => {}) }))
 vi.mock('virtual:pwa-register', () => ({
   registerSW(options: RegisterSWOptions) {

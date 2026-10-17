@@ -7,6 +7,7 @@ Each claim carries a label:
 - **Documented**: a primary source (WebKit, Apple, MDN, specs, plugin docs).
 - **Reported**: only community PRs, issues or secondary sites say so. Treat it as unverified.
 - **Observed**: seen on the owner's iPhone.
+- **Off-device**: seen in the drive-app skill's browser (Edge), not on an iPhone or iPad.
 - **Inferred**: follows from documented behaviour, not stated anywhere.
 
 ## Top-edge blur (Liquid Glass)
@@ -57,7 +58,7 @@ Each claim carries a label:
   2. Closing the app from the app switcher frees the old worker.
   3. On the second full launch, the new version runs.
 - Inferred: resuming the app from the background doesn't load the page, so on its own it neither checks for an update nor applies one. useUpdate.ts therefore checks whenever the page becomes visible again, so a version deployed since launch shows the Update button without a relaunch.
-- Seen off-device, in Edge with a changed `sw.js` served under `vite preview`: the check on resume found the new version and Update appeared. Tapping it loaded the new version with the game intact, both on a page an older worker controlled and on a first visit, where none did. Not yet seen on an iPhone.
+- Off-device, with a changed `sw.js` served under `vite preview`: the check on resume found the new version and Update appeared. Tapping it loaded the new version with the game intact, both on a page an older worker controlled and on a first visit, where none did.
 - Documented, in workbox-window's source, which `updateSW()` uses: the page reloads on the new worker's `controlling` event only if a worker controlled the page when it registered (`isUpdate`). On a first visit nothing does, so useUpdate.ts reloads the page itself after `updateSW()`. That call still asks a waiting worker to take over, so the reload gets the new version even while another tab holds the old one.
 - To check a fix on a device without the button: deploy, launch, close the app from the app switcher, and launch again. With it: deploy, bring the open app back from the background, and tap Update.
 

@@ -2,7 +2,10 @@
 import type { RegisterSWOptions } from 'virtual:pwa-register'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-/** The service worker registration, faked: `sw.options` holds what the composable passed in. */
+/**
+ * The service worker registration, faked: `sw.options` holds what the composable passed in.
+ * It's saved here, not read from `mock.calls`: Vitest clears call history before each test.
+ */
 const sw = vi.hoisted(() => ({ options: {} as RegisterSWOptions, update: vi.fn(async () => {}) }))
 vi.mock('virtual:pwa-register', () => ({
   registerSW(options: RegisterSWOptions) {

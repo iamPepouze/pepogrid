@@ -1,6 +1,13 @@
 // Opens PepoGrid in the system Edge (playwright-core, no browser download) on the
-// dev server the drive-app skill starts, with a game loaded and ready to play.
+// dev server the drive-app skill starts, with a game loaded and ready to play. For service worker
+// checks, `preview()`, `deploy()` and `resume()` serve a build and stand in for a deploy.
+import { spawn } from 'node:child_process'
+import { appendFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
+
+/** The repo root; `globalThis.URL`, since this module's own `URL` is the app's address. */
+const root = fileURLToPath(new globalThis.URL('../../../', import.meta.url))
 
 /** The dev server port the skill starts Vite on: `npm run dev -- --port 5199 --strictPort`. */
 export const PORT = 5199
@@ -92,4 +99,38 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
       await browser.close()
     },
   }
+}
+
+/**
+ * Serves the last `npm run build` with `vite preview` on PORT, where the service worker runs
+ * (the dev server never registers it). Resolves once the page answers; `stop()` ends the server.
+ */
+export async function preview() {
+  const server = spawn(process.execPath, [`${root}node_modules/vite/bin/vite.js`, 'preview', '--port', String(PORT), '--strictPort'], { cwd: root, stdio: 'ignore' })
+  for (let i = 0; i < 60; i++) {
+    if (await fetch(URL).then((r) => r.ok, () => false)) return { stop: () => server.kill() }
+    await new Promise((r) => setTimeout(r, 500))
+  }
+  server.kill()
+  throw new Error(`vite preview didn't answer on ${URL}`)
+}
+
+/**
+ * Stands in for a deploy: stops `server`, changes dist/sw.js so the browser finds a new worker,
+ * and serves again. The server restarts because preview caches file sizes at startup.
+ */
+export async function deploy(server) {
+  server.stop()
+  appendFileSync(`${root}dist/sw.js`, `\n// deploy ${Date.now()}\n`)
+  return preview()
+}
+
+/** The app going to the background and back, as an iOS resume does without reloading the page. */
+export function resume(page) {
+  return page.evaluate(() => {
+    for (const state of ['hidden', 'visible']) {
+      Object.defineProperty(document, 'visibilityState', { value: state, configurable: true })
+      document.dispatchEvent(new Event('visibilitychange'))
+    }
+  })
 }
