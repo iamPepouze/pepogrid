@@ -1,6 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
+import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { toRaw } from 'vue'
+import { createApp, nextTick, toRaw } from 'vue'
 import { PEERS, ROWS, bit, digitsOf, rowOf, unitsOf } from '../lib/sudoku'
 import { useGameStore } from './game'
 import { useResultsStore } from './results'
@@ -147,6 +148,47 @@ describe('key technique', () => {
 
     expect(results.results[0].outcome).toBe('abandoned')
     expect(results.results[0].keyTechniqueRevealed).toBe(true)
+  })
+
+  describe('across a reload', () => {
+    /** Stands in for localStorage, which these Node tests lack. */
+    const storage = new Map<string, string>()
+    const storageLike = { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => void storage.set(key, value) }
+
+    /** A fresh app start: a new Pinia that saves and loads the game as main.ts does. */
+    function reload() {
+      const pinia = createPinia().use(createPersistedState({ key: (id) => `pepogrid.${id}`, storage: storageLike }))
+      // Pinia only applies plugins once it is installed in an app.
+      createApp({}).use(pinia)
+      setActivePinia(pinia)
+      return useGameStore()
+    }
+
+    beforeEach(() => storage.clear())
+
+    it('keeps the reveal', async () => {
+      const game = reload()
+      await game.newGame('easy')
+      game.revealKeyTechnique()
+      await nextTick()
+
+      const resumed = reload()
+      expect(resumed.isValid()).toBe(true)
+      expect(resumed.keyTechniqueRevealed).toBe(true)
+    })
+
+    it('resumes a save from before the key technique as unrevealed', async () => {
+      const game = reload()
+      await game.newGame('easy')
+      await nextTick()
+      const { keyTechniqueRevealed, ...older } = JSON.parse(storage.get('pepogrid.game')!)
+      expect(keyTechniqueRevealed).toBe(false)
+      storage.set('pepogrid.game', JSON.stringify(older))
+
+      const resumed = reload()
+      expect(resumed.isValid()).toBe(true)
+      expect(resumed.keyTechniqueRevealed).toBe(false)
+    })
   })
 
   it('rejects a save whose reveal is not true or false', async () => {

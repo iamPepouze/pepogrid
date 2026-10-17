@@ -14,9 +14,9 @@ defineExpose({
 </script>
 
 <template>
-  <section class="key-technique" aria-labelledby="key-technique-title">
-    <div class="heading">
-      <button ref="backButton" type="button" class="back surface" @click="emit('back')">
+  <section class="key-technique view" aria-labelledby="key-technique-title">
+    <div class="view-heading">
+      <button ref="backButton" type="button" class="back-button surface" @click="emit('back')">
         <ArrowLeft aria-hidden="true" />
         <span>Back</span>
       </button>
@@ -24,7 +24,7 @@ defineExpose({
     </div>
 
     <div class="card surface">
-      <p class="lead">This puzzle’s hardest step needs</p>
+      <p class="lead">This puzzle’s hardest technique is</p>
       <p class="technique">{{ technique }}</p>
       <p class="note">A lesson on this technique is coming.</p>
     </div>
@@ -32,36 +32,6 @@ defineExpose({
 </template>
 
 <style scoped>
-.key-technique {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  color: var(--text);
-}
-
-.heading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.heading h2 {
-  margin: 0;
-  font-size: 1.15rem;
-}
-
-.back {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px 6px 8px;
-}
-
-.back > svg {
-  width: 18px;
-  height: 18px;
-}
-
 .card {
   padding: 16px;
 }

@@ -35,7 +35,7 @@ const emit = defineEmits<{ keyTechnique: [trigger: HTMLButtonElement] }>()
     </button>
     <button
       type="button"
-      class="control"
+      class="control technique"
       :disabled="game.loading || game.completed"
       @click="emit('keyTechnique', $event.currentTarget as HTMLButtonElement)"
     >
@@ -139,14 +139,14 @@ const emit = defineEmits<{ keyTechnique: [trigger: HTMLButtonElement] }>()
     }
   }
 
-  /* The side panel is too narrow for inline labels in one row: a 2×2 grid. */
+  /* The side panel is too narrow for inline labels in one row: two columns. */
   @media (orientation: landscape) and (min-width: 600px) {
     .controls {
       grid-template-columns: repeat(2, 1fr);
     }
 
-    /* Five controls: the last takes a row of its own rather than half of one. */
-    .control:last-child {
+    /* The fifth control takes a row of its own rather than half of one. */
+    .technique {
       grid-column: span 2;
     }
   }
