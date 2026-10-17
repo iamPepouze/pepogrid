@@ -14,6 +14,10 @@ The five default labels: needs-triage, needs-info, ready-for-agent, ready-for-hu
 
 Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root, created when first needed. See `docs/agents/domain.md`.
 
+### iOS installed app
+
+Before grilling or changing the home-screen app's layout, dialogs or updates, read `docs/ios-installed-app.md`.
+
 ### Local edits to vendored skills
 
 Re-apply these after updating the skills in `skills-lock.json`:
