@@ -178,7 +178,11 @@ describe('key technique lessons', () => {
             const cells = [...step.focus, ...(step.highlight ?? []), ...[...candidates, ...sources].map(([i]) => i)]
             expect(cells.every((i) => Number.isInteger(i) && i >= 0 && i < 81), `${at}: a cell outside the grid`).toBe(true)
             for (const [i, d] of candidates) expect(grid[i].candidates & bit(d), `${at}: ${d} is no candidate of cell ${i}`).not.toBe(0)
-            for (const [i, d] of sources) expect(grid[i]?.digit, `${at}: cell ${i} doesn't hold the ${d} the step rests on`).toBe(d)
+            for (const [i, d] of sources) {
+              expect(grid[i]?.digit, `${at}: cell ${i} doesn't hold the ${d} the step rests on`).toBe(d)
+              expect(grid[i]?.placed, `${at}: cell ${i} is placed by this step, so it can't be a reason for it`).toBe(false)
+              expect(step.focus, `${at}: source cell ${i} is drawn faded`).toContain(i)
+            }
             for (const [i, d] of step.eliminations ?? []) expect(d, `${at}: eliminates the solution at ${i}`).not.toBe(solution[i])
             if (step.placement) expect(step.placement[1], `${at}: places a wrong digit`).toBe(solution[step.placement[0]])
           })

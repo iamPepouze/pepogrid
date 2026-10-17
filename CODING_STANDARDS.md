@@ -2,7 +2,7 @@
 
 How code in this repo is written. Each rule describes what the code already does, with an example to copy. `/code-review` checks every diff against these rules. A breach is a hard violation, except for rules that say **prefer**, which are judgement calls.
 
-Rules a tool can check live in the tool, not here: [eslint.config.js](eslint.config.js) (house formatting, and what `src/lib` may import and which browser globals it may not touch), `vue-tsc` (strict, no unused locals or parameters), shellcheck (`scripts/*.sh`, in CI) and [test-seeds.sh](scripts/test-seeds.sh) (changed tests pass under 20 fixed seeds, in CI).
+Rules a tool can check live in the tool, not here: [eslint.config.js](eslint.config.js) (house formatting, what `src/lib` may import and which browser globals it may not touch, and a digit's bitmask going through `bit(d)`), `vue-tsc` (strict, no unused locals or parameters), shellcheck (`scripts/*.sh`, in CI) and [test-seeds.sh](scripts/test-seeds.sh) (changed tests pass under 20 fixed seeds, in CI).
 
 A change that sets or changes a convention updates this file in the same change. A review flags a new convention that the diff introduces without an entry here.
 
@@ -25,7 +25,7 @@ A change that sets or changes a convention updates this file in the same change.
 ### Grid model
 
 - **G1 Grids are flat.** A grid is an 81-number array in row-major order, `0` for empty (`Grid` in [grid.ts](src/lib/grid.ts)). Persisted results store it as an 81-character string (`gridToString`).
-- **G2 Digit sets are bitmasks.** Notes and candidates are masks where `bit(d)` (d in 1–9) marks digit `d`. ESLint flags a digit's mask spelled `1 << d`.
+- **G2 Digit sets are bitmasks.** Notes and candidates are masks where `bit(d)` (d in 1–9) marks digit `d`.
 - **G3 Prefer the grid.ts helpers.** Use `PEERS`, `UNITS`, `ROWS`/`COLS`/`BOXES`, `rowOf`/`colOf`/`boxOf`, `unitsOf`, `popcount` and `digitsOf` instead of recomputing geometry or bit counts inline.
 
 ### Stores

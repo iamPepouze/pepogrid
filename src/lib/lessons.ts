@@ -21,8 +21,11 @@ export interface LessonPosition {
   candidates: string[]
 }
 
-/** A candidate: a digit in a cell. */
-export type Candidate = [cell: number, digit: number]
+/** A digit in a cell: a candidate, or a digit placed there. */
+export type CellDigit = [cell: number, digit: number]
+
+/** A candidate: a digit still possible in an empty cell. */
+export type Candidate = CellDigit
 
 export interface LessonStep {
   caption: string
@@ -34,7 +37,7 @@ export interface LessonStep {
    * Placed digits the caption rests on ("row 1 already has a 3"), drawn shaded like `highlight`.
    * The tests check each cell holds its digit, so a caption naming the wrong cell fails them.
    */
-  sources?: Candidate[]
+  sources?: CellDigit[]
   /** Candidates the step points at, drawn in the accent colour. */
   marks?: Candidate[]
   /** Candidates the step rules out; later steps no longer show them. */

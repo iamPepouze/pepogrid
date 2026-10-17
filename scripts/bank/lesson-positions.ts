@@ -12,7 +12,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { loadBank } from '../../src/lib/bank'
 import { DIFFICULTIES } from '../../src/lib/difficulty'
-import { colOf, rowOf } from '../../src/lib/grid'
+import { PEERS, colOf, rowOf } from '../../src/lib/grid'
 import type { LessonPosition } from '../../src/lib/lessons'
 import { ROOT, WORK, runSerate } from './tools'
 
@@ -42,6 +42,12 @@ async function steps(puzzles: string[]): Promise<string[]> {
 /** `%m` gives nine characters per cell, each digit or '.', so a cell's candidates are its digits. */
 const candidatesOf = (m: string) => Array.from({ length: 81 }, (_, i) => m.slice(i * 9, i * 9 + 9).replaceAll('.', ''))
 
+/** A position as serate's `%m %i` prints it: each cell's candidates (a filled cell shows its digit) and the grid, 0 for empty. */
+function parsePosition(line: string) {
+  const [m, grid] = line.split(' ')
+  return { candidates: candidatesOf(m), values: grid.replaceAll('.', '0') }
+}
+
 /** Separates the steps in serate's output; no explanation contains it. */
 const STEP_MARK = '@@step@@'
 
@@ -49,8 +55,9 @@ const puzzles = await puzzlesFor(technique)
 if (!puzzles.length) throw new Error(`no bank puzzle has ${technique} as its hardest technique`)
 
 /**
- * Sudoku Explainer's own explanation of step `index` (from 0) of `puzzle`, as plain text: it names
- * the pattern's cells and what the step removes. Its HTML spans lines, so it gets a run of its own.
+ * Sudoku Explainer's own explanation of step `index` (from 0) of `puzzle`, as plain text: the
+ * reasoning in words, which names the pattern's cells only for some techniques. Its HTML spans
+ * lines, so it gets a run of its own.
  */
 async function explanation(puzzle: string, index: number): Promise<string> {
   const stdout = await runSerate(['--format=', `--after=${STEP_MARK}%h`, puzzle])
@@ -60,10 +67,10 @@ async function explanation(puzzle: string, index: number): Promise<string> {
 
 let found: LessonPosition | undefined
 /** The matching step's index within its puzzle's solve. */
-let stepIndex = 0
+let stepIndex = -1
 /** The position before the step after the match (`%m %i`), to tell what the match changed; empty when it was the last. */
 let next = ''
-for (let k = 0; k < puzzles.length && !next; k += BATCH) {
+for (let k = 0; k < puzzles.length && !found; k += BATCH) {
   let puzzle = ''
   let before = ''
   for (const line of await steps(puzzles.slice(k, k + BATCH))) {
@@ -81,34 +88,31 @@ for (let k = 0; k < puzzles.length && !next; k += BATCH) {
       stepIndex++
       const [name, summary] = line.slice(2).split('|')
       if (name.trim() !== technique || skip-- > 0) continue
-      const [m, grid] = before.split(' ')
-      const candidates = candidatesOf(m)
-      const values = grid.replaceAll('.', '0')
+      const { candidates, values } = parsePosition(before)
       // Filled cells keep no candidates, so the lesson draws their digit instead.
       found = { technique, summary: summary.trim(), puzzle, values, candidates: candidates.map((c, i) => (values[i] === '0' ? c : '')) }
     }
   }
-  if (found) break
 }
 if (!found) throw new Error(`no ${technique} step found`)
 
-/** What the step did: the digits it placed (`r2c4=3`) and the candidates it removed from cells still empty (`r1c2-8`). */
+/**
+ * What the step did: the digits it placed (`r2c4=3`) and the candidates it removed (`r1c2-8`), as a
+ * lesson step's `placement` and `eliminations`. A placed digit's removal from its peers is left out:
+ * the lesson grid applies that itself.
+ */
 function changes(position: LessonPosition, after: string) {
-  const [m, grid] = after.split(' ')
-  const candidates = candidatesOf(m)
-  const values = grid.replaceAll('.', '0')
+  const { candidates, values } = parsePosition(after)
   const cell = (i: number) => `r${rowOf(i) + 1}c${colOf(i) + 1}`
-  const placed: string[] = []
-  const removed: string[] = []
-  position.candidates.forEach((digits, i) => {
-    if (position.values[i] !== '0') return
-    if (values[i] !== '0') placed.push(`${cell(i)}=${values[i]}`)
-    else {
-      const gone = [...digits].filter((d) => !candidates[i].includes(d))
-      if (gone.length) removed.push(`${cell(i)}-${gone.join('')}`)
-    }
+  const empty = (i: number) => position.values[i] === '0'
+  const placedAt = position.candidates.flatMap((_, i) => (empty(i) && values[i] !== '0' ? [i] : []))
+  const clearedByPlacement = (i: number, d: string) => placedAt.some((p) => values[p] === d && PEERS[p].includes(i))
+  const removed = position.candidates.flatMap((digits, i) => {
+    if (!empty(i) || values[i] !== '0') return []
+    const gone = [...digits].filter((d) => !candidates[i].includes(d) && !clearedByPlacement(i, d))
+    return gone.length ? [`${cell(i)}-${gone.join('')}`] : []
   })
-  return { placed, removed }
+  return { placed: placedAt.map((i) => `${cell(i)}=${values[i]}`), removed }
 }
 
 const positions = existsSync(OUTPUT) ? JSON.parse(readFileSync(OUTPUT, 'utf8')) : {}
@@ -118,7 +122,6 @@ console.log(`${id}: ${found.summary}`)
 console.log(await explanation(found.puzzle, stepIndex))
 if (next) {
   const { placed, removed } = changes(found, next)
-  // A placement also clears its digit from its peers, so those removals come with it.
   console.log(`Places: ${placed.join(', ') || 'nothing'}`)
   console.log(`Removes: ${removed.join(', ') || 'nothing'}`)
 }
