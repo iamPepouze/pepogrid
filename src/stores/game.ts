@@ -66,6 +66,8 @@ export const useGameStore = defineStore(
     const history = ref<Snapshot[]>([])
     const selected = ref<number | null>(null)
     const notesMode = ref(false)
+    /** True once the player has revealed this game's key technique; the result records it. */
+    const keyTechniqueRevealed = ref(false)
     /** SE and HoDoKu ratings of the puzzle (from the bank). */
     const rating = ref<Rating | null>(null)
     /** Bank indexes already played per tier, to avoid repeats. */
@@ -144,6 +146,7 @@ export const useGameStore = defineStore(
         hodokuScore: rating.value!.hodokuScore,
         hodokuLevel: rating.value!.hodokuLevel,
         hardest: rating.value!.hardest,
+        keyTechniqueRevealed: keyTechniqueRevealed.value,
       })
     }
 
@@ -179,6 +182,7 @@ export const useGameStore = defineStore(
       history.value = []
       selected.value = null
       notesMode.value = false
+      keyTechniqueRevealed.value = false
       newlyComplete.value = null
     }
 
@@ -285,6 +289,10 @@ export const useGameStore = defineStore(
       notesMode.value = !notesMode.value
     }
 
+    function revealKeyTechnique() {
+      keyTechniqueRevealed.value = true
+    }
+
     function tick() {
       if (!completed.value) elapsed.value++
     }
@@ -297,6 +305,7 @@ export const useGameStore = defineStore(
         Number.isInteger(mistakes.value) &&
         Number.isInteger(elapsed.value) &&
         typeof completed.value === 'boolean' &&
+        typeof keyTechniqueRevealed.value === 'boolean' &&
         Array.isArray(history.value) &&
         isRating(rating.value) &&
         (selected.value === null || (Number.isInteger(selected.value) && selected.value >= 0 && selected.value < 81))
@@ -316,6 +325,7 @@ export const useGameStore = defineStore(
       history,
       selected,
       notesMode,
+      keyTechniqueRevealed,
       rating,
       bankUsed,
       familyPlayed,
@@ -338,6 +348,7 @@ export const useGameStore = defineStore(
       erase,
       undo,
       toggleNotesMode,
+      revealKeyTechnique,
       tick,
       isValid,
     }

@@ -27,6 +27,8 @@ export interface GameResult {
   hodokuLevel: HodokuLevel
   /** Technique behind the SE rating. */
   hardest: string
+  /** Whether the player revealed the key technique; missing on results stored before it existed, which count as not revealed. */
+  keyTechniqueRevealed?: boolean
 }
 
 /** A grid as an 81-character string, the form results store it in. */

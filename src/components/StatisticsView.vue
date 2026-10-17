@@ -90,9 +90,9 @@ async function onTabKeydown(e: KeyboardEvent) {
 </script>
 
 <template>
-  <section class="statistics" aria-labelledby="statistics-title">
-    <div class="heading">
-      <button ref="backButton" type="button" class="back surface" @click="emit('back')">
+  <section class="statistics view" aria-labelledby="statistics-title">
+    <div class="view-heading">
+      <button ref="backButton" type="button" class="back-button surface" @click="emit('back')">
         <ArrowLeft aria-hidden="true" />
         <span>Back</span>
       </button>
@@ -178,36 +178,6 @@ async function onTabKeydown(e: KeyboardEvent) {
 </template>
 
 <style scoped>
-.statistics {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  color: var(--text);
-}
-
-.heading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.heading h2 {
-  margin: 0;
-  font-size: 1.15rem;
-}
-
-.back {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px 6px 8px;
-}
-
-.back > svg {
-  width: 18px;
-  height: 18px;
-}
-
 .card {
   padding: 12px;
 }

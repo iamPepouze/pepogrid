@@ -4,6 +4,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import AppDialog, { type DialogContent } from './components/AppDialog.vue'
 import DifficultyMenu from './components/DifficultyMenu.vue'
 import GameControls from './components/GameControls.vue'
+import KeyTechniqueView from './components/KeyTechniqueView.vue'
 import NumberPad from './components/NumberPad.vue'
 import SettingsMenu from './components/SettingsMenu.vue'
 import StatisticsView from './components/StatisticsView.vue'
@@ -28,14 +29,46 @@ const { canUpdate, update } = useUpdate()
 /** Ratings of the current puzzle, shown only for the difficulties that display them. */
 const shownRating = computed(() => (TIERS[game.difficulty].showRating ? game.rating : null))
 
-/** True while Statistics stands in for the game: the timer and the board keys pause meanwhile. */
-const statisticsOpen = ref(false)
+/** The view standing in for the game, null while the game is on screen: the timer and the board keys pause meanwhile. */
+const view = ref<'statistics' | 'keyTechnique' | null>(null)
 const statisticsButton = ref<HTMLButtonElement | null>(null)
 
 /** Opens Statistics, or goes back to the game; focus lands on the Statistics button either way. */
 function toggleStatistics() {
-  statisticsOpen.value = !statisticsOpen.value
+  view.value = view.value === 'statistics' ? null : 'statistics'
   statisticsButton.value?.focus()
+}
+
+const keyTechniqueView = ref<InstanceType<typeof KeyTechniqueView> | null>(null)
+/** The Technique button that opened the key technique: focus returns there when the view closes. */
+let keyTechniqueOpener: HTMLButtonElement | null = null
+
+/** Opens the key technique, asking first the first time in a game, since revealing it is noted on the result. */
+async function openKeyTechnique(trigger: HTMLButtonElement) {
+  if (!game.keyTechniqueRevealed) {
+    const confirmed = await ask({
+      title: 'Reveal the key technique?',
+      message: 'You’ll see which technique this puzzle hinges on. It will be noted on this game’s result.',
+      confirmLabel: 'Reveal',
+      cancelLabel: 'Cancel',
+    })
+    if (!confirmed) {
+      trigger.focus()
+      return
+    }
+    game.revealKeyTechnique()
+  }
+  keyTechniqueOpener = trigger
+  view.value = 'keyTechnique'
+  await nextTick()
+  keyTechniqueView.value?.focusBack()
+}
+
+async function closeKeyTechnique() {
+  view.value = null
+  // The button sits in the game, which shows again only after the update.
+  await nextTick()
+  keyTechniqueOpener?.focus()
 }
 
 const statisticsView = ref<InstanceType<typeof StatisticsView> | null>(null)
@@ -124,7 +157,7 @@ const ARROWS: Record<string, [number, number]> = {
 
 function onKeydown(e: KeyboardEvent) {
   // Focus can leave the dialog's buttons (a tap on its text lands on <body>), so check the dialog itself.
-  if (prompt.value || statisticsOpen.value) return
+  if (prompt.value || view.value) return
   if (e.target instanceof Element && e.target.closest('[data-own-keys]')) return
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'z') {
     e.preventDefault()
@@ -178,7 +211,7 @@ function fitBoard() {
   const main = gameEl.value
   const area = boardAreaEl.value
   // A hidden game measures as empty, so keep the size it had until it shows again.
-  if (!app || !header || !main || !area || statisticsOpen.value) return
+  if (!app || !header || !main || !area || view.value) return
   if (SIDE_BY_SIDE.matches) {
     app.style.removeProperty('--board-size')
     return
@@ -203,7 +236,7 @@ onMounted(() => {
   window.addEventListener('keydown', onKeydown)
   // The timer only runs while the tab is visible and the board is on screen.
   timer = window.setInterval(() => {
-    if (document.visibilityState === 'visible' && !statisticsOpen.value) game.tick()
+    if (document.visibilityState === 'visible' && !view.value) game.tick()
   }, 1000)
 
   // Refit when the window resizes or content changes height (win banner, Install or Update button).
@@ -237,13 +270,13 @@ onBeforeUnmount(() => {
         class="icon-button"
         aria-label="Statistics"
         title="Statistics"
-        :aria-pressed="statisticsOpen"
+        :aria-pressed="view === 'statistics'"
         :disabled="game.loading"
         @click="toggleStatistics"
       >
         <ChartColumn aria-hidden="true" />
       </button>
-      <template v-if="!statisticsOpen">
+      <template v-if="!view">
         <button
           type="button"
           class="new-game icon-button"
@@ -259,16 +292,24 @@ onBeforeUnmount(() => {
     </header>
 
     <StatisticsView
-      v-if="statisticsOpen"
+      v-if="view === 'statistics'"
       ref="statisticsView"
-      class="statistics-area"
+      class="view-area"
       :current="game.difficulty"
       @back="toggleStatistics"
       @reset="resetStatistics"
     />
 
-    <!-- Hidden rather than unmounted, so the board's element and the layout's observers outlive a look at Statistics. -->
-    <main v-show="!statisticsOpen" ref="gameEl" class="game">
+    <KeyTechniqueView
+      v-if="view === 'keyTechnique' && game.rating"
+      ref="keyTechniqueView"
+      class="view-area"
+      :technique="game.rating.hardest"
+      @back="closeKeyTechnique"
+    />
+
+    <!-- Hidden rather than unmounted, so the board's element and the layout's observers outlive a look at another view. -->
+    <main v-show="!view" ref="gameEl" class="game">
       <div class="status-area">
         <div class="status">
           <span>Mistakes: <strong>{{ game.mistakes }}</strong></span>
@@ -292,7 +333,7 @@ onBeforeUnmount(() => {
         <SudokuBoard ref="board" />
       </div>
 
-      <GameControls class="controls-area" />
+      <GameControls class="controls-area" @key-technique="openKeyTechnique" />
       <NumberPad class="pad-area" />
 
       <p class="hints">
@@ -331,8 +372,8 @@ onBeforeUnmount(() => {
   width: var(--board-size, 100%);
 }
 
-/* Statistics takes the rest of the height and scrolls inside it, under a header that stays put. */
-.statistics-area {
+/* A view standing in for the game takes the rest of the height and scrolls inside it, under a header that stays put. */
+.view-area {
   flex: 1;
   min-height: 0;
   width: var(--board-size, 100%);
@@ -505,7 +546,7 @@ kbd {
     width: auto;
   }
 
-  .statistics-area {
+  .view-area {
     align-self: center;
     width: min(100%, 640px);
   }

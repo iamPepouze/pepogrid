@@ -83,6 +83,10 @@ _Avoid_: Winning streak
 A solved result with no mistakes.
 _Avoid_: Perfect game, clean solve
 
+**Key technique**:
+The in-game view that reveals the puzzle's hardest technique and teaches its technique family through step-by-step examples; the result records that it was revealed. It never points at a next move.
+_Avoid_: Hint, tip, help
+
 **Matching-number highlight**:
 An optional tint on every cell holding the digit of the selected cell.
 

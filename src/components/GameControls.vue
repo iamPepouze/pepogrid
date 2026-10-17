@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { Eraser, Pencil, Undo2, WandSparkles } from '@lucide/vue'
+import { BookOpen, Eraser, Pencil, Undo2, WandSparkles } from '@lucide/vue'
 import { useGameStore } from '../stores/game'
 
 const game = useGameStore()
+/** `keyTechnique` passes the button, so focus can return to it: Safari doesn't focus a tapped button. */
+const emit = defineEmits<{ keyTechnique: [trigger: HTMLButtonElement] }>()
 </script>
 
 <template>
@@ -31,13 +33,22 @@ const game = useGameStore()
       <WandSparkles class="icon" aria-hidden="true" />
       <span>Fill notes</span>
     </button>
+    <button
+      type="button"
+      class="control technique"
+      :disabled="game.loading || game.completed"
+      @click="emit('keyTechnique', $event.currentTarget as HTMLButtonElement)"
+    >
+      <BookOpen class="icon" aria-hidden="true" />
+      <span>Technique</span>
+    </button>
   </div>
 </template>
 
 <style scoped>
 .controls {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
 }
 
@@ -128,10 +139,15 @@ const game = useGameStore()
     }
   }
 
-  /* The side panel is too narrow for inline labels in one row: a 2×2 grid. */
+  /* The side panel is too narrow for inline labels in one row: two columns. */
   @media (orientation: landscape) and (min-width: 600px) {
     .controls {
       grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* The fifth control takes a row of its own rather than half of one. */
+    .technique {
+      grid-column: span 2;
     }
   }
 }
