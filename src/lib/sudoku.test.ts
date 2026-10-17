@@ -144,8 +144,8 @@ describe('technique families', () => {
 })
 
 describe('key technique lessons', () => {
-  it('gives every technique in the Easy bank a lesson section with an example', async () => {
-    for (const [, , , hardest] of await loadBank('easy')) {
+  it.each(['easy', 'medium'] as const)('gives every technique in the %s bank a lesson section with an example', async (difficulty) => {
+    for (const [, , , hardest] of await loadBank(difficulty)) {
       const found = lessonFor(hardest)
       expect(found?.section.examples.length, hardest).toBeGreaterThan(0)
       expect(found?.lesson.family).toBe(techniqueFamily(hardest))

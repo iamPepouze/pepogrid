@@ -2,7 +2,7 @@
 import { ArrowLeft } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { lessonFor } from '../lib/lessons'
-import LessonExample from './LessonExample.vue'
+import LessonSectionBody from './LessonSectionBody.vue'
 
 const props = defineProps<{ technique: string }>()
 const emit = defineEmits<{ back: [] }>()
@@ -16,6 +16,9 @@ defineExpose({
 
 /** The lesson and section teaching the technique, or null while it has none. */
 const found = computed(() => lessonFor(props.technique))
+
+/** The family's other sections, in the lesson's order, kept reachable below the one that opens. */
+const others = computed(() => found.value?.lesson.sections.filter((s) => s !== found.value?.section) ?? [])
 </script>
 
 <template>
@@ -37,9 +40,13 @@ const found = computed(() => lessonFor(props.technique))
 
     <section v-if="found" class="card surface section" aria-labelledby="lesson-section-title">
       <h3 id="lesson-section-title">{{ found.section.title }}</h3>
-      <p>{{ found.section.text }}</p>
-      <LessonExample v-for="example in found.section.examples" :key="example.position" :example="example" />
+      <LessonSectionBody :section="found.section" />
     </section>
+
+    <details v-for="other in others" :key="other.title" class="card surface">
+      <summary>{{ other.title }}</summary>
+      <LessonSectionBody :section="other" />
+    </details>
   </section>
 </template>
 
@@ -60,13 +67,19 @@ const found = computed(() => lessonFor(props.technique))
   gap: 10px;
 }
 
-.section h3 {
+.section h3,
+summary {
   margin: 0;
   font-size: 1.05rem;
+  font-weight: 600;
 }
 
-.section p {
-  margin: 0;
+summary {
+  cursor: pointer;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
 }
 
 .technique {

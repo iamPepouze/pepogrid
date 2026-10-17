@@ -5,7 +5,7 @@
  */
 import positions from '../data/lesson-positions.json'
 import { techniqueFamily } from './difficulty'
-import { BOXES, PEERS, bit } from './grid'
+import { BOXES, COLS, PEERS, ROWS, bit } from './grid'
 
 /** A real position for a lesson, as scripts/bank/lesson-positions.ts saves it. */
 export interface LessonPosition {
@@ -69,8 +69,18 @@ export interface Lesson {
 
 /** Cell index from a 1-based row and column, as the captions name them, so each step reads like its caption. */
 const at = (row: number, col: number) => (row - 1) * 9 + col - 1
+/** A row's or column's cells from its 1-based number, as the captions name them. */
+const row = (n: number) => ROWS[n - 1]
+const col = (n: number) => COLS[n - 1]
 
+/** Every candidate of `digits` in `cells`, for steps that mark or strike a few digits across a few cells. */
+const each = (cells: number[], digits: number[]): Candidate[] => cells.flatMap((i) => digits.map((d): Candidate => [i, d]))
+
+const TOP_LEFT_BOX = BOXES[0]
 const TOP_MIDDLE_BOX = BOXES[1]
+const MIDDLE_LEFT_BOX = BOXES[3]
+const MIDDLE_RIGHT_BOX = BOXES[5]
+const NAKED_SINGLE_CELL = at(2, 8)
 
 export const LESSONS: readonly Lesson[] = [
   {
@@ -107,6 +117,190 @@ export const LESSONS: readonly Lesson[] = [
                 highlight: [at(2, 4)],
                 marks: [[at(2, 4), 3]],
                 placement: [at(2, 4), 3],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    family: 'Naked Single',
+    text: 'A cell’s peers are the 20 cells that share its row, column or box. A naked single is a cell whose peers already hold every digit but one.',
+    sections: [
+      {
+        title: 'Naked Single',
+        techniques: ['Naked Single'],
+        text: 'Pick an empty cell and list the digits its peers hold. Each one is ruled out for the cell. When eight digits are ruled out, the ninth goes there: it is the cell’s only candidate, in plain sight.',
+        examples: [
+          {
+            position: 'naked-single',
+            steps: [
+              {
+                caption: 'Row 2, column 8 is empty. Which digits can it still hold? Look at its peers: its row, its column and its box.',
+                focus: [NAKED_SINGLE_CELL, ...PEERS[NAKED_SINGLE_CELL]],
+                highlight: [NAKED_SINGLE_CELL],
+              },
+              {
+                caption: 'Row 2 already has a 2, a 3, a 5 and a 6, so the cell can’t hold any of them.',
+                focus: [NAKED_SINGLE_CELL, ...PEERS[NAKED_SINGLE_CELL]],
+                highlight: [NAKED_SINGLE_CELL],
+                sources: [[at(2, 6), 2], [at(2, 9), 3], [at(2, 2), 5], [at(2, 5), 6]],
+              },
+              {
+                caption: 'Column 8 adds a 1, a 4, a 7 and an 8. Its box has a 1, a 3 and a 5, all ruled out already.',
+                focus: [NAKED_SINGLE_CELL, ...PEERS[NAKED_SINGLE_CELL]],
+                highlight: [NAKED_SINGLE_CELL],
+                sources: [[at(6, 8), 1], [at(5, 8), 4], [at(7, 8), 7], [at(4, 8), 8], [at(1, 7), 1], [at(2, 9), 3], [at(1, 8), 5]],
+              },
+              {
+                caption: 'Every digit but 9 is ruled out, so the 9 goes there. That’s a naked single: the cell’s only candidate.',
+                focus: [NAKED_SINGLE_CELL, ...PEERS[NAKED_SINGLE_CELL]],
+                highlight: [NAKED_SINGLE_CELL],
+                marks: [[NAKED_SINGLE_CELL, 9]],
+                placement: [NAKED_SINGLE_CELL, 9],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    family: 'Hidden subsets',
+    text: 'When some digits a unit needs can only go in as many of its cells, those cells must hold exactly those digits, so their other candidates are ruled out. A direct hidden subset leaves a digit with one place to go.',
+    sections: [
+      {
+        title: 'Direct Hidden Pair',
+        techniques: ['Direct Hidden Pair'],
+        text: 'Look for two digits that have the same two cells, and only those, in a row, column or box. Those cells must hold the pair, in some order, so any other candidate in them goes. Here that leaves another digit with a single place in the unit.',
+        examples: [
+          {
+            position: 'direct-hidden-pair',
+            steps: [
+              {
+                caption: 'Row 5 still needs a 1, a 2, a 4, a 5, a 6, a 7 and an 8. Where can its 1 and its 2 go?',
+                focus: row(5),
+              },
+              {
+                caption: 'Each is a candidate only in columns 2 and 3. Two digits, two cells: these cells must hold the 1 and the 2, in some order. That’s a hidden pair.',
+                focus: row(5),
+                highlight: [at(5, 2), at(5, 3)],
+                marks: each([at(5, 2), at(5, 3)], [1, 2]),
+              },
+              {
+                caption: 'With the 1 and the 2 taking both cells, nothing else fits there: their other candidates go.',
+                focus: row(5),
+                highlight: [at(5, 2), at(5, 3)],
+                eliminations: [...each([at(5, 2)], [4, 5, 8]), ...each([at(5, 3)], [4, 7, 8])],
+              },
+              {
+                caption: 'Row 5’s 8 now has only one place left, column 9, so the 8 goes there. The hidden pair led straight to a single: that makes it direct.',
+                focus: row(5),
+                highlight: [at(5, 9)],
+                marks: [[at(5, 9), 8]],
+                placement: [at(5, 9), 8],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Direct Hidden Triplet',
+        techniques: ['Direct Hidden Triplet'],
+        text: 'Three digits whose only places in a unit are the same three cells form a hidden triplet. The three cells must hold those digits, so their other candidates go. Not every cell needs all three digits as candidates: what counts is that the digits have no other place.',
+        examples: [
+          {
+            position: 'direct-hidden-triplet',
+            steps: [
+              {
+                caption: 'Row 7 still needs a 1, a 2, a 3, a 4, an 8 and a 9. Where can its 3, its 4 and its 9 go?',
+                focus: row(7),
+              },
+              {
+                caption: 'All three are candidates only in columns 5, 6 and 7. Three digits, three cells: these cells must hold them, in some order. That’s a hidden triplet, though only one of the cells has all three.',
+                focus: row(7),
+                highlight: [at(7, 5), at(7, 6), at(7, 7)],
+                marks: [...each([at(7, 5)], [3, 9]), ...each([at(7, 6)], [3, 4, 9]), ...each([at(7, 7)], [4, 9])],
+              },
+              {
+                caption: 'With the 3, the 4 and the 9 taking those cells, nothing else fits there: their other candidates go.',
+                focus: row(7),
+                highlight: [at(7, 5), at(7, 6), at(7, 7)],
+                eliminations: [...each([at(7, 5)], [1, 2, 8]), ...each([at(7, 6)], [2, 8]), ...each([at(7, 7)], [1, 2])],
+              },
+              {
+                caption: 'Row 7’s 8 now has only one place left, column 1, so the 8 goes there. The hidden triplet led straight to a single: that makes it direct.',
+                focus: row(7),
+                highlight: [at(7, 1)],
+                marks: [[at(7, 1), 8]],
+                placement: [at(7, 1), 8],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    family: 'Intersections',
+    text: 'A box meets a row or column in three cells. When a box’s only places for a digit all lie in one row or column, that line’s copy of the digit must be in the box, so the rest of the line can’t hold it. That’s pointing.',
+    sections: [
+      {
+        title: 'Pointing',
+        techniques: ['Pointing'],
+        text: 'Pick a box and a digit it still needs. If every cell in the box with that candidate lies in the same row or column, the box points along that line: the digit is ruled out in the rest of the line, outside the box.',
+        examples: [
+          {
+            position: 'pointing',
+            steps: [
+              {
+                caption: 'The top-left box still needs a 6. Which of its cells can hold it?',
+                focus: TOP_LEFT_BOX,
+              },
+              {
+                caption: 'Only two, in rows 1 and 2, and both are in column 2. So whichever holds the box’s 6 is also column 2’s 6.',
+                focus: [...TOP_LEFT_BOX, ...col(2)],
+                highlight: [at(1, 2), at(2, 2)],
+                marks: each([at(1, 2), at(2, 2)], [6]),
+              },
+              {
+                caption: 'So no other cell in column 2 can be 6, and the 6 in row 4 goes. That’s pointing: the box points along the column.',
+                focus: [...TOP_LEFT_BOX, ...col(2)],
+                highlight: [at(1, 2), at(2, 2)],
+                marks: each([at(1, 2), at(2, 2)], [6]),
+                eliminations: [[at(4, 2), 6]],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Direct Pointing',
+        techniques: ['Direct Pointing'],
+        text: 'Pointing is direct when the candidates it rules out leave a digit with one place to go in another unit, so it leads straight to a single.',
+        examples: [
+          {
+            position: 'direct-pointing',
+            steps: [
+              {
+                caption: 'The middle-left box still needs a 2, and every cell that can hold it is in row 4.',
+                focus: MIDDLE_LEFT_BOX,
+                highlight: [at(4, 1), at(4, 2), at(4, 3)],
+                marks: each([at(4, 1), at(4, 2), at(4, 3)], [2]),
+              },
+              {
+                caption: 'So row 4’s 2 is in that box, and no other cell in row 4 can be 2: the box points along the row.',
+                focus: [...MIDDLE_LEFT_BOX, ...row(4)],
+                highlight: [at(4, 1), at(4, 2), at(4, 3)],
+                eliminations: each([at(4, 5), at(4, 6), at(4, 8)], [2]),
+              },
+              {
+                caption: 'The middle-right box needs a 2 too. With row 4 ruled out, only row 5, column 8 can hold it, so the 2 goes there. The pointing led straight to a single: that makes it direct.',
+                focus: MIDDLE_RIGHT_BOX,
+                highlight: [at(5, 8)],
+                marks: [[at(5, 8), 2]],
+                placement: [at(5, 8), 2],
               },
             ],
           },
