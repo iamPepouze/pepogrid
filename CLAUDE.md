@@ -20,7 +20,7 @@ Before grilling or changing anything for the installed iOS app (layout, status b
 
 ### Local edits to vendored skills
 
-Re-apply these after updating the skills in `skills-lock.json`:
+Skills not in `skills-lock.json` are this repo's own. Re-apply these after updating the skills in `skills-lock.json`:
 
 - `retro`: drop `disable-model-invocation`, so a retro asked for in words can run.
 - `code-review`: move the smell baseline into `SMELLS.md`, and give the Standards sub-agent its path instead of the pasted list.
@@ -38,4 +38,3 @@ The **branch file** is `.scratch/<branch>.md` (gitignored), with any `/` in the 
 - **`/code-review`**: with no fixed point given, use the commit on the branch file's `Reviewed up to: <sha>` line, the first non-blank line after its title, rather than asking (this overrides the vendored skill). Use `origin/main`, after `git fetch`, when the file or line is missing, or when that commit isn't an ancestor of `HEAD`: local `main` lags behind squash merges. After reporting such a review, write that line with the reviewed `HEAD`'s full SHA, creating the file if needed. Decisions the user makes during `/implement`, or while fixing a review, go into the branch file's spec before the next review.
 - **Review sub-agents**: the Spec sub-agent also checks each rationale the spec gives (lines like "X already happens"): a false premise is a finding. For any state that outlives the action that set it (an animation, a signal, a timer), it walks undo, a second trigger mid-flight, and a resume. When the diff touches `.claude/skills/` or CLAUDE.md, the `writing-for-agents` skill is a standards source.
 - **Merging or waiting on CI**: `main` only accepts PRs with a green `check`. See `docs/agents/ci.md`.
-- **`/land`** is repo-local, not in `skills-lock.json`: edit it in place.
