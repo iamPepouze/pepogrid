@@ -69,6 +69,9 @@ export interface Lesson {
 
 /** Cell index from a 1-based row and column, as the captions name them, so each step reads like its caption. */
 const at = (row: number, col: number) => (row - 1) * 9 + col - 1
+/** A row's or column's cells from its 1-based number, as the captions name them. */
+const row = (n: number) => ROWS[n - 1]
+const col = (n: number) => COLS[n - 1]
 
 /** Every candidate of `digits` in `cells`, for steps that mark or strike a few digits across a few cells. */
 const each = (cells: number[], digits: number[]): Candidate[] => cells.flatMap((i) => digits.map((d): Candidate => [i, d]))
@@ -148,7 +151,7 @@ export const LESSONS: readonly Lesson[] = [
                 caption: 'Column 8 adds a 1, a 4, a 7 and an 8. Its box has a 1, a 3 and a 5, all ruled out already.',
                 focus: [NAKED_SINGLE_CELL, ...PEERS[NAKED_SINGLE_CELL]],
                 highlight: [NAKED_SINGLE_CELL],
-                sources: [[at(6, 8), 1], [at(5, 8), 4], [at(7, 8), 7], [at(4, 8), 8]],
+                sources: [[at(6, 8), 1], [at(5, 8), 4], [at(7, 8), 7], [at(4, 8), 8], [at(1, 7), 1], [at(2, 9), 3], [at(1, 8), 5]],
               },
               {
                 caption: 'Every digit but 9 is ruled out, so the 9 goes there. That’s a naked single: the cell’s only candidate.',
@@ -177,23 +180,23 @@ export const LESSONS: readonly Lesson[] = [
             steps: [
               {
                 caption: 'Row 5 still needs a 1, a 2, a 4, a 5, a 6, a 7 and an 8. Where can its 1 and its 2 go?',
-                focus: ROWS[4],
+                focus: row(5),
               },
               {
                 caption: 'Each is a candidate only in columns 2 and 3. Two digits, two cells: these cells must hold the 1 and the 2, in some order. That’s a hidden pair.',
-                focus: ROWS[4],
+                focus: row(5),
                 highlight: [at(5, 2), at(5, 3)],
                 marks: each([at(5, 2), at(5, 3)], [1, 2]),
               },
               {
                 caption: 'With the 1 and the 2 taking both cells, nothing else fits there: their other candidates go.',
-                focus: ROWS[4],
+                focus: row(5),
                 highlight: [at(5, 2), at(5, 3)],
                 eliminations: [...each([at(5, 2)], [4, 5, 8]), ...each([at(5, 3)], [4, 7, 8])],
               },
               {
                 caption: 'Row 5’s 8 now has only one place left, column 9, so the 8 goes there. The hidden pair led straight to a single: that makes it direct.',
-                focus: ROWS[4],
+                focus: row(5),
                 highlight: [at(5, 9)],
                 marks: [[at(5, 9), 8]],
                 placement: [at(5, 9), 8],
@@ -212,23 +215,23 @@ export const LESSONS: readonly Lesson[] = [
             steps: [
               {
                 caption: 'Row 7 still needs a 1, a 2, a 3, a 4, an 8 and a 9. Where can its 3, its 4 and its 9 go?',
-                focus: ROWS[6],
+                focus: row(7),
               },
               {
                 caption: 'All three are candidates only in columns 5, 6 and 7. Three digits, three cells: these cells must hold them, in some order. That’s a hidden triplet, though only one of the cells has all three.',
-                focus: ROWS[6],
+                focus: row(7),
                 highlight: [at(7, 5), at(7, 6), at(7, 7)],
                 marks: [...each([at(7, 5)], [3, 9]), ...each([at(7, 6)], [3, 4, 9]), ...each([at(7, 7)], [4, 9])],
               },
               {
                 caption: 'With the 3, the 4 and the 9 taking those cells, nothing else fits there: their other candidates go.',
-                focus: ROWS[6],
+                focus: row(7),
                 highlight: [at(7, 5), at(7, 6), at(7, 7)],
                 eliminations: [...each([at(7, 5)], [1, 2, 8]), ...each([at(7, 6)], [2, 8]), ...each([at(7, 7)], [1, 2])],
               },
               {
                 caption: 'Row 7’s 8 now has only one place left, column 1, so the 8 goes there. The hidden triplet led straight to a single: that makes it direct.',
-                focus: ROWS[6],
+                focus: row(7),
                 highlight: [at(7, 1)],
                 marks: [[at(7, 1), 8]],
                 placement: [at(7, 1), 8],
@@ -257,13 +260,13 @@ export const LESSONS: readonly Lesson[] = [
               },
               {
                 caption: 'Only two, in rows 1 and 2, and both are in column 2. So whichever holds the box’s 6 is also column 2’s 6.',
-                focus: [...TOP_LEFT_BOX, ...COLS[1]],
+                focus: [...TOP_LEFT_BOX, ...col(2)],
                 highlight: [at(1, 2), at(2, 2)],
                 marks: each([at(1, 2), at(2, 2)], [6]),
               },
               {
                 caption: 'So no other cell in column 2 can be 6, and the 6 in row 4 goes. That’s pointing: the box points along the column.',
-                focus: [...TOP_LEFT_BOX, ...COLS[1]],
+                focus: [...TOP_LEFT_BOX, ...col(2)],
                 highlight: [at(1, 2), at(2, 2)],
                 marks: each([at(1, 2), at(2, 2)], [6]),
                 eliminations: [[at(4, 2), 6]],
@@ -288,7 +291,7 @@ export const LESSONS: readonly Lesson[] = [
               },
               {
                 caption: 'So row 4’s 2 is in that box, and no other cell in row 4 can be 2: the box points along the row.',
-                focus: [...MIDDLE_LEFT_BOX, ...ROWS[3]],
+                focus: [...MIDDLE_LEFT_BOX, ...row(4)],
                 highlight: [at(4, 1), at(4, 2), at(4, 3)],
                 eliminations: each([at(4, 5), at(4, 6), at(4, 8)], [2]),
               },

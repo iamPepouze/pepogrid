@@ -2,7 +2,7 @@
 import { ArrowLeft } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { lessonFor } from '../lib/lessons'
-import LessonExample from './LessonExample.vue'
+import LessonSectionBody from './LessonSectionBody.vue'
 
 const props = defineProps<{ technique: string }>()
 const emit = defineEmits<{ back: [] }>()
@@ -40,16 +40,12 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
 
     <section v-if="found" class="card surface section" aria-labelledby="lesson-section-title">
       <h3 id="lesson-section-title">{{ found.section.title }}</h3>
-      <p>{{ found.section.text }}</p>
-      <LessonExample v-for="example in found.section.examples" :key="example.position" :example="example" />
+      <LessonSectionBody :section="found.section" />
     </section>
 
     <details v-for="other in others" :key="other.title" class="card surface">
       <summary>{{ other.title }}</summary>
-      <div class="section">
-        <p>{{ other.text }}</p>
-        <LessonExample v-for="example in other.examples" :key="example.position" :example="example" />
-      </div>
+      <LessonSectionBody :section="other" />
     </details>
   </section>
 </template>
@@ -84,10 +80,6 @@ summary {
 
 details[open] summary {
   margin-bottom: 10px;
-}
-
-.section p {
-  margin: 0;
 }
 
 .technique {
