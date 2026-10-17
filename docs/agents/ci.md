@@ -5,6 +5,7 @@ How changes reach `main`, and how to wait on CI from this machine.
 - `check` (`.github/workflows/ci.yml`) is the one CI job. It runs on PRs into `main`, and `deploy.yml` reuses it, so `main` is deployed only after the same checks a PR must pass.
 - The "Protect main" ruleset requires a PR, a green `check` and squash merge, with no bypass. Direct pushes to `main` are rejected: work on a branch and open a PR.
 - The repo's squash commit takes the PR title (`squash_merge_commit_title: PR_TITLE`), even for a one-commit PR, and lists the branch commits as its body. So the title is what `main` keeps, and branch commits can stay free-form. The title format is the "Branch names" rule in [CLAUDE.md](../../CLAUDE.md). `check` enforces that rule's branch-name half on PRs with [scripts/check-branch-name.sh](../../scripts/check-branch-name.sh); titles are unchecked.
+- The user finishes a PR with `/land`: it merges once `check` is green, syncs `main`, and deletes merged branches. It stops on a PR with no local branch, so Dependabot PRs stay merged by hand.
 
 ## Dependabot
 
