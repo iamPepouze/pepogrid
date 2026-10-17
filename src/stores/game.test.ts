@@ -109,6 +109,54 @@ describe('game store results', () => {
   })
 })
 
+describe('key technique', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('starts each game unrevealed, and stays revealed once revealed until the next game', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    expect(game.keyTechniqueRevealed).toBe(false)
+
+    game.revealKeyTechnique()
+    expect(game.keyTechniqueRevealed).toBe(true)
+    await game.newGame('easy')
+    expect(game.keyTechniqueRevealed).toBe(false)
+  })
+
+  it('records on a solved result whether the key technique was revealed', async () => {
+    const game = useGameStore()
+    const results = useResultsStore()
+    await game.newGame('easy')
+    solve(game)
+    await game.newGame('easy')
+    game.revealKeyTechnique()
+    solve(game)
+
+    expect(results.results.map((r) => r.keyTechniqueRevealed)).toEqual([false, true])
+  })
+
+  it('records on an abandoned result that the key technique was revealed', async () => {
+    const game = useGameStore()
+    const results = useResultsStore()
+    await game.newGame('medium')
+    game.revealKeyTechnique()
+    fill(game, [firstNonGiven(game)])
+    await game.newGame('medium')
+
+    expect(results.results[0].outcome).toBe('abandoned')
+    expect(results.results[0].keyTechniqueRevealed).toBe(true)
+  })
+
+  it('rejects a save whose reveal is not true or false', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    game.$patch({ keyTechniqueRevealed: 'yes' as unknown as boolean })
+    expect(game.isValid()).toBe(false)
+  })
+})
+
 /** Non-given cells whose solution is digit `d`: the ones the player must fill with it. */
 const nonGivensOfDigit = (game: Game, d: number) =>
   game.solution.flatMap((v, i) => (v === d && game.puzzle[i] === 0 ? [i] : []))

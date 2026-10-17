@@ -323,6 +323,76 @@ describe('App', () => {
     })
   })
 
+  describe('Key technique', () => {
+    const techniqueButton = (app: Awaited<ReturnType<typeof mountApp>>) => app.findAll<HTMLButtonElement>('.controls button').find((b) => b.text() === 'Technique')!
+
+    it('asks before the first reveal, and Cancel reveals nothing and gives focus back to Technique', async () => {
+      const app = await mountApp()
+      const game = useGameStore()
+      const button = techniqueButton(app)
+
+      await button.trigger('click')
+      expect(app.find('dialog').text()).toContain('Reveal the key technique?')
+      expect(app.find('dialog').text()).toContain('noted on this game’s result')
+      await dialogButton(app, 'Cancel').trigger('click')
+      await flushPromises()
+
+      expect(game.keyTechniqueRevealed).toBe(false)
+      expect(app.find('.key-technique').exists()).toBe(false)
+      expect(document.activeElement).toBe(button.element)
+    })
+
+    it('reveals the hardest technique in place of the board once confirmed', async () => {
+      const app = await mountApp()
+      const game = useGameStore()
+
+      await techniqueButton(app).trigger('click')
+      await dialogButton(app, 'Reveal').trigger('click')
+      await flushPromises()
+
+      expect(game.keyTechniqueRevealed).toBe(true)
+      expect(app.find('.key-technique').text()).toContain(game.rating!.hardest)
+      expect(app.find<HTMLElement>('.game').element.style.display).toBe('none')
+      expect(app.find(newGameButton).exists()).toBe(false)
+      // Technique is hidden with the board, so focus moves into the view.
+      expect(document.activeElement?.textContent?.trim()).toBe('Back')
+    })
+
+    it('opens straight away once revealed, and Back returns to the game with focus on Technique', async () => {
+      const app = await mountApp()
+      useGameStore().revealKeyTechnique()
+      const button = techniqueButton(app)
+
+      await button.trigger('click')
+      expect(app.find('dialog').exists()).toBe(false)
+      expect(app.find('.key-technique').exists()).toBe(true)
+
+      await app.findAll('.key-technique button').find((b) => b.text() === 'Back')!.trigger('click')
+      expect(app.find('.key-technique').exists()).toBe(false)
+      expect(app.find<HTMLElement>('.game').element.style.display).toBe('')
+      expect(document.activeElement).toBe(button.element)
+    })
+
+    it('stops the timer and leaves the board alone while the key technique is open', async () => {
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+      try {
+        const app = await mountApp()
+        const game = useGameStore()
+        game.revealKeyTechnique()
+        const [cell] = nonGivensOf(game, [...game.puzzle.keys()])
+        game.select(cell)
+        await techniqueButton(app).trigger('click')
+
+        vi.advanceTimersByTime(5000)
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: '5', code: 'Digit5' }))
+        expect(game.elapsed).toBe(0)
+        expect(game.values[cell]).toBe(0)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+  })
+
   it('shows Update in the header once a new version is waiting, and loads it on tap', async () => {
     // A returning player: the installed version controls the page.
     const real = Object.getOwnPropertyDescriptor(navigator, 'serviceWorker')

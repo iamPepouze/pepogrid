@@ -3,6 +3,7 @@ import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { useGameStore } from '../stores/game'
+import { fill, nonGivensOf } from '../stores/testing'
 import GameControls from './GameControls.vue'
 
 enableAutoUnmount(afterEach)
@@ -29,5 +30,30 @@ describe('GameControls', () => {
     game.undo()
     await controls.vm.$nextTick()
     expect(fillButton().attributes('disabled')).toBeUndefined()
+  })
+
+  it('asks for the key technique from its Technique button, from its own element', async () => {
+    await useGameStore().newGame('easy')
+    const controls = mount(GameControls, { global: { plugins: [pinia] } })
+    const button = controls.findAll('button').find((b) => b.text() === 'Technique')!
+
+    await button.trigger('click')
+    expect(controls.emitted('keyTechnique')).toEqual([[button.element]])
+  })
+
+  it('disables Technique while a puzzle loads and once the game is solved', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const controls = mount(GameControls, { global: { plugins: [pinia] } })
+    const disabled = () => controls.findAll<HTMLButtonElement>('button').find((b) => b.text() === 'Technique')!.element.disabled
+
+    expect(disabled()).toBe(false)
+    const loading = game.newGame('easy')
+    await controls.vm.$nextTick()
+    expect(disabled()).toBe(true)
+    await loading
+    fill(game, nonGivensOf(game, [...game.puzzle.keys()]))
+    await controls.vm.$nextTick()
+    expect(disabled()).toBe(true)
   })
 })

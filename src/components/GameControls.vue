@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { Eraser, Pencil, Undo2, WandSparkles } from '@lucide/vue'
+import { BookOpen, Eraser, Pencil, Undo2, WandSparkles } from '@lucide/vue'
 import { useGameStore } from '../stores/game'
 
 const game = useGameStore()
+/** `keyTechnique` passes the button, so focus can return to it: Safari doesn't focus a tapped button. */
+const emit = defineEmits<{ keyTechnique: [trigger: HTMLButtonElement] }>()
 </script>
 
 <template>
@@ -31,13 +33,22 @@ const game = useGameStore()
       <WandSparkles class="icon" aria-hidden="true" />
       <span>Fill notes</span>
     </button>
+    <button
+      type="button"
+      class="control"
+      :disabled="game.loading || game.completed"
+      @click="emit('keyTechnique', $event.currentTarget as HTMLButtonElement)"
+    >
+      <BookOpen class="icon" aria-hidden="true" />
+      <span>Technique</span>
+    </button>
   </div>
 </template>
 
 <style scoped>
 .controls {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
 }
 
@@ -132,6 +143,11 @@ const game = useGameStore()
   @media (orientation: landscape) and (min-width: 600px) {
     .controls {
       grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Five controls: the last takes a row of its own rather than half of one. */
+    .control:last-child {
+      grid-column: span 2;
     }
   }
 }
