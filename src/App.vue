@@ -319,19 +319,6 @@ onBeforeUnmount(() => {
     max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
 }
 
-/*
- * Since iOS 26, the installed app on iPhone gets a blur over its top edge, stronger on iOS 27, with no
- * switch to turn it off. The header sits below it: about 40pt of blur plus 8px of room.
- * Landscape has no status bar, so no blur.
- */
-@media (display-mode: standalone) and (orientation: portrait) {
-  @supports (-webkit-touch-callout: none) {
-    .app {
-      padding-top: calc(env(safe-area-inset-top) + 48px);
-    }
-  }
-}
-
 /* The header and the game only: a bare `> *` would also size any child component's root, such as a dialog. */
 .app > :is(.topbar, .game) {
   flex-shrink: 0;
@@ -555,6 +542,20 @@ kbd {
 
   .tagline {
     display: block;
+  }
+}
+
+/*
+ * Since iOS 26, the installed app on iPhone and iPad gets a blur over its top edge, stronger on iOS 27,
+ * with no switch to turn it off. The header sits below it: about 40pt of blur plus 8px of room.
+ * At least 600px tall: an iPhone in portrait, an iPad either way. An iPhone in landscape has no
+ * status bar, so no blur. Last, so it also wins over the desktop-sized query on an iPad.
+ */
+@media (display-mode: standalone) and (min-height: 600px) {
+  @supports (-webkit-touch-callout: none) {
+    .app {
+      padding-top: calc(env(safe-area-inset-top) + 48px);
+    }
   }
 }
 </style>
