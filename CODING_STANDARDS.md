@@ -2,7 +2,7 @@
 
 How code in this repo is written. Each rule describes what the code already does, with an example to copy. `/code-review` checks every diff against these rules. A breach is a hard violation, except for rules that say **prefer**, which are judgement calls.
 
-Rules a tool can check live in the tool, not here: [eslint.config.js](eslint.config.js) (house formatting, what `src/lib` may import and which browser globals it may not touch, and a digit's bitmask going through `bit(d)`), `vue-tsc` (strict, no unused locals or parameters), shellcheck (`scripts/*.sh`, in CI), [contrast.mjs](scripts/contrast.mjs) (the theme tokens' WCAG contrast, in CI) and [test-seeds.sh](scripts/test-seeds.sh) (changed tests pass under 20 fixed seeds, in CI).
+Rules a tool can check live in the tool, not here: [eslint.config.js](eslint.config.js) (house formatting, what `src/lib` may import and which browser globals it may not touch, and a digit's bitmask going through `bit(d)`), `vue-tsc` (strict, no unused locals or parameters), shellcheck (`scripts/*.sh`, in CI), [contrast.mjs](scripts/contrast.mjs) (the theme tokens' WCAG contrast, in CI), [check-utf8.mjs](scripts/check-utf8.mjs) (every text file is valid UTF-8, in `npm run lint`) and [test-seeds.sh](scripts/test-seeds.sh) (changed tests pass under 20 fixed seeds, in CI). A project hook ([block-python-writes.mjs](.claude/hooks/block-python-writes.mjs)) refuses an agent's shell command that writes a file with Python.
 
 A change that sets or changes a convention updates this file in the same change. A review flags a new convention that the diff introduces without an entry here.
 

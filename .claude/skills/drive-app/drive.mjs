@@ -73,14 +73,16 @@ function solve(grid) {
 export async function openGame({ reducedMotion = 'no-preference', viewport = { width: 400, height: 800 }, touch = false, colorScheme = 'light', storage = {}, textScale = 1 } = {}) {
   const browser = await chromium.launch({ channel: 'msedge' })
   const context = await browser.newContext({ viewport, reducedMotion, colorScheme, hasTouch: touch, isMobile: touch })
-  // On every load, so a reload keeps the size; the script runs before <html> exists, so it waits for it.
+  // On every load, so a reload keeps the size; the script can run before <html> exists, so it waits for it then.
   if (textScale !== 1)
     await context.addInitScript((scale) => {
-      new MutationObserver((_, observer) => {
-        if (!document.documentElement) return
+      const apply = () => {
+        if (!document.documentElement) return false
         document.documentElement.style.fontSize = `${scale * 100}%`
-        observer.disconnect()
-      }).observe(document, { childList: true })
+        return true
+      }
+      if (apply()) return
+      new MutationObserver((_, observer) => apply() && observer.disconnect()).observe(document, { childList: true })
     }, textScale)
   const page = await context.newPage()
   const errors = []

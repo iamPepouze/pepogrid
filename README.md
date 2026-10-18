@@ -107,7 +107,7 @@ Changes reach `main` through pull requests, which must pass the `check` job in [
 
 Code follows [CODING_STANDARDS.md](CODING_STANDARDS.md), and what players get follows [UX_STANDARDS.md](UX_STANDARDS.md). `/code-review` checks every change against both. The [ux](.claude/skills/ux/SKILL.md) skill critiques ideas and screens against the UX rules, and brings its questions into grilling.
 
-Agents see UI changes in a real browser through the [drive-app](.claude/skills/drive-app/SKILL.md) skill: it drives the system Edge with `playwright-core`, so no browser is downloaded. A project hook in [.claude/settings.json](.claude/settings.json) stops an agent's shell command from writing files with Python, whose Windows defaults have changed encodings and line endings; agents edit with their Edit tool, or a Node script for one change across many files.
+Agents see UI changes in a real browser through the [drive-app](.claude/skills/drive-app/SKILL.md) skill: it drives the system Edge with `playwright-core`, so no browser is downloaded. A project hook in [.claude/settings.json](.claude/settings.json) refuses an agent's Bash or PowerShell command that runs Python with a file write in the command itself, since Python's Windows defaults have changed encodings and line endings; agents edit with their Edit tool, or a Node script for one change across many files. A write the hook can't see (inside a script file, or through a redirect) is left to `npm run lint`'s UTF-8 check.
 
 The app icon source is [public/favicon.svg](public/favicon.svg). Android's cropped (maskable) icon has its own source, [icons/maskable.svg](icons/maskable.svg), with a smaller grid that stays inside Android's safe zone. The PNG icons in `public/` are rendered from these two files.
 
