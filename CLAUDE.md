@@ -20,7 +20,7 @@ Before grilling or changing anything for the installed iOS app (layout, status b
 
 ### Vendored skills
 
-Before updating the skills in `skills-lock.json`, editing one of them, or changing any skill's `model`, read `docs/agents/vendored-skills.md`.
+Before adding a skill, updating or editing a vendored skill (one in `skills-lock.json`), or changing any skill's `model` or `disable-model-invocation`, read `docs/agents/vendored-skills.md`.
 
 ## Workflow
 
