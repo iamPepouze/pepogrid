@@ -45,7 +45,7 @@ The UX axis of `/code-review`. You get the diff command, the commit list and the
 3. Check the diff and the screenshots against every rule. The Spec axis checks the spec's UX decisions were built. Here, flag a UX decision only when it breaks a rule.
 4. Report in under 400 words, hard findings first. List any state you couldn't reach as unchecked.
 
-Done when every state the diff touches has been screenshotted and opened, or listed as unchecked, and every rule has been checked against the diff and the screenshots.
+Done when step 1 reported `no player-visible change`, or when every state the diff touches has been screenshotted and opened, or listed as unchecked, and every rule has been checked against the diff and the screenshots.
 
 ## Audit
 

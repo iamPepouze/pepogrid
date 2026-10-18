@@ -47,7 +47,7 @@ A change that sets or changes a UX convention updates this file in the same chan
 
 ## Mobile (judgement calls)
 
-- **U21 Comfortable targets** (Apple HIG: 44×44pt; Material: 48×48dp). The controls used during play (number pad, game controls, board cells where the grid allows) are at least 44px in their smaller dimension on phones. The game controls (*Undo*, *Erase*, *Notes*…) are at least 52px tall and about 50px wide at 320px. The one-row number pad (U28) is only 28px wide there, a trade-off still open (#69).
+- **U21 Comfortable targets** (Apple HIG: 44×44pt; Material: 48×48dp). The controls used during play (number pad, game controls, board cells where the grid allows) are at least 44px in their smaller dimension on phones. The game controls (*Undo*, *Erase*, *Notes*…) are at least 52px tall and 53px wide at 320px.
 - **U22 Within thumb reach**. On phones, the controls used during play sit at the bottom, under the board. Rarely used ones (settings, statistics, new game) can sit in the header.
 - **U23 Clear of system UI** (Apple HIG: layout and safe areas). Content and controls stay clear of the notch, status bar, home indicator and the iOS top-edge blur ([ios-installed-app.md](docs/ios-installed-app.md)). The installed app's header clears the status bar and the blur.
 - **U24 Feedback on touch**. A tap shows a pressed state at once, and nothing depends on hover. Haptics only add to visible feedback, since iOS has none (CODING_STANDARDS.md C4). A number pad button tints while pressed.
