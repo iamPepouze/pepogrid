@@ -187,6 +187,8 @@ describe('key technique lessons', () => {
             }
             // A faded cell is drawn in --muted, which is only checked for contrast on --cell, not on a highlight.
             for (const i of step.highlight ?? []) expect(step.focus, `${at}: highlighted cell ${i} is drawn faded`).toContain(i)
+            // A faded cell's marked candidates and placed digit would keep full colour, so the pattern wouldn't recede.
+            for (const [i] of [...(step.marks ?? []), ...(step.placement ? [step.placement] : [])]) expect(step.focus, `${at}: cell ${i} is marked or placed but drawn faded`).toContain(i)
             for (const [i, d] of step.eliminations ?? []) expect(d, `${at}: eliminates the solution at ${i}`).not.toBe(solution[i])
             if (step.placement) expect(step.placement[1], `${at}: places a wrong digit`).toBe(solution[step.placement[0]])
           })

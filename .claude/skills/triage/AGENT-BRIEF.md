@@ -32,6 +32,10 @@ The agent needs to know when it's done. Every agent brief must have concrete, te
 - **Good:** "Running `gh issue list --label needs-triage` returns issues that have been through initial classification"
 - **Bad:** "Triage should work correctly"
 
+### Measured colours
+
+A brief that prescribes a colour token measures each pair it draws, in both themes, from the tokens in `src/style.css` with the ratio function in `scripts/contrast.mjs`, and quotes the measured ratios. A ratio the brief states unmeasured can be wrong, and the implementer then needs the user's call mid-run.
+
 ### Explicit scope boundaries
 
 State what is out of scope. This prevents the agent from gold-plating or making assumptions about adjacent features.
