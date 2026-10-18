@@ -1,5 +1,6 @@
 ---
 name: ux
+model: opus
 description: "UX specialist for PepoGrid, judging against UX_STANDARDS.md. Use to critique a feature idea or a screen, to bring UX questions into grilling a change players see, as the UX axis of a code review, or to audit the app."
 ---
 

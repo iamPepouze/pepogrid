@@ -1,5 +1,6 @@
 ---
 name: drive-app
+model: inherit
 description: "Drive PepoGrid in a real browser. Use to see a UI change working, or to check focus, an animation or an update."
 ---
 

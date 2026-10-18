@@ -1,5 +1,6 @@
 ---
 name: retro
+model: opus
 description: "Conduct a retrospective on a coding session."
 ---
 

@@ -1,5 +1,6 @@
 ---
 name: land
+model: haiku
 description: "Merge a PR once its check is green, return to an up-to-date main, and delete merged branches with their branch files."
 disable-model-invocation: true
 ---
