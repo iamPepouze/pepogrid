@@ -21,8 +21,17 @@ export interface LessonPosition {
   candidates: string[]
 }
 
-/** The technique a Sudoku Explainer summary is about: the text before its first colon (`X-Wing: Cells …`). */
-export const summaryTechnique = (summary: string) => summary.split(':')[0].trim()
+/** Step names in Sudoku Explainer's summaries that its ratings spell differently, as the ratings spell them. */
+const RATING_NAMES: Record<string, string> = { 'Nishio Forcing Chain': 'Nishio Forcing Chains' }
+
+/**
+ * The technique a Sudoku Explainer summary is about, as its ratings name it: the text before its
+ * first colon (`X-Wing: Cells …`).
+ */
+export const summaryTechnique = (summary: string) => {
+  const name = summary.split(':')[0].trim()
+  return RATING_NAMES[name] ?? name
+}
 
 /** A digit in a cell: a candidate, or a digit placed there. */
 export type CellDigit = [cell: number, digit: number]
@@ -112,6 +121,17 @@ const LOOP_4_CELLS = [at(7, 2), at(8, 2), at(8, 4), at(9, 4), at(9, 8), at(7, 8)
 const ALIGNED_PAIR_CELLS = [at(3, 2), at(3, 3)]
 /** The X-Cycle lesson’s cells, in the order its steps follow the 3s round the loop. */
 const X_CYCLE_CELLS = [at(1, 6), at(3, 4), at(3, 2), at(2, 1), at(6, 1), at(6, 6)]
+const BOTTOM_RIGHT_BOX = BOXES[8]
+const ALIGNED_TRIPLET_CELLS = [at(1, 5), at(1, 6), at(2, 1)]
+/** The Turbot Fish lesson’s cells, from one end of its chain to the other. */
+const TURBOT_CELLS = [at(5, 5), at(8, 5), at(9, 6), at(9, 2)]
+/** Each cycle lesson’s cells, in the order its steps follow the loop. */
+const Y_CYCLE_CELLS = [at(5, 2), at(7, 2), at(7, 9), at(5, 9)]
+const CYCLE_CELLS = [at(2, 8), at(2, 9), at(9, 9), at(9, 4), at(3, 4), at(3, 8)]
+/** Each forcing chain lesson’s cells, in the order its steps reach them. */
+const FORCING_X_CHAIN_CELLS = [at(4, 6), at(4, 9), at(8, 9), at(7, 7), at(7, 5), at(2, 5), at(1, 6)]
+const FORCING_CHAIN_CELLS = [at(3, 6), at(3, 1), at(3, 4), at(7, 4), at(9, 6)]
+const NISHIO_CELLS = [at(2, 5), at(9, 5), at(9, 1), at(3, 4), at(3, 5), at(3, 1)]
 
 export const LESSONS: readonly Lesson[] = [
   {
@@ -1114,7 +1134,7 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     family: 'Exclusion',
-    text: 'Exclusion tries the digits a few cells that share a unit could hold together. A combination is ruled out when it repeats a digit, or when it would leave a cell that is a peer of all of them with no candidate. A candidate that appears in no combination left goes.',
+    text: 'Exclusion tries the digits a few cells could hold together. A combination is ruled out when it puts the same digit twice in a unit, or when it would leave a cell that is a peer of all of them with no candidate. A candidate that appears in no combination left goes.',
     sections: [
       {
         title: 'Aligned Pair Exclusion',
@@ -1158,11 +1178,53 @@ export const LESSONS: readonly Lesson[] = [
           },
         ],
       },
+      {
+        title: 'Aligned Triplet Exclusion',
+        techniques: ['Aligned Triplet Exclusion'],
+        text: 'The same with three cells: list the combinations of digits they could hold. Rule out a combination when it puts the same digit twice in a unit, or when another cell that is a peer of all three holds only digits from it: it would be left empty. When every combination with a given candidate of one cell is ruled out, that candidate goes.',
+        examples: [
+          {
+            position: 'aligned-triplet-exclusion',
+            steps: [
+              {
+                caption: 'Take three cells: row 1, columns 5 and 6, and row 2, column 1. Suppose row 1, column 6 were a 6.',
+                focus: [...row(1), ...row(2), ...TOP_LEFT_BOX, ...TOP_MIDDLE_BOX],
+                highlight: ALIGNED_TRIPLET_CELLS,
+                marks: [[at(1, 6), 6]],
+              },
+              {
+                caption: 'Row 1, column 5, in the same row, couldn’t be a 6 too, so it would be its 3. Row 2, column 1 would be a 2 or a 4. Try each.',
+                focus: [...row(1), ...row(2), ...TOP_LEFT_BOX, ...TOP_MIDDLE_BOX],
+                highlight: ALIGNED_TRIPLET_CELLS,
+                marks: [[at(1, 6), 6], [at(1, 5), 3], ...each([at(2, 1)], [2, 4])],
+              },
+              {
+                caption: 'A 3, a 6 and a 4 can’t be: row 2, column 5 holds only a 3, a 4 or a 6, and it is a peer of all three, sharing row 2 with one and the top-middle box with the others. It would be left with nothing.',
+                focus: [...row(1), ...row(2), ...TOP_LEFT_BOX, ...TOP_MIDDLE_BOX],
+                highlight: [...ALIGNED_TRIPLET_CELLS, at(2, 5)],
+                marks: [[at(1, 6), 6], [at(1, 5), 3], [at(2, 1), 4], ...each([at(2, 5)], [3, 4, 6])],
+              },
+              {
+                caption: 'A 3, a 6 and a 2 can’t be either: row 1, column 3 holds only a 2 or a 3, and it shares row 1 with two of the cells and the top-left box with the third.',
+                focus: [...row(1), ...row(2), ...TOP_LEFT_BOX, ...TOP_MIDDLE_BOX],
+                highlight: [...ALIGNED_TRIPLET_CELLS, at(1, 3)],
+                marks: [[at(1, 6), 6], [at(1, 5), 3], [at(2, 1), 2], ...each([at(1, 3)], [2, 3])],
+              },
+              {
+                caption: 'Every combination with a 6 in row 1, column 6 is ruled out, so its 6 goes. That’s an aligned triplet exclusion.',
+                focus: [...row(1), ...row(2), ...TOP_LEFT_BOX, ...TOP_MIDDLE_BOX],
+                highlight: ALIGNED_TRIPLET_CELLS,
+                eliminations: [[at(1, 6), 6]],
+              },
+            ],
+          },
+        ],
+      },
     ],
   },
   {
     family: 'Cycles',
-    text: 'A cycle follows digits round a closed loop of cells, one link at a time: if this cell holds the digit, that one can’t, or if this one can’t, that one must. When the loop closes with every link working both ways, its cells take the digits in one of exactly two ways. Whatever holds in both goes for the rest of the grid.',
+    text: 'A cycle follows digits round a closed loop of cells, one link at a time: if this cell holds the digit, that one can’t, or if this one can’t, that one must. When the loop closes with every link working both ways, its cells take the digits in one of exactly two ways. Whatever holds in both goes for the rest of the grid. A chain that stops short of closing still rules out the digit where it would close.',
     sections: [
       {
         title: 'Bidirectional X-Cycle',
@@ -1220,6 +1282,336 @@ export const LESSONS: readonly Lesson[] = [
                 highlight: X_CYCLE_CELLS,
                 marks: each(X_CYCLE_CELLS, [3]),
                 eliminations: each([at(1, 2), at(1, 4), at(2, 2), at(2, 4), at(2, 5), at(6, 2), at(6, 5), at(6, 9)], [3]),
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Turbot Fish',
+        techniques: ['Turbot Fish'],
+        text: 'A Turbot Fish is a short chain of one digit: a unit where the digit has only two places, a link between two cells that can’t both hold it, and another unit with only two places. If the chain’s first end isn’t the digit, its last end is, so one of the two ends holds it. A cell that is a peer of both ends can’t.',
+        examples: [
+          {
+            position: 'turbot-fish',
+            steps: [
+              {
+                caption: 'Column 5’s 6 has only two places, rows 5 and 8, so one of them is the 6.',
+                focus: col(5),
+                highlight: TURBOT_CELLS.slice(0, 2),
+                marks: each(TURBOT_CELLS.slice(0, 2), [6]),
+              },
+              {
+                caption: 'If it is row 8, then row 9, column 6, in the same box, can’t be 6.',
+                focus: [...TURBOT_CELLS, ...BOTTOM_MIDDLE_BOX],
+                highlight: TURBOT_CELLS.slice(0, 3),
+                marks: [[at(8, 5), 6]],
+              },
+              {
+                caption: 'Row 9’s 6 has only two places, columns 2 and 6, so it is in column 2.',
+                focus: [...TURBOT_CELLS, ...row(9)],
+                highlight: TURBOT_CELLS,
+                marks: [[at(8, 5), 6], [at(9, 2), 6]],
+              },
+              {
+                caption: 'So either column 5’s 6 is in row 5, or row 9, column 2 is a 6: one end of the chain or the other holds the 6. That’s a Turbot Fish.',
+                focus: TURBOT_CELLS,
+                highlight: TURBOT_CELLS,
+                marks: each([at(5, 5), at(9, 2)], [6]),
+              },
+              {
+                caption: 'Row 5, column 2 is a peer of both ends: it shares row 5 with one and column 2 with the other. Whichever is the 6, it can’t be, so its 6 goes.',
+                focus: [...TURBOT_CELLS, ...row(5), ...col(2)],
+                highlight: TURBOT_CELLS,
+                marks: each([at(5, 5), at(9, 2)], [6]),
+                eliminations: [[at(5, 2), 6]],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Bidirectional Y-Cycle',
+        techniques: ['Bidirectional Y-Cycle'],
+        text: 'A Y-Cycle runs through cells with two candidates each. Each link joins two cells of a unit that share a candidate: if one is that digit, the other is left with its other digit. When the loop closes, every cell takes one of its two digits, in one of exactly two ways, and each pair of neighbours holds their shared digit either way. So the rest of their unit can’t hold it.',
+        examples: [
+          {
+            position: 'bidirectional-y-cycle',
+            steps: [
+              {
+                caption: 'These four cells hold two candidates each: row 5, column 2 a 3 or a 6, row 7, column 2 a 3 or a 5, row 7, column 9 a 4 or a 5, and row 5, column 9 a 4 or a 6.',
+                focus: Y_CYCLE_CELLS,
+                highlight: Y_CYCLE_CELLS,
+                marks: [...each([at(5, 2)], [3, 6]), ...each([at(7, 2)], [3, 5]), ...each([at(7, 9)], [4, 5]), ...each([at(5, 9)], [4, 6])],
+              },
+              {
+                caption: 'Suppose row 5, column 2 is the 3. Row 7, column 2, in the same column, can’t be 3, so it is the 5.',
+                focus: [...Y_CYCLE_CELLS, ...col(2)],
+                highlight: Y_CYCLE_CELLS.slice(0, 2),
+                marks: [[at(5, 2), 3], [at(7, 2), 5]],
+              },
+              {
+                caption: 'Then row 7, column 9, in the same row, can’t be 5, so it is the 4.',
+                focus: [...Y_CYCLE_CELLS, ...row(7)],
+                highlight: Y_CYCLE_CELLS.slice(0, 3),
+                marks: [[at(5, 2), 3], [at(7, 2), 5], [at(7, 9), 4]],
+              },
+              {
+                caption: 'Then row 5, column 9, in the same column, can’t be 4, so it is the 6.',
+                focus: [...Y_CYCLE_CELLS, ...col(9)],
+                highlight: Y_CYCLE_CELLS,
+                marks: [[at(5, 2), 3], [at(7, 2), 5], [at(7, 9), 4], [at(5, 9), 6]],
+              },
+              {
+                caption: 'Then row 5, column 2, in the same row, can’t be 6, so it is the 3: back where the loop started, and it holds.',
+                focus: [...Y_CYCLE_CELLS, ...row(5)],
+                highlight: Y_CYCLE_CELLS,
+                marks: [[at(5, 2), 3], [at(7, 2), 5], [at(7, 9), 4], [at(5, 9), 6]],
+              },
+              {
+                caption: 'Suppose instead row 5, column 2 is the 6: every link flips, and each cell takes its other digit. Either way the loop works. That’s a bidirectional Y-Cycle.',
+                focus: Y_CYCLE_CELLS,
+                highlight: Y_CYCLE_CELLS,
+                marks: [[at(5, 2), 6], [at(7, 2), 3], [at(7, 9), 5], [at(5, 9), 4]],
+              },
+              {
+                caption: 'Either way, column 2 gets its 3 in the loop, row 7 its 5, column 9 its 4 and row 5 its 6. So no other cell of those units can hold them: the 3s in rows 3 and 6 of column 2, the 5 in row 7, column 3, the 4 in row 8, column 9 and the 6 in row 5, column 3 go.',
+                focus: [...Y_CYCLE_CELLS, ...col(2), ...row(7), ...col(9), ...row(5)],
+                highlight: Y_CYCLE_CELLS,
+                marks: [...each([at(5, 2)], [3, 6]), ...each([at(7, 2)], [3, 5]), ...each([at(7, 9)], [4, 5]), ...each([at(5, 9)], [4, 6])],
+                eliminations: [[at(3, 2), 3], [at(6, 2), 3], [at(7, 3), 5], [at(8, 9), 4], [at(5, 3), 6]],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Bidirectional Cycle',
+        techniques: ['Bidirectional Cycle'],
+        text: 'A cycle can follow more than one digit, mixing every kind of link: a unit where a digit has only two places, two cells of a unit that can’t both hold a digit, and a cell that holds one digit, so none of its others. When the loop closes with every link working both ways, its cells take the digits in one of exactly two ways, and what a unit holds either way goes from the rest of that unit.',
+        examples: [
+          {
+            position: 'bidirectional-cycle',
+            steps: [
+              {
+                caption: 'Follow the 3s and the 4s round a loop. Suppose row 2, column 8 is a 3. Then it can’t be its 4.',
+                focus: CYCLE_CELLS,
+                highlight: CYCLE_CELLS.slice(0, 1),
+                marks: [[at(2, 8), 3]],
+              },
+              {
+                caption: 'The top-right box’s 4 has only two places, row 2, columns 8 and 9, so it is in column 9.',
+                focus: [...CYCLE_CELLS, ...TOP_RIGHT_BOX],
+                highlight: CYCLE_CELLS.slice(0, 2),
+                marks: [[at(2, 8), 3], [at(2, 9), 4]],
+              },
+              {
+                caption: 'Then row 9, column 9, in the same column, can’t be 4.',
+                focus: [...CYCLE_CELLS, ...col(9)],
+                highlight: CYCLE_CELLS.slice(0, 3),
+                marks: [[at(2, 8), 3], [at(2, 9), 4]],
+              },
+              {
+                caption: 'Row 9’s 4 has only two places, columns 4 and 9, so it is in column 4.',
+                focus: [...CYCLE_CELLS, ...row(9)],
+                highlight: CYCLE_CELLS.slice(0, 4),
+                marks: [[at(2, 8), 3], [at(2, 9), 4], [at(9, 4), 4]],
+              },
+              {
+                caption: 'Row 9, column 4 is the 4, so it can’t be its 3.',
+                focus: CYCLE_CELLS,
+                highlight: CYCLE_CELLS.slice(0, 4),
+                marks: [[at(2, 8), 3], [at(2, 9), 4], [at(9, 4), 4]],
+              },
+              {
+                caption: 'Column 4’s 3 has only two places, rows 3 and 9, so it is in row 3.',
+                focus: [...CYCLE_CELLS, ...col(4)],
+                highlight: CYCLE_CELLS.slice(0, 5),
+                marks: [[at(2, 8), 3], [at(2, 9), 4], [at(9, 4), 4], [at(3, 4), 3]],
+              },
+              {
+                caption: 'Then row 3, column 8, in the same row, can’t be 3.',
+                focus: [...CYCLE_CELLS, ...row(3)],
+                highlight: CYCLE_CELLS,
+                marks: [[at(2, 8), 3], [at(2, 9), 4], [at(9, 4), 4], [at(3, 4), 3]],
+              },
+              {
+                caption: 'The top-right box’s 3 has only two places, column 8, rows 2 and 3, so it is in row 2: back where the loop started, and it holds.',
+                focus: [...CYCLE_CELLS, ...TOP_RIGHT_BOX],
+                highlight: CYCLE_CELLS,
+                marks: [[at(2, 8), 3], [at(2, 9), 4], [at(9, 4), 4], [at(3, 4), 3]],
+              },
+              {
+                caption: 'Suppose instead row 2, column 8 isn’t a 3: every link flips. It is the 4, row 9, column 9 the 4, and row 9, column 4 and row 3, column 8 the 3s. Either way the loop works. That’s a bidirectional cycle: unlike an X-Cycle, it follows more than one digit.',
+                focus: CYCLE_CELLS,
+                highlight: CYCLE_CELLS,
+                marks: [[at(2, 8), 4], [at(9, 9), 4], [at(9, 4), 3], [at(3, 8), 3]],
+              },
+              {
+                caption: 'Either way, row 3 gets its 3 in the loop, in column 4 or column 8. So no other cell of row 3 can be 3: the 3s in columns 2 and 6 go.',
+                focus: [...CYCLE_CELLS, ...row(3)],
+                highlight: CYCLE_CELLS,
+                marks: each([at(3, 4), at(3, 8)], [3]),
+                eliminations: each([at(3, 2), at(3, 6)], [3]),
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    family: 'Forcing chains',
+    text: 'A forcing chain supposes a candidate is true and follows what must follow, one link at a time: if this cell holds the digit, its peers can’t, and if a unit is left with one place for a digit, or a cell with one candidate, that digit goes there. When the chain runs into a contradiction, such as two of the same digit in a unit, the supposition was false, and the candidate it started from goes.',
+    sections: [
+      {
+        title: 'Forcing X-Chain',
+        techniques: ['Forcing X-Chain'],
+        text: 'A forcing X-Chain follows one digit. Each link is either a cell holding the digit, so its peers can’t, or a unit left with one place for it, so it goes there. When the chain comes back to put the digit in a peer of the cell it started from, the supposition contradicts itself.',
+        examples: [
+          {
+            position: 'forcing-x-chain',
+            steps: [
+              {
+                caption: 'Suppose row 4, column 6 is a 4. Then row 4, column 9, in the same row, can’t be.',
+                focus: [...FORCING_X_CHAIN_CELLS, ...row(4)],
+                highlight: FORCING_X_CHAIN_CELLS.slice(0, 2),
+                marks: [[at(4, 6), 4]],
+              },
+              {
+                caption: 'Column 9’s 4 has only two places, rows 4 and 8, so it is in row 8.',
+                focus: [...FORCING_X_CHAIN_CELLS, ...col(9)],
+                highlight: FORCING_X_CHAIN_CELLS.slice(0, 3),
+                marks: [[at(4, 6), 4], [at(8, 9), 4]],
+              },
+              {
+                caption: 'Then row 7, column 7, in the same box as row 8, column 9, can’t be 4.',
+                focus: [...FORCING_X_CHAIN_CELLS, ...BOTTOM_RIGHT_BOX],
+                highlight: FORCING_X_CHAIN_CELLS.slice(0, 4),
+                marks: [[at(4, 6), 4], [at(8, 9), 4]],
+              },
+              {
+                caption: 'Row 7’s 4 has only two places, columns 5 and 7, so it is in column 5.',
+                focus: [...FORCING_X_CHAIN_CELLS, ...row(7)],
+                highlight: FORCING_X_CHAIN_CELLS.slice(0, 5),
+                marks: [[at(4, 6), 4], [at(8, 9), 4], [at(7, 5), 4]],
+              },
+              {
+                caption: 'Then row 2, column 5, in the same column, can’t be 4.',
+                focus: [...FORCING_X_CHAIN_CELLS, ...col(5)],
+                highlight: FORCING_X_CHAIN_CELLS.slice(0, 6),
+                marks: [[at(4, 6), 4], [at(8, 9), 4], [at(7, 5), 4]],
+              },
+              {
+                caption: 'The top-middle box’s 4 has only two places, row 2, column 5 and row 1, column 6, so it is in row 1, column 6.',
+                focus: [...FORCING_X_CHAIN_CELLS, ...TOP_MIDDLE_BOX],
+                highlight: FORCING_X_CHAIN_CELLS,
+                marks: [[at(4, 6), 4], [at(8, 9), 4], [at(7, 5), 4], [at(1, 6), 4]],
+              },
+              {
+                caption: 'But row 1, column 6 shares column 6 with row 4, column 6, supposed to be the 4: column 6 would hold two 4s. The supposition is false, so row 4, column 6’s 4 goes. That’s a forcing X-Chain.',
+                focus: [...FORCING_X_CHAIN_CELLS, ...col(6)],
+                highlight: FORCING_X_CHAIN_CELLS,
+                marks: [[at(1, 6), 4]],
+                eliminations: [[at(4, 6), 4]],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Forcing Chain',
+        techniques: ['Forcing Chain'],
+        text: 'A forcing chain can switch digits along the way: a cell with two candidates that loses one is left with the other, and the chain carries on with that digit. When it comes back to put the starting digit in a peer of the cell it started from, the supposition contradicts itself.',
+        examples: [
+          {
+            position: 'forcing-chain',
+            steps: [
+              {
+                caption: 'Suppose row 3, column 6 is a 4. Then row 3, column 1, in the same row, can’t be 4.',
+                focus: [...FORCING_CHAIN_CELLS, ...row(3)],
+                highlight: FORCING_CHAIN_CELLS.slice(0, 2),
+                marks: [[at(3, 6), 4]],
+              },
+              {
+                caption: 'Row 3, column 1 holds only a 2 or a 4, so it is the 2.',
+                focus: FORCING_CHAIN_CELLS,
+                highlight: FORCING_CHAIN_CELLS.slice(0, 2),
+                marks: [[at(3, 6), 4], [at(3, 1), 2]],
+              },
+              {
+                caption: 'Then row 3, column 4, in the same row, can’t be 2.',
+                focus: [...FORCING_CHAIN_CELLS, ...row(3)],
+                highlight: FORCING_CHAIN_CELLS.slice(0, 3),
+                marks: [[at(3, 6), 4], [at(3, 1), 2]],
+              },
+              {
+                caption: 'Column 4’s 2 has only two places, rows 3 and 7, so it is in row 7.',
+                focus: [...FORCING_CHAIN_CELLS, ...col(4)],
+                highlight: FORCING_CHAIN_CELLS.slice(0, 4),
+                marks: [[at(3, 6), 4], [at(3, 1), 2], [at(7, 4), 2]],
+              },
+              {
+                caption: 'Then row 9, column 6, in the same box, can’t be 2.',
+                focus: [...FORCING_CHAIN_CELLS, ...BOTTOM_MIDDLE_BOX],
+                highlight: FORCING_CHAIN_CELLS,
+                marks: [[at(3, 6), 4], [at(3, 1), 2], [at(7, 4), 2]],
+              },
+              {
+                caption: 'Row 9, column 6 holds only a 2 or a 4, so it is the 4.',
+                focus: FORCING_CHAIN_CELLS,
+                highlight: FORCING_CHAIN_CELLS,
+                marks: [[at(3, 6), 4], [at(3, 1), 2], [at(7, 4), 2], [at(9, 6), 4]],
+              },
+              {
+                caption: 'But row 9, column 6 shares column 6 with row 3, column 6, supposed to be the 4: column 6 would hold two 4s. The supposition is false, so row 3, column 6’s 4 goes. That’s a forcing chain.',
+                focus: [...FORCING_CHAIN_CELLS, ...col(6)],
+                highlight: FORCING_CHAIN_CELLS,
+                marks: [[at(9, 6), 4]],
+                eliminations: [[at(3, 6), 4]],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Nishio Forcing Chains',
+        techniques: ['Nishio Forcing Chains'],
+        text: 'A Nishio chain follows one digit, but from one supposition it follows several chains, and a link may need more than one of them: a unit’s last place for the digit counts only once every other place is ruled out. When two chains disagree, one putting the digit in a cell and the other ruling it out, or two putting it twice in a unit, the supposition was false.',
+        examples: [
+          {
+            position: 'nishio-forcing-chains',
+            steps: [
+              {
+                caption: 'Suppose row 2, column 5 is an 8. Then row 9, column 5, in the same column, can’t be.',
+                focus: [...NISHIO_CELLS, ...col(5)],
+                highlight: NISHIO_CELLS.slice(0, 2),
+                marks: [[at(2, 5), 8]],
+              },
+              {
+                caption: 'Row 9’s 8 has only two places, columns 1 and 5, so it is in column 1.',
+                focus: [...NISHIO_CELLS, ...row(9)],
+                highlight: NISHIO_CELLS.slice(0, 3),
+                marks: [[at(2, 5), 8], [at(9, 1), 8]],
+              },
+              {
+                caption: 'Go back to the supposition. Row 3, columns 4 and 5, in the same box as row 2, column 5, can’t be 8 either.',
+                focus: [...NISHIO_CELLS, ...TOP_MIDDLE_BOX],
+                highlight: NISHIO_CELLS.slice(0, 5),
+                marks: [[at(2, 5), 8], [at(9, 1), 8]],
+              },
+              {
+                caption: 'Row 3’s 8 had three places, columns 1, 4 and 5. Two are ruled out, so it is in column 1.',
+                focus: [...NISHIO_CELLS, ...row(3)],
+                highlight: NISHIO_CELLS,
+                marks: [[at(2, 5), 8], [at(9, 1), 8], [at(3, 1), 8]],
+              },
+              {
+                caption: 'But rows 3 and 9 of column 1 can’t both be 8: column 1 would hold two. The supposition is false, so row 2, column 5’s 8 goes. That’s a Nishio forcing chain.',
+                focus: [...NISHIO_CELLS, ...col(1)],
+                highlight: NISHIO_CELLS,
+                marks: each([at(3, 1), at(9, 1)], [8]),
+                eliminations: [[at(2, 5), 8]],
               },
             ],
           },

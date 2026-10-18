@@ -144,7 +144,7 @@ describe('technique families', () => {
 })
 
 describe('key technique lessons', () => {
-  it.each(['easy', 'medium', 'hard', 'expert'] as const)('gives every technique in the %s bank a lesson section with an example', async (difficulty) => {
+  it.each(['easy', 'medium', 'hard', 'expert', 'master'] as const)('gives every technique in the %s bank a lesson section with an example', async (difficulty) => {
     for (const [, , , hardest] of await loadBank(difficulty)) {
       const found = lessonFor(hardest)
       expect(found?.section.examples.length, hardest).toBeGreaterThan(0)
@@ -152,8 +152,8 @@ describe('key technique lessons', () => {
     }
   })
 
-  it('has no lesson for a technique not written up yet', () => {
-    expect(lessonFor('Forcing Chain')).toBeNull()
+  it('has no lesson for a technique in no bank', () => {
+    expect(lessonFor('Dynamic Forcing Chain')).toBeNull()
   })
 
   it('keeps every example step consistent with its puzzle’s solution', () => {
