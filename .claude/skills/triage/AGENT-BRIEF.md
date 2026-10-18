@@ -34,7 +34,7 @@ The agent needs to know when it's done. Every agent brief must have concrete, te
 
 ### Measured colours
 
-A brief that prescribes a colour token measures each pair it draws, in both themes, from the tokens in `src/style.css` with the ratio function in `scripts/contrast.mjs`, and quotes the measured ratios. A ratio the brief states unmeasured can be wrong, and the implementer then needs the user's call mid-run.
+A brief that prescribes a colour token measures each pair it draws, in both themes, from the tokens in `src/style.css`, in a throwaway script that copies `luminance` and `ratio` from `scripts/contrast.mjs` (they aren't exported), and quotes the measured ratios. A ratio the brief states unmeasured can be wrong, and the implementer then needs the user's call mid-run.
 
 ### Explicit scope boundaries
 

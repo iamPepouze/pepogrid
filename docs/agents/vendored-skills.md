@@ -8,7 +8,7 @@ Skills listed in `skills-lock.json` are vendored; the rest are this repo's own. 
 - `ask-matt`: describe `/code-review` by what it checks, leaving its axes to its skill.
 - `to-spec`: place named tests by `CODING_STANDARDS.md`'s test-layout rules. Add a **UX decisions** section to the template, for a change players see.
 - `to-tickets`: place named tests by `CODING_STANDARDS.md`'s test-layout rules. An acceptance criterion goes to the ticket whose code exercises it, and a shape a later ticket reads is named in the earlier ticket's "What to build". A spec's UX decision goes the same way, under a **UX decisions** heading in both templates.
-- `triage`: `AGENT-BRIEF.md` gains a **Measured colours** principle: a brief that prescribes a colour token measures each pair with `scripts/contrast.mjs`'s ratio and quotes it.
+- `triage`: `AGENT-BRIEF.md` gains a **Measured colours** principle: a brief that prescribes a colour token measures each pair in both themes, with `luminance` and `ratio` copied from `scripts/contrast.mjs`, and quotes it.
 - `pr`: an **On device** bullet in Evidence, from the branch file's `device-check:` line.
 
 ## Models
