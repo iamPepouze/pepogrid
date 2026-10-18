@@ -1,6 +1,6 @@
 # UX standards
 
-What a player gets from PepoGrid. Each rule names its source and gives an example from the app. `/code-review`'s UX axis checks every change players see against these rules, the `ux` skill critiques ideas and screens against them, and a spec's **UX decisions** section cites them.
+What a player gets from PepoGrid. Each rule names its source and gives an example from the app. `/code-review` checks changes against these rules, the `ux` skill critiques ideas and screens against them, and a spec's **UX decisions** section cites them.
 
 The rules come from four places:
 
