@@ -223,20 +223,26 @@ async function onTabKeydown(e: KeyboardEvent) {
   margin: 0;
 }
 
-/* Each of a family's notes sits on its own line under its count, so the counts stay in one column. */
-.families dd {
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0;
+/*
+ * Each of a family's notes sits on its own line under its count, so the counts stay in one right-hand column.
+ * The notes take the room they need first, so the family's name wraps before a note does. When the name's
+ * longest word and the notes can't share a line, as with large text on a phone, the count and its notes drop under the name.
+ */
+.families > div {
+  flex-wrap: wrap;
+  row-gap: 0;
 }
 
-/* The notes take the room they need first, so the family's name wraps before a note does; a note breaks only when even that can't make room. */
 .families dt {
   flex: 1 1 0;
 }
 
 .families dd {
   flex: 0 1 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+  margin-left: auto;
   text-align: right;
 }
 
