@@ -56,6 +56,16 @@ Do NOT include specific file paths or code snippets. They may end up being outda
 
 Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it within the relevant decision and note briefly that it came from a prototype. Trim to the decision-rich parts, not a working demo, just the important bits.
 
+## UX decisions
+
+Only for a change players see; leave the section out otherwise. A list of the player-facing decisions that were made, each citing the UX_STANDARDS.md rules it follows (`U5`, `U11`):
+
+- The flows: what the player does, step by step
+- The states it has, from UX_STANDARDS.md U1's list
+- The feedback each action gives, and how it is undone
+- The wording of labels and messages
+- The keyboard and touch paths
+
 ## Testing Decisions
 
 A list of testing decisions that were made. Include:
