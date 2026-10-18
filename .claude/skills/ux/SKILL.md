@@ -21,10 +21,10 @@ Pick the mode from what you were asked.
 A feature idea, or grilling a change players see.
 
 1. Read the code around what the idea touches, so each claim about the app's current behaviour is checked, not assumed.
-2. Walk the idea through every rule group. Each player-facing choice the idea leaves open becomes a question with a recommended answer: the states it has (loading, disabled, empty, error, done), its feedback, its undo, its wording, its keyboard and touch paths, and how it fits at 320px wide. A choice a rule settles is stated, not asked.
-3. Put the questions through AskUserQuestion, recommended option first, at most 4 per call. While grilling, they join the grilling's own rounds.
+2. Walk the idea through every rule group. Each player-facing choice the idea leaves open becomes a question with a recommended answer: the states it has (U1's list), its feedback, its undo, its wording, its keyboard and touch paths, and how it fits at 320px wide. A choice a rule settles is stated, not asked.
+3. Ask the questions as CLAUDE.md's **Grilling** rule says. While grilling, they join the grilling's own rounds.
 
-Done when every rule group has been considered and every open choice is either asked or settled by a cited rule.
+Done when every rule group has produced a question, settled a choice by a cited rule, or been judged not to apply to the idea.
 
 ## Screen
 
@@ -41,9 +41,11 @@ Done when every screenshot has been opened and every rule has been checked again
 The UX axis of `/code-review`. You get the diff command, the commit list and the spec.
 
 1. Decide whether the diff changes what players see: rendered text (components, lessons, dialog messages, labels), styles, layout, keys, focus, timing, animation or haptics. If it changes none of these, report `no player-visible change` and stop.
-2. Screenshot each state the diff touches, as in **Screen**. Follow drive-app's steps, including stopping the server. A review only reports, so leave the branch file alone.
+2. Screenshot each state the diff touches, as in **Screen**, following drive-app's steps. A review only reports, so leave the branch file alone.
 3. Check the diff and the screenshots against every rule. The Spec axis checks the spec's UX decisions were built. Here, flag a UX decision only when it breaks a rule.
 4. Report in under 400 words, hard findings first. List any state you couldn't reach as unchecked.
+
+Done when every state the diff touches has been screenshotted and opened, or listed as unchecked, and every rule has been checked against the diff and the screenshots.
 
 ## Audit
 

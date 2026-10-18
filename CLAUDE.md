@@ -23,12 +23,10 @@ Before grilling or changing anything for the installed iOS app (layout, status b
 Skills not in `skills-lock.json` are this repo's own. Re-apply these after updating the skills in `skills-lock.json`:
 
 - `retro`: drop `disable-model-invocation`, so a retro asked for in words can run.
-- `code-review`: move the smell baseline into `SMELLS.md`, and give the Standards sub-agent its path instead of the pasted list.
+- `code-review`: move the smell baseline into `SMELLS.md`, and give the Standards sub-agent its path instead of the pasted list. Add a third parallel axis, **UX**, whose sub-agent follows the `ux` skill's Review mode.
 - `to-spec` and `to-tickets`: place named tests by `CODING_STANDARDS.md`'s test-layout rules.
 - `to-spec`: a **UX decisions** section in the template, for a change players see.
-- `to-tickets`: an acceptance criterion goes to the ticket whose code exercises it, and a shape a later ticket reads is named in the earlier ticket's "What to build".
-- `to-tickets`: a spec's UX decision goes to the ticket whose code exercises it, under a **UX decisions** heading in both templates.
-- `code-review`: a third parallel axis, **UX**, whose sub-agent follows the `ux` skill's Review mode.
+- `to-tickets`: an acceptance criterion goes to the ticket whose code exercises it, and a shape a later ticket reads is named in the earlier ticket's "What to build". A spec's UX decision goes the same way, under a **UX decisions** heading in both templates.
 - `pr`: an **On device** bullet in Evidence, from the branch file's `device-check:` line.
 
 ## Workflow

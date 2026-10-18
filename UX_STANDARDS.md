@@ -21,10 +21,10 @@ A change that sets or changes a UX convention updates this file in the same chan
 
 ## Usability (judgement calls)
 
-- **U1 Visible status** (N1). Every action shows its result at once, and every state a control can be in is visible: loading, disabled, active, done. *Fill notes* greys out when it would change nothing, and the status bar counts mistakes as they happen.
+- **U1 Visible status** (N1). Every action shows its result at once, and every state a control or view can be in is designed and visible: loading, disabled, active, empty, error, done. *Fill notes* greys out when it would change nothing, and the status bar counts mistakes as they happen.
 - **U2 The player's words** (N2). Labels use the words Sudoku players use and the terms in [GLOSSARY.md](GLOSSARY.md), never internal names. *Notes*, *Key technique*, and technique names as Sudoku Explainer and HoDoKu give them.
 - **U3 A way back** (N3). Every change to the board can be undone, every view that stands in for the game has *Back*, and every dialog closes with Cancel, `Esc` or a tap outside. One Undo after *Fill notes* brings back the notes the player had.
-- **U4 Consistency** (N4). The same thing looks and behaves the same everywhere. Statistics' difficulty tabs and the key technique's tabs share one look and the same arrow keys (CODING_STANDARDS.md C6).
+- **U4 Consistency** (N4). The same thing looks and behaves the same everywhere. Statistics and the key technique share one look for their tab rows, cards and *Back* button, in the same places (CODING_STANDARDS.md C6).
 - **U5 Error prevention** (N5). Before an action destroys something Undo can't bring back, the app asks first. A control that would do nothing is disabled. *New game* asks when the game in progress has a digit or a note, and a complete digit's pad button greys out.
 - **U6 Recognition over recall** (N6). The screen shows the state, so the player doesn't have to remember it. The *Notes* button shows ON or OFF, and keyboard hints show on devices with a mouse.
 - **U7 Shortcuts beside the visible way** (N7). Frequent actions get a keyboard shortcut or a touch gesture, and each one also has a visible control. `N` and the *Notes* button; long-press, `Shift` + digit and notes mode all add a note.
@@ -47,7 +47,7 @@ A change that sets or changes a UX convention updates this file in the same chan
 
 ## Mobile (judgement calls)
 
-- **U21 Comfortable targets** (Apple HIG: 44×44pt; Material: 48×48dp). The controls used during play (number pad, game controls, board cells where the grid allows) are at least 44px in their smaller dimension on phones. The number pad's buttons are at least 44px tall.
+- **U21 Comfortable targets** (Apple HIG: 44×44pt; Material: 48×48dp). The controls used during play (number pad, game controls, board cells where the grid allows) are at least 44px in their smaller dimension on phones. The game controls (*Undo*, *Erase*, *Notes*…) are at least 52px tall and about 50px wide at 320px. The one-row number pad (U28) is only 28px wide there, a trade-off still open (#69).
 - **U22 Within thumb reach**. On phones, the controls used during play sit at the bottom, under the board. Rarely used ones (settings, statistics, new game) can sit in the header.
 - **U23 Clear of system UI** (Apple HIG: layout and safe areas). Content and controls stay clear of the notch, status bar, home indicator and the iOS top-edge blur ([ios-installed-app.md](docs/ios-installed-app.md)). The installed app's header clears the status bar and the blur.
 - **U24 Feedback on touch**. A tap shows a pressed state at once, and nothing depends on hover. Haptics only add to visible feedback, since iOS has none (CODING_STANDARDS.md C4). A number pad button tints while pressed.

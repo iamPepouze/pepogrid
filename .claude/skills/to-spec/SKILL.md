@@ -61,7 +61,7 @@ Exception: if a prototype produced a snippet that encodes a decision more precis
 Only for a change players see; leave the section out otherwise. A list of the player-facing decisions that were made, each citing the UX_STANDARDS.md rules it follows (`U5`, `U11`):
 
 - The flows: what the player does, step by step
-- The states: loading, disabled, empty, error, done
+- The states it has, from UX_STANDARDS.md U1's list
 - The feedback each action gives, and how it is undone
 - The wording of labels and messages
 - The keyboard and touch paths

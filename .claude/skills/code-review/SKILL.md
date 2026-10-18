@@ -40,7 +40,7 @@ On top of whatever the repo documents, the Standards axis always carries the **s
 
 ### 4. Spawn the sub-agents in parallel
 
-Issue all three sub-agent calls together, in the foreground, and aggregate the reports they return.
+Issue the sub-agent calls together, in the foreground, and aggregate the reports they return.
 
 **Standards sub-agent prompt** should include:
 
