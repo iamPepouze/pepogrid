@@ -70,9 +70,9 @@ describe('KeyTechniqueView', () => {
     expect(others[0].find('.lesson-grid').exists()).toBe(true)
   })
 
-  it('says a lesson is coming for a technique without one', () => {
-    const view = mountView('Forcing Chain')
-    expect(view.find('.technique').text()).toBe('Forcing Chain')
+  it('says a lesson is coming for a technique in no bank', () => {
+    const view = mountView('Dynamic Forcing Chain')
+    expect(view.find('.technique').text()).toBe('Dynamic Forcing Chain')
     expect(view.text()).toContain('A lesson on this technique is coming.')
     expect(view.find('.lesson-grid').exists()).toBe(false)
   })
