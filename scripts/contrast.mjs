@@ -9,28 +9,31 @@ import { readFileSync } from 'node:fs'
 const TEXT = 4.5
 const UI = 3
 
-/** Failing pairs, `<foreground> on <background>`, with the issue that tracks each. */
+/**
+ * Failing pairs, `<foreground> on <background> at <minimum>`, with the issue that tracks each. The
+ * minimum is part of the key, so a pair allowed as text is still held to 3:1 as a control.
+ */
 const ALLOWED = {
-  '--user-digit on --same-digit': '#64',
-  '--user-digit on --conflict': '#64',
-  '--user-digit on --selected': '#64',
-  '--wrong-digit on --peer': '#64',
-  '--wrong-digit on --same-digit': '#64',
-  '--wrong-digit on --conflict': '#64',
-  '--wrong-digit on --selected': '#64',
-  '--note on --selected': '#64',
-  '--accent on --cell': '#75',
-  '--accent on --selected': '#75',
-  '--selected on --cell': '#66',
-  '--selected on --peer': '#66',
-  '--accent on --page': '#77',
-  '--accent on --peer': '#77',
-  '--button-border on --button-bg': '#77',
+  '--user-digit on --same-digit at 4.5': '#64',
+  '--user-digit on --conflict at 4.5': '#64',
+  '--user-digit on --selected at 4.5': '#64',
+  '--wrong-digit on --peer at 4.5': '#64',
+  '--wrong-digit on --same-digit at 4.5': '#64',
+  '--wrong-digit on --conflict at 4.5': '#64',
+  '--wrong-digit on --selected at 4.5': '#64',
+  '--note on --selected at 4.5': '#64',
+  '--accent on --cell at 4.5': '#75',
+  '--accent on --selected at 4.5': '#75',
+  '--selected on --cell at 3': '#66',
+  '--selected on --peer at 3': '#66',
+  '--accent on --page at 4.5': '#77',
+  '--accent on --peer at 4.5': '#77',
+  '--button-border on --button-bg at 3': '#77',
 }
 
 /**
- * [foreground token, background token, minimum, what it is]. A change that draws a token on a new
- * background adds the pair here. Disabled controls are exempt (WCAG 1.4.3), so they aren't listed.
+ * [foreground token, background token, minimum, what it is], kept as UX_STANDARDS.md's **Checking**
+ * says. Disabled controls are exempt (WCAG 1.4.3), so they aren't listed.
  */
 const PAIRS = [
   // Board and lesson digits. A digit is normal text at 320px wide, where cells are smallest.
@@ -53,12 +56,12 @@ const PAIRS = [
   ['--accent', '--on-accent', TEXT, 'the active Notes badge'],
   ['--user-digit', '--button-bg', TEXT, 'a number pad digit'],
   ['--note', '--button-bg', TEXT, 'a number pad digit in notes mode'],
-  // Text, so held to 4.5:1, which also covers the focus ring's 3:1 on the page.
-  ['--accent', '--page', TEXT, 'the Install and Update pills, the focus ring'],
+  ['--accent', '--page', TEXT, 'the Install and Update pills'],
   ['--accent', '--peer', TEXT, 'a hovered pill'],
   ['--text', '--peer', TEXT, 'a hovered button, the solved banner'],
   ['--muted', '--peer', TEXT, "the solved banner's ratings"],
   // States and controls (U12).
+  ['--accent', '--page', UI, 'the focus ring, a selected tab'],
   ['--accent', '--button-bg', UI, 'a selected tab beside the others'],
   ['--button-border', '--button-bg', UI, "the settings switch's track when off"],
   ['--selected', '--cell', UI, 'the selected cell'],
@@ -93,7 +96,7 @@ function ratio(a, b) {
 const problems = []
 const allowed = []
 for (const [fg, bg, min, what] of PAIRS) {
-  const issue = ALLOWED[`${fg} on ${bg}`]
+  const issue = ALLOWED[`${fg} on ${bg} at ${min}`]
   const results = Object.entries(THEMES).map(([theme, t]) => {
     if (!t[fg] || !t[bg]) throw new Error(`${theme} theme has no ${t[fg] ? bg : fg}`)
     return { theme, value: ratio(t[fg], t[bg]) }

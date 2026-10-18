@@ -41,7 +41,7 @@ const readSave = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('
 
 /**
  * Fills `grid` (81 numbers, 0 for empty) by backtracking; returns it, or null when it has no solution.
- * A copy of src/lib's `solve`, since this plain .mjs runs under Node, which can't import that TypeScript.
+ * A solver of its own, since Node can't import src/lib's `solve`: sudoku.ts imports `./grid` with no file extension.
  */
 function solve(grid) {
   const i = grid.indexOf(0)
