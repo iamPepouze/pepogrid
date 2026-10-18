@@ -33,6 +33,7 @@ Break the work into **tracer bullet** tickets.
 - Each slice is sized to fit in a single fresh context window
 - Any prefactoring should be done first
 - A test named in a ticket sits in the file the repo's `CODING_STANDARDS.md` test-layout rules name, when it has one
+- An acceptance criterion sits in the ticket whose code exercises it. When a later ticket reads what an earlier one writes (a stored field, a type's shape), the earlier ticket states the shape in "What to build", and the reading's criteria go to the later ticket
 
 </vertical-slice-rules>
 

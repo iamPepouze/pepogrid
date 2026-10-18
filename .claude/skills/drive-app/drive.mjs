@@ -83,6 +83,14 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
     cell: (i) => page.locator('.cell').nth(i),
     /** Number pad button for digit `d` (1-9). */
     pad: (d) => page.locator('.pad .digit').nth(d - 1),
+    /** The focused element, as `button "Back"`, `button[role=tab] "Hardest"` or `body` (focus lost), to log after each step that should move focus. */
+    focused: () =>
+      page.evaluate(() => {
+        const el = document.activeElement
+        if (!el || el === document.body) return 'body'
+        const role = el.getAttribute('role')
+        return `${el.tagName.toLowerCase()}${role ? `[role=${role}]` : ''} "${el.textContent?.trim() ?? ''}"`
+      }),
     /** Text of every button cut off: content wider than the button, or the button past the viewport's edge. */
     clipped: () =>
       page.evaluate(() =>
