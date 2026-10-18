@@ -94,6 +94,7 @@ const TOP_RIGHT_BOX = BOXES[2]
 const MIDDLE_LEFT_BOX = BOXES[3]
 const MIDDLE_RIGHT_BOX = BOXES[5]
 const BOTTOM_MIDDLE_BOX = BOXES[7]
+const BOTTOM_RIGHT_BOX = BOXES[8]
 const NAKED_SINGLE_CELL = at(2, 8)
 const X_WING_CELLS = [at(3, 4), at(6, 4), at(3, 7), at(6, 7)]
 /** The cells that can hold the Swordfish lesson’s 9, column by column. */
@@ -121,7 +122,6 @@ const LOOP_4_CELLS = [at(7, 2), at(8, 2), at(8, 4), at(9, 4), at(9, 8), at(7, 8)
 const ALIGNED_PAIR_CELLS = [at(3, 2), at(3, 3)]
 /** The X-Cycle lesson’s cells, in the order its steps follow the 3s round the loop. */
 const X_CYCLE_CELLS = [at(1, 6), at(3, 4), at(3, 2), at(2, 1), at(6, 1), at(6, 6)]
-const BOTTOM_RIGHT_BOX = BOXES[8]
 const ALIGNED_TRIPLET_CELLS = [at(1, 5), at(1, 6), at(2, 1)]
 /** The Turbot Fish lesson’s cells, from one end of its chain to the other. */
 const TURBOT_CELLS = [at(5, 5), at(8, 5), at(9, 6), at(9, 2)]
@@ -1224,7 +1224,7 @@ export const LESSONS: readonly Lesson[] = [
   },
   {
     family: 'Cycles',
-    text: 'A cycle follows digits round a closed loop of cells, one link at a time: if this cell holds the digit, that one can’t, or if this one can’t, that one must. When the loop closes with every link working both ways, its cells take the digits in one of exactly two ways. Whatever holds in both goes for the rest of the grid. A chain that stops short of closing still rules out the digit where it would close.',
+    text: 'A cycle follows digits round a closed loop of cells, one link at a time: if this cell holds the digit, that one can’t, or if this one can’t, that one must. When the loop closes with every link working both ways, its cells take the digits in one of exactly two ways. Whatever holds in both goes for the rest of the grid. A chain that stops short of closing still puts the digit at one of its two ends, so a cell that is a peer of both can’t hold it.',
     sections: [
       {
         title: 'Bidirectional X-Cycle',
@@ -1473,7 +1473,7 @@ export const LESSONS: readonly Lesson[] = [
             position: 'forcing-x-chain',
             steps: [
               {
-                caption: 'Suppose row 4, column 6 is a 4. Then row 4, column 9, in the same row, can’t be.',
+                caption: 'Suppose row 4, column 6 is a 4. Then row 4, column 9, in the same row, can’t be 4.',
                 focus: [...FORCING_X_CHAIN_CELLS, ...row(4)],
                 highlight: FORCING_X_CHAIN_CELLS.slice(0, 2),
                 marks: [[at(4, 6), 4]],
@@ -1577,13 +1577,13 @@ export const LESSONS: readonly Lesson[] = [
       {
         title: 'Nishio Forcing Chains',
         techniques: ['Nishio Forcing Chains'],
-        text: 'A Nishio chain follows one digit, but from one supposition it follows several chains, and a link may need more than one of them: a unit’s last place for the digit counts only once every other place is ruled out. When two chains disagree, one putting the digit in a cell and the other ruling it out, or two putting it twice in a unit, the supposition was false.',
+        text: 'Like an X-Chain, a Nishio chain follows one digit, but from one supposition it follows several chains. When two of them disagree, one putting the digit in a cell and the other ruling it out, or both putting it in the same unit, the supposition was false.',
         examples: [
           {
             position: 'nishio-forcing-chains',
             steps: [
               {
-                caption: 'Suppose row 2, column 5 is an 8. Then row 9, column 5, in the same column, can’t be.',
+                caption: 'Suppose row 2, column 5 is an 8. Then row 9, column 5, in the same column, can’t be 8.',
                 focus: [...NISHIO_CELLS, ...col(5)],
                 highlight: NISHIO_CELLS.slice(0, 2),
                 marks: [[at(2, 5), 8]],
