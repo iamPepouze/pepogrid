@@ -43,7 +43,8 @@ const solvedFigures = computed((): Figure[] => [
   { label: 'Average time', value: shown(stats.value.averageTime, formatDuration) },
   { label: 'Average mistakes', value: shown(stats.value.averageMistakes, tenths) },
   { label: 'Flawless', value: shown(stats.value.flawless, String) },
-  { label: 'Revealed', value: shown(stats.value.revealed, String) },
+  { label: 'Key technique revealed', value: shown(stats.value.revealed, String) },
+  { label: 'Next step used', value: shown(stats.value.nextStepUsed, String) },
 ])
 
 const streakFigures = computed((): Figure[] => [
@@ -147,12 +148,13 @@ async function onTabKeydown(e: KeyboardEvent) {
 
         <template v-if="stats.families.length">
           <h3>Technique families</h3>
-          <dl class="list">
+          <dl class="list families">
             <div v-for="f in stats.families" :key="f.family">
               <dt>{{ f.family }}</dt>
               <dd>
                 <span class="stat-value">{{ f.solved }}/{{ f.played }}</span>
-                <span v-if="f.revealed" class="muted-note">· {{ f.revealed }} revealed</span>
+                <span v-if="f.revealed" class="muted-note">{{ f.revealed }} revealed the key technique</span>
+                <span v-if="f.nextStepUsed" class="muted-note">{{ f.nextStepUsed }} used the next step</span>
               </dd>
             </div>
           </dl>
@@ -221,7 +223,35 @@ async function onTabKeydown(e: KeyboardEvent) {
   margin: 0;
 }
 
-/* A muted note beside a value: a rating's range, a family's revealed solves. */
+/*
+ * Each of a family's notes sits on its own line under its count, so the counts stay in one right-hand column.
+ * The notes take the room they need first, so the family's name wraps before a note does. When the name's
+ * longest word and the notes can't share a line, as with large text on a phone, the count and its notes drop under the name.
+ */
+.families {
+  /* 8px more than other lists, so a family's stacked notes read as one block, apart from the next family's name. */
+  gap: 12px;
+}
+
+.families > div {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+.families dt {
+  flex: 1 1 0;
+}
+
+.families dd {
+  flex: 0 1 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+  margin-left: auto;
+  text-align: right;
+}
+
+/* A muted note beside or under a value: a rating's range, a family's solves with help. */
 .muted-note {
   color: var(--muted);
   font-size: 0.85rem;

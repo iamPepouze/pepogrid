@@ -29,6 +29,8 @@ export interface StatResult {
   hardest: string
   /** Whether the key technique was revealed; missing on older results. */
   keyTechniqueRevealed?: boolean
+  /** How many times the next step was shown; missing on older results. */
+  nextStepsShown?: number
 }
 
 export interface Counts {
@@ -49,6 +51,8 @@ export interface Statistics extends Counts {
   flawless: number | null
   /** Solved results whose key technique was revealed. */
   revealed: number | null
+  /** Solved results that used the next step. */
+  nextStepUsed: number | null
   se: Spread | null
   hodoku: Spread | null
   /** Solved results in a row up to the latest result, 0 when it is an abandon. */
@@ -63,12 +67,13 @@ export interface Statistics extends Counts {
   recent: StatResult[]
 }
 
-/** A technique family's solved and played results at one difficulty, and how many of the solved ones were revealed. */
+/** A technique family's solved and played results at one difficulty, and how many of the solved ones were revealed or used the next step. */
 export interface FamilyRecord {
   family: string
   solved: number
   played: number
   revealed: number
+  nextStepUsed: number
 }
 
 /** The mean, smallest and largest of a set of values, such as solved results' SE ratings. */
@@ -80,6 +85,9 @@ export interface Spread {
 
 /** Only a stored `true` counts: a missing or hand-edited value reads as not revealed. */
 const isRevealed = (r: StatResult) => r.keyTechniqueRevealed === true
+
+/** Only a stored positive number counts: a missing or hand-edited value reads as 0. */
+const usedNextStep = (r: StatResult) => typeof r.nextStepsShown === 'number' && r.nextStepsShown > 0
 
 const mean = (values: readonly number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
 
@@ -115,11 +123,12 @@ function familiesOf(results: readonly StatResult[], difficulty: Difficulty): Fam
   const records = new Map<string, FamilyRecord>()
   for (const r of results) {
     const family = familyOf(difficulty, r.hardest)
-    const record = records.get(family) ?? { family, solved: 0, played: 0, revealed: 0 }
+    const record = records.get(family) ?? { family, solved: 0, played: 0, revealed: 0, nextStepUsed: 0 }
     record.played++
     if (r.outcome === 'completed') {
       record.solved++
       if (isRevealed(r)) record.revealed++
+      if (usedNextStep(r)) record.nextStepUsed++
     }
     records.set(family, record)
   }
@@ -146,6 +155,7 @@ export function statisticsOf(results: readonly StatResult[], difficulty: Difficu
     averageMistakes: mistakes?.average ?? null,
     flawless: mistakes ? solved.filter((r) => r.mistakes === 0).length : null,
     revealed: solved.length ? solved.filter(isRevealed).length : null,
+    nextStepUsed: solved.length ? solved.filter(usedNextStep).length : null,
     se: spreadOf(solved.map((r) => r.se)),
     hodoku: spreadOf(solved.map((r) => r.hodokuScore)),
     currentStreak,
