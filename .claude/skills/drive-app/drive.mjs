@@ -13,6 +13,9 @@ const root = fileURLToPath(new globalThis.URL('../../../', import.meta.url))
 export const PORT = 5199
 export const URL = `http://localhost:${PORT}/pepogrid/`
 
+/** Characters of a focused element's text that `focused()` keeps. */
+const FOCUS_TEXT_MAX = 40
+
 let resultCount = 0
 
 /**
@@ -83,14 +86,18 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
     cell: (i) => page.locator('.cell').nth(i),
     /** Number pad button for digit `d` (1-9). */
     pad: (d) => page.locator('.pad .digit').nth(d - 1),
-    /** The focused element, as `button "Back"`, `button[role=tab] "Hardest"` or `body` (focus lost), to log after each step that should move focus. */
+    /**
+     * The focused element, as `button "Back"`, `button[role=tab] "Hardest"`, `button "Statistics"` (its
+     * aria-label, for an icon button) or `body` (focus lost). Text is cut at FOCUS_TEXT_MAX, for a focused container.
+     */
     focused: () =>
-      page.evaluate(() => {
+      page.evaluate((max) => {
         const el = document.activeElement
         if (!el || el === document.body) return 'body'
         const role = el.getAttribute('role')
-        return `${el.tagName.toLowerCase()}${role ? `[role=${role}]` : ''} "${el.textContent?.trim() ?? ''}"`
-      }),
+        const text = (el.textContent ?? '').replace(/\s+/g, ' ').trim() || (el.getAttribute('aria-label') ?? '')
+        return `${el.tagName.toLowerCase()}${role ? `[role=${role}]` : ''} "${text.length > max ? `${text.slice(0, max)}…` : text}"`
+      }, FOCUS_TEXT_MAX),
     /** Text of every button cut off: content wider than the button, or the button past the viewport's edge. */
     clipped: () =>
       page.evaluate(() =>

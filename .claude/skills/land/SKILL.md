@@ -13,7 +13,7 @@ Land a PR: merge it, sync `main`, and clean up. Every gate below **stops** the s
 3. If the PR is MERGED, skip to **3. Sync**. If it is CLOSED, stop.
 4. Local and PR heads match: `git fetch`, then a local branch named `headRefName` exists and points at `headRefOid`. Otherwise stop: the branch is missing locally, has unpushed commits, or the PR has commits not seen locally.
 5. The title follows the "Branch names" rule in CLAUDE.md. Otherwise stop and quote the title; the wording on `main` is the user's call.
-6. Review has caught up: the branch file's `Reviewed up to:` line names `headRefOid`. Otherwise stop and list `git log --oneline <reviewed>..<headRefOid>` (every commit, when the file or line is missing): whether to run `/code-review` or land them unreviewed is the user's call.
+6. Review has caught up: the branch file of `headRefName` (CLAUDE.md's **Workflow**) has a `Reviewed up to:` line naming `headRefOid`. Otherwise stop and list the unreviewed commits, `git log --oneline <base>..<headRefOid>`, where `<base>` is the commit `/code-review` would start from (CLAUDE.md's `/code-review` rule: that line's commit, or `origin/main` when the file or line is missing or the commit isn't an ancestor). Whether to run `/code-review` or land them unreviewed is the user's call.
 
 ## 2. Merge
 
