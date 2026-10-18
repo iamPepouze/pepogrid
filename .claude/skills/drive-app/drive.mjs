@@ -87,7 +87,7 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
     /** Number pad button for digit `d` (1-9). */
     pad: (d) => page.locator('.pad .digit').nth(d - 1),
     /**
-     * The focused element by its accessible name, as a browser picks it (aria-label, else text): `button "Back"`,
+     * The focused element by its aria-label, else its text (aria-labelledby is not followed): `button "Back"`,
      * `button[role=tab] "Hardest"`, `div[role=grid] "Sudoku board"`, or `body` (focus lost). A container's text is cut at FOCUS_TEXT_MAX.
      */
     focused: () =>
@@ -95,7 +95,7 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
         const el = document.activeElement
         if (!el || el === document.body) return 'body'
         const role = el.getAttribute('role')
-        const text = el.getAttribute('aria-label') ?? (el.textContent ?? '').replace(/\s+/g, ' ').trim()
+        const text = (el.getAttribute('aria-label')?.trim() || el.textContent || '').replace(/\s+/g, ' ').trim()
         return `${el.tagName.toLowerCase()}${role ? `[role=${role}]` : ''} "${text.length > max ? `${text.slice(0, max)}…` : text}"`
       }, FOCUS_TEXT_MAX),
     /** Text of every button cut off: content wider than the button, or the button past the viewport's edge. */
