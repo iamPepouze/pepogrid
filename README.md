@@ -104,7 +104,7 @@ Dependency install scripts run only when `allowScripts` in [package.json](packag
 
 Changes reach `main` through pull requests, which must pass the `check` job in [.github/workflows/ci.yml](.github/workflows/ci.yml) (`npm run lint`, `npm test`, `scripts/test-seeds.sh`, `npm run build`, plus actionlint on the workflows, shellcheck on `scripts/*.sh` and [scripts/check-utf8.sh](scripts/check-utf8.sh), which fails on a tracked text file that isn't valid UTF-8); see [docs/agents/ci.md](docs/agents/ci.md). Every push to `main` reruns `check` and deploys the build to GitHub Pages ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)).
 
-Code follows [CODING_STANDARDS.md](CODING_STANDARDS.md), which `/code-review` checks every change against.
+Code follows [CODING_STANDARDS.md](CODING_STANDARDS.md), and what players get follows [UX_STANDARDS.md](UX_STANDARDS.md). `/code-review` checks every change against both. The [ux](.claude/skills/ux/SKILL.md) skill critiques ideas and screens against the UX rules, and brings its questions into grilling.
 
 Agents see UI changes in a real browser through the [drive-app](.claude/skills/drive-app/SKILL.md) skill: it drives the system Edge with `playwright-core`, so no browser is downloaded.
 

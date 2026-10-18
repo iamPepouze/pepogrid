@@ -34,6 +34,7 @@ Break the work into **tracer bullet** tickets.
 - Any prefactoring should be done first
 - A test named in a ticket sits in the file the repo's `CODING_STANDARDS.md` test-layout rules name, when it has one
 - An acceptance criterion sits in the ticket whose code exercises it. When a later ticket reads what an earlier one writes (a stored field, a type's shape), the earlier ticket names that shape in "What to build", an exception to its user's-perspective wording and to the prototype-only rule for shapes below, and the reading's criteria go to the later ticket
+- A decision from the spec's **UX decisions** section sits in the ticket whose code exercises it, with its U-rule citations
 
 </vertical-slice-rules>
 
@@ -81,6 +82,8 @@ Do NOT close or modify any parent issue.
 - [ ] Acceptance criterion 1
 - [ ] Acceptance criterion 2
 
+**UX decisions:** the spec's UX decisions this ticket's code exercises, if any; omit otherwise.
+
 </local-ticket-template>
 
 <issue-template>
@@ -97,6 +100,10 @@ The end-to-end behaviour this ticket makes work, from the user's perspective, no
 
 - [ ] Criterion 1
 - [ ] Criterion 2
+
+## UX decisions
+
+The spec's UX decisions this ticket's code exercises, if any; omit this section otherwise.
 
 ## Blocked by
 
