@@ -29,6 +29,8 @@ export interface GameResult {
   hardest: string
   /** Whether the player revealed the key technique; missing on results stored before it existed, which count as not revealed. */
   keyTechniqueRevealed?: boolean
+  /** How many times the player opened the next step; missing on results stored before it existed, which count as 0. */
+  nextStepsShown?: number
 }
 
 /** A grid as an 81-character string, the form results store it in. */

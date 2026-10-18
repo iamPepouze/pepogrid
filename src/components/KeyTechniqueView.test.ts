@@ -1,18 +1,68 @@
 // @vitest-environment happy-dom
 import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it } from 'vitest'
-import KeyTechniqueView from './KeyTechniqueView.vue'
+import type { NextTechnique } from '../lib/rater'
+import KeyTechniqueView, { type KeyTechniqueTab } from './KeyTechniqueView.vue'
 
 enableAutoUnmount(afterEach)
 
 describe('KeyTechniqueView', () => {
-  const mountView = (technique: string) => mount(KeyTechniqueView, { props: { technique } })
+  /** The view on its Hardest tab, for `hardest`, unless `fields` say otherwise. */
+  const mountView = (hardest: string, fields: { tab?: KeyTechniqueTab; nextStep?: NextTechnique } = {}) =>
+    mount(KeyTechniqueView, { props: { tab: 'hardest', nextStep: { kind: 'technique', technique: 'Hidden Single' }, hardest, ...fields }, attachTo: document.body })
+  const tabs = (view: ReturnType<typeof mountView>) => view.findAll<HTMLButtonElement>('[role="tab"]')
   const button = (view: ReturnType<typeof mountView>, label: string) => view.findAll<HTMLButtonElement>('button').find((b) => b.text() === label)!
   /** The lesson grid's cell at a 1-based row and column. */
   const cell = (view: ReturnType<typeof mountView>, row: number, col: number) => view.findAll('.lesson-grid .cell')[(row - 1) * 9 + col - 1]
 
-  it('names the technique and opens its family’s lesson at its section', () => {
+  it('shows Next step and Hardest as tabs, with the one shown selected', () => {
+    const view = mountView('XY-Wing', { tab: 'next' })
+    expect(view.find('[role="tablist"]').exists()).toBe(true)
+    expect(tabs(view).map((t) => [t.text(), t.attributes('aria-selected')])).toEqual([['Next step', 'true'], ['Hardest', 'false']])
+    const panel = view.find('[role="tabpanel"]')
+    expect(panel.attributes('aria-labelledby')).toBe(tabs(view)[0].attributes('id'))
+    expect(tabs(view)[0].attributes('aria-controls')).toBe(panel.attributes('id'))
+  })
+
+  it('names the next technique on Next step and opens its family’s lesson at its section', () => {
+    const view = mountView('XY-Wing', { tab: 'next', nextStep: { kind: 'technique', technique: 'Naked Triplet' } })
+    expect(view.find('.lead').text()).toBe('Your next step needs')
+    expect(view.find('.technique').text()).toBe('Naked Triplet')
+    expect(view.find('h3').text()).toBe('Naked Triplet')
+    expect(view.findAll('details').map((d) => d.find('summary').text())).toContain('Naked Pair')
+    expect(view.text()).not.toContain('XY-Wing')
+  })
+
+  it('says when the next step needs a technique beyond XY-Wing', () => {
+    const view = mountView('Unique Rectangle type 1', { tab: 'next', nextStep: { kind: 'beyond' } })
+    expect(view.find('[role="tabpanel"]').text()).toBe('Your next step needs a technique beyond XY-Wing')
+    expect(view.find('.lesson-grid').exists()).toBe(false)
+  })
+
+  it('asks for the tab the player chooses, leaving the choice to its parent', async () => {
+    const view = mountView('XY-Wing', { tab: 'next' })
+    await tabs(view)[1].trigger('click')
+    await tabs(view)[0].trigger('click')
+    expect(view.emitted('select')).toEqual([['hardest'], ['next']])
+    expect(tabs(view)[0].attributes('aria-selected')).toBe('true')
+  })
+
+  it('moves focus between the tabs with the arrow keys, without choosing one', async () => {
+    const view = mountView('XY-Wing', { tab: 'next' })
+    expect(tabs(view).map((t) => t.attributes('tabindex'))).toEqual(['0', '-1'])
+    tabs(view)[0].element.focus()
+    await tabs(view)[0].trigger('keydown', { key: 'ArrowRight' })
+    expect(document.activeElement).toBe(tabs(view)[1].element)
+    await tabs(view)[1].trigger('keydown', { key: 'ArrowRight' })
+    expect(document.activeElement).toBe(tabs(view)[0].element)
+    await tabs(view)[0].trigger('keydown', { key: 'ArrowLeft' })
+    expect(document.activeElement).toBe(tabs(view)[1].element)
+    expect(view.emitted('select')).toBeUndefined()
+  })
+
+  it('names the hardest technique on Hardest and opens its family’s lesson at its section', () => {
     const view = mountView('Hidden Single')
+    expect(view.find('.lead').text()).toBe('This puzzle’s hardest technique is')
     expect(view.find('.technique').text()).toBe('Hidden Single')
     expect(view.find('h3').text()).toBe('Hidden Single')
     expect(view.text()).toContain('A single is a digit with only one place left to go.')

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ArrowLeft } from '@lucide/vue'
 import { computed, nextTick, ref } from 'vue'
+import { tabKeyTarget } from '../composables/tabKeys'
 import { DIFFICULTIES, LABELS, type Difficulty } from '../lib/difficulty'
 import { MAX_RESULTS, capReached, countsOf, formatDuration, statisticsOf, type Counts, type Spread, type StatResult } from '../lib/statistics'
 import { useResultsStore } from '../stores/results'
@@ -79,9 +80,7 @@ const recentFields = (r: StatResult) => [
 
 /** Arrow keys, Home and End move between tabs, as in the WAI-ARIA tabs pattern. */
 async function onTabKeydown(e: KeyboardEvent) {
-  const i = DIFFICULTIES.indexOf(selected.value)
-  const last = DIFFICULTIES.length - 1
-  const next = { ArrowRight: i === last ? 0 : i + 1, ArrowLeft: i === 0 ? last : i - 1, Home: 0, End: last }[e.key]
+  const next = tabKeyTarget(e.key, DIFFICULTIES.indexOf(selected.value), DIFFICULTIES.length)
   if (next === undefined) return
   e.preventDefault()
   selected.value = DIFFICULTIES[next]
@@ -193,31 +192,6 @@ async function onTabKeydown(e: KeyboardEvent) {
   font-weight: 600;
 }
 
-.tabs {
-  display: flex;
-  gap: 4px;
-}
-
-.tabs button {
-  /* Sized from the label, so Medium gets the room it needs on the narrowest phones. */
-  flex: 1 1 auto;
-  min-height: 36px;
-  padding: 6px 4px;
-  border: 1px solid var(--button-border);
-  border-radius: 999px;
-  background: var(--button-bg);
-  color: var(--text);
-  font: inherit;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.tabs button[aria-selected='true'] {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
 .empty {
   margin: 0;
   color: var(--muted);
@@ -281,11 +255,5 @@ async function onTabKeydown(e: KeyboardEvent) {
 .reset {
   align-self: center;
   padding: 6px 16px;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .tabs button:hover:not([aria-selected='true']) {
-    background: var(--peer);
-  }
 }
 </style>

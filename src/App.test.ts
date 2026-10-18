@@ -324,48 +324,107 @@ describe('App', () => {
   })
 
   describe('Key technique', () => {
-    const techniqueButton = (app: Awaited<ReturnType<typeof mountApp>>) => app.findAll<HTMLButtonElement>('.controls button').find((b) => b.text() === 'Technique')!
+    type App = Awaited<ReturnType<typeof mountApp>>
+    const techniqueButton = (app: App) => app.findAll<HTMLButtonElement>('.controls button').find((b) => b.text() === 'Technique')!
+    const tab = (app: App, label: string) => app.findAll<HTMLButtonElement>('.key-technique [role="tab"]').find((b) => b.text() === label)!
+    const selectedTab = (app: App) => app.find('.key-technique [role="tab"][aria-selected="true"]').text()
 
-    it('asks before the first reveal, and Cancel reveals nothing and gives focus back to Technique', async () => {
+    /** Opens the view from Technique, confirming the next step when asked. */
+    async function openView(app: App) {
+      await techniqueButton(app).trigger('click')
+      if (app.find('dialog').exists()) await dialogButton(app, 'Show').trigger('click')
+      await flushPromises()
+    }
+
+    it('asks before the first next step, and Cancel shows and counts nothing and gives focus back to Technique', async () => {
       const app = await mountApp()
       const game = useGameStore()
       const button = techniqueButton(app)
 
       await button.trigger('click')
-      expect(app.find('dialog').text()).toContain('Reveal the key technique?')
+      expect(app.find('dialog').text()).toContain('See your next step?')
       expect(app.find('dialog').text()).toContain('noted on this game’s result')
       await dialogButton(app, 'Cancel').trigger('click')
       await flushPromises()
 
-      expect(game.keyTechniqueRevealed).toBe(false)
+      expect(game.nextStepsShown).toBe(0)
       expect(app.find('.key-technique').exists()).toBe(false)
       expect(document.activeElement).toBe(button.element)
     })
 
-    it('reveals the hardest technique in place of the board once confirmed', async () => {
+    it('opens on Next step in place of the board once confirmed', async () => {
       const app = await mountApp()
       const game = useGameStore()
 
-      await techniqueButton(app).trigger('click')
-      await dialogButton(app, 'Reveal').trigger('click')
-      await flushPromises()
+      await openView(app)
 
-      expect(game.keyTechniqueRevealed).toBe(true)
-      expect(app.find('.key-technique').text()).toContain(game.rating!.hardest)
+      expect(game.nextStepsShown).toBe(1)
+      expect(selectedTab(app)).toBe('Next step')
+      expect(app.find('.key-technique .technique').text()).toBe('Hidden Single')
       expect(app.find<HTMLElement>('.game').element.style.display).toBe('none')
       expect(app.find(newGameButton).exists()).toBe(false)
       // Technique is hidden with the board, so focus moves into the view.
       expect(document.activeElement?.textContent?.trim()).toBe('Back')
     })
 
-    it('opens straight away once revealed, and Back returns to the game with focus on Technique', async () => {
+    it('counts each opening once, even after switching tabs, and asks only before the game’s first', async () => {
+      const app = await mountApp()
+      const game = useGameStore()
+      game.revealKeyTechnique()
+
+      await openView(app)
+      await tab(app, 'Hardest').trigger('click')
+      await tab(app, 'Next step').trigger('click')
+      await tab(app, 'Hardest').trigger('click')
+      expect(game.nextStepsShown).toBe(1)
+
+      await app.findAll('.key-technique button').find((b) => b.text() === 'Back')!.trigger('click')
+      await techniqueButton(app).trigger('click')
+      await flushPromises()
+      expect(app.find('dialog').exists()).toBe(false)
+      expect(selectedTab(app)).toBe('Next step')
+      expect(game.nextStepsShown).toBe(2)
+    })
+
+    it('asks before the first Hardest tab, and Cancel keeps Next step with focus on Hardest', async () => {
+      const app = await mountApp()
+      const game = useGameStore()
+      await openView(app)
+
+      await tab(app, 'Hardest').trigger('click')
+      expect(app.find('dialog').text()).toContain('Reveal the key technique?')
+      await dialogButton(app, 'Cancel').trigger('click')
+      await flushPromises()
+
+      expect(game.keyTechniqueRevealed).toBe(false)
+      expect(selectedTab(app)).toBe('Next step')
+      expect(document.activeElement).toBe(tab(app, 'Hardest').element)
+    })
+
+    it('reveals the hardest technique on Hardest once confirmed', async () => {
+      const app = await mountApp()
+      const game = useGameStore()
+      await openView(app)
+
+      await tab(app, 'Hardest').trigger('click')
+      await dialogButton(app, 'Reveal').trigger('click')
+      await flushPromises()
+
+      expect(game.keyTechniqueRevealed).toBe(true)
+      expect(selectedTab(app)).toBe('Hardest')
+      expect(app.find('.key-technique .technique').text()).toBe(game.rating!.hardest)
+      expect(document.activeElement).toBe(tab(app, 'Hardest').element)
+    })
+
+    it('opens Hardest straight away once revealed, and Back returns to the game with focus on Technique', async () => {
       const app = await mountApp()
       useGameStore().revealKeyTechnique()
       const button = techniqueButton(app)
+      await openView(app)
 
-      await button.trigger('click')
+      await tab(app, 'Hardest').trigger('click')
       expect(app.find('dialog').exists()).toBe(false)
-      expect(app.find('.key-technique').exists()).toBe(true)
+      expect(selectedTab(app)).toBe('Hardest')
 
       await app.findAll('.key-technique button').find((b) => b.text() === 'Back')!.trigger('click')
       expect(app.find('.key-technique').exists()).toBe(false)
@@ -373,7 +432,7 @@ describe('App', () => {
       expect(document.activeElement).toBe(button.element)
     })
 
-    it('stops the timer and leaves the board alone while the key technique is open', async () => {
+    it.each(['Next step', 'Hardest'])('stops the timer and leaves the board alone while the key technique is open on %s', async (label) => {
       vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
       try {
         const app = await mountApp()
@@ -381,7 +440,8 @@ describe('App', () => {
         game.revealKeyTechnique()
         const [cell] = nonGivensOf(game, [...game.puzzle.keys()])
         game.select(cell)
-        await techniqueButton(app).trigger('click')
+        await openView(app)
+        await tab(app, label).trigger('click')
 
         vi.advanceTimersByTime(5000)
         window.dispatchEvent(new KeyboardEvent('keydown', { key: '5', code: 'Digit5' }))

@@ -84,8 +84,12 @@ A solved result with no mistakes.
 _Avoid_: Perfect game, clean solve
 
 **Key technique**:
-The in-game view that reveals the puzzle's hardest technique and teaches its technique family through step-by-step examples; the result records that it was revealed. It never points at a next move.
+The in-game view with two tabs: Next step names the next technique, and Hardest reveals the puzzle's hardest technique. Each teaches its technique's family through step-by-step examples, and the result records how often the next step was shown and whether the hardest technique was revealed. It never points at a cell.
 _Avoid_: Hint, tip, help
+
+**Next technique**:
+The easiest technique that makes progress from the player's current digits and notes, tried in Sudoku Explainer's order up to XY-Wing.
+_Avoid_: Hint
 
 **Lesson**:
 The key technique's explanation of one technique family, with a section per technique and examples stepped through on real positions.

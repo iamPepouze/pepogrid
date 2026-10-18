@@ -2,6 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createApp, nextTick, toRaw } from 'vue'
+import { positionOf } from '../lib/lessons'
 import { PEERS, ROWS, bit, digitsOf, rowOf, unitsOf } from '../lib/sudoku'
 import { useGameStore } from './game'
 import { useResultsStore } from './results'
@@ -15,6 +16,19 @@ function solve(game: Game) {
   game.puzzle.forEach((v, i) => {
     if (!v) place(game, [i], game.solution[i])
   })
+}
+
+/** Stands in for localStorage, which these Node tests lack. */
+const storage = new Map<string, string>()
+const storageLike = { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => void storage.set(key, value) }
+
+/** A fresh app start: a new Pinia that saves and loads the game as main.ts does, from `storage`. */
+function reload() {
+  const pinia = createPinia().use(createPersistedState({ key: (id) => `pepogrid.${id}`, storage: storageLike }))
+  // Pinia only applies plugins once it is installed in an app.
+  createApp({}).use(pinia)
+  setActivePinia(pinia)
+  return useGameStore()
 }
 
 describe('game store results', () => {
@@ -151,19 +165,6 @@ describe('key technique', () => {
   })
 
   describe('across a reload', () => {
-    /** Stands in for localStorage, which these Node tests lack. */
-    const storage = new Map<string, string>()
-    const storageLike = { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => void storage.set(key, value) }
-
-    /** A fresh app start: a new Pinia that saves and loads the game as main.ts does. */
-    function reload() {
-      const pinia = createPinia().use(createPersistedState({ key: (id) => `pepogrid.${id}`, storage: storageLike }))
-      // Pinia only applies plugins once it is installed in an app.
-      createApp({}).use(pinia)
-      setActivePinia(pinia)
-      return useGameStore()
-    }
-
     beforeEach(() => storage.clear())
 
     it('keeps the reveal', async () => {
@@ -195,6 +196,82 @@ describe('key technique', () => {
     const game = useGameStore()
     await game.newGame('easy')
     game.$patch({ keyTechniqueRevealed: 'yes' as unknown as boolean })
+    expect(game.isValid()).toBe(false)
+  })
+})
+
+describe('next step', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('counts each next step shown and returns its technique, until the next game', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    expect(game.nextStepsShown).toBe(0)
+
+    expect(game.showNextStep()).toEqual({ kind: 'technique', technique: 'Hidden Single' })
+    game.showNextStep()
+    expect(game.nextStepsShown).toBe(2)
+    await game.newGame('easy')
+    expect(game.nextStepsShown).toBe(0)
+  })
+
+  it('takes the player’s digits and notes into account', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    // The Naked Pair lesson's position: without its notes, Pointing would come first.
+    const { values, candidates } = positionOf('naked-pair')
+    game.$patch({ values, notes: candidates })
+    expect(game.showNextStep()).toEqual({ kind: 'technique', technique: 'Naked Pair' })
+  })
+
+  it('records on a solved or abandoned result how many next steps were shown', async () => {
+    const game = useGameStore()
+    const results = useResultsStore()
+    await game.newGame('easy')
+    solve(game)
+    await game.newGame('easy')
+    game.showNextStep()
+    game.showNextStep()
+    fill(game, [firstNonGiven(game)])
+    await game.newGame('easy')
+
+    expect(results.results.map((r) => r.nextStepsShown)).toEqual([0, 2])
+  })
+
+  describe('across a reload', () => {
+    beforeEach(() => storage.clear())
+
+    it('keeps the count', async () => {
+      const game = reload()
+      await game.newGame('easy')
+      game.showNextStep()
+      await nextTick()
+
+      const resumed = reload()
+      expect(resumed.isValid()).toBe(true)
+      expect(resumed.nextStepsShown).toBe(1)
+    })
+
+    it('resumes a save from before the next step with none shown', async () => {
+      const game = reload()
+      await game.newGame('easy')
+      await nextTick()
+      const { nextStepsShown, ...older } = JSON.parse(storage.get('pepogrid.game')!)
+      expect(nextStepsShown).toBe(0)
+      storage.set('pepogrid.game', JSON.stringify(older))
+
+      const resumed = reload()
+      expect(resumed.isValid()).toBe(true)
+      expect(resumed.nextStepsShown).toBe(0)
+    })
+  })
+
+  it('rejects a save whose count is not a whole number', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    game.$patch({ nextStepsShown: 1.5 })
     expect(game.isValid()).toBe(false)
   })
 })
