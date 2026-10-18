@@ -56,6 +56,6 @@ The whole app, once, plus the open issues.
    - Statistics, with no games and with games stored (drive-app's `result()`);
    - the key technique: both tabs, stepping through a lesson, a collapsed section opened.
 2. File each gap as its own GitHub issue, labelled `needs-triage`, through the [issue tracker](../../../docs/agents/issue-tracker.md). Group findings with one rule and one cause into one issue. Search the open issues first, so none is filed twice. The body gives the finding as above and the screens where it shows.
-3. Read every open spec and ticket. Each one that changes what players see gets a `## UX decisions` section added to its body, in the shape of the [to-spec](../to-spec/SKILL.md) template's section. Draft it from the rules and the issue, ask the owner wherever there's a real choice (as in **Idea**), and keep the rest of the body unchanged. Link a gap you filed in step 2 instead of repeating it.
+3. Read every open spec and ticket. Each one that changes what players see gets a `## UX decisions` section added to its body, in the shape of the [to-spec](../to-spec/SKILL.md) template's section. Draft it from the rules and the issue, check each claim about the app's current behaviour in the code (as in **Idea**), ask the owner wherever there's a real choice (as in **Idea**), and keep the rest of the body unchanged. Link a gap you filed in step 2 instead of repeating it.
 
 Done when every screen above has been checked against every rule, every gap is an issue, and every open issue has been updated or judged not to change what players see.
