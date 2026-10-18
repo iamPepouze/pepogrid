@@ -13,7 +13,7 @@ const root = fileURLToPath(new globalThis.URL('../../../', import.meta.url))
 export const PORT = 5199
 export const URL = `http://localhost:${PORT}/pepogrid/`
 
-/** Characters of a focused element's text that `focused()` keeps. */
+/** Characters of a focused element's name that `focused()` keeps. */
 const FOCUS_TEXT_MAX = 40
 
 let resultCount = 0
@@ -87,8 +87,8 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
     /** Number pad button for digit `d` (1-9). */
     pad: (d) => page.locator('.pad .digit').nth(d - 1),
     /**
-     * The focused element by its aria-label, else its text (aria-labelledby is not followed): `button "Back"`,
-     * `button[role=tab] "Hardest"`, `div[role=grid] "Sudoku board"`, or `body` (focus lost). A container's text is cut at FOCUS_TEXT_MAX.
+     * The focused element by its aria-label, or its text when the label is missing or blank (aria-labelledby is not followed):
+     * `button "Back"`, `button[role=tab] "Hardest"`, `div[role=grid] "Sudoku board"`, or `body` (focus lost). The name is cut at FOCUS_TEXT_MAX.
      */
     focused: () =>
       page.evaluate((max) => {
