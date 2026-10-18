@@ -39,6 +39,17 @@ describe('KeyTechniqueView', () => {
     expect(view.find('.lesson-grid').exists()).toBe(false)
   })
 
+  it('says the grid has a mistake, with no technique and no lesson', () => {
+    const view = mountView('XY-Wing', { tab: 'next', nextStep: { kind: 'mistake' } })
+    expect(view.findAll('[role="tabpanel"] p').map((p) => p.text())).toEqual([
+      'Your grid has a mistake',
+      'Check your digits and notes: something there rules out the solution.',
+    ])
+    expect(view.find('.technique').exists()).toBe(false)
+    expect(view.find('.lesson-grid').exists()).toBe(false)
+    expect(view.text()).not.toContain('XY-Wing')
+  })
+
   it('asks for the tab the player chooses, leaving the choice to its parent', async () => {
     const view = mountView('XY-Wing', { tab: 'next' })
     await tabs(view)[1].trigger('click')

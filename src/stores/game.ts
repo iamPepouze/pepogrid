@@ -301,7 +301,7 @@ export const useGameStore = defineStore(
     /** Finds the next technique from the player's digits and notes, and counts the look on the result. */
     function showNextStep(): NextTechnique {
       nextStepsShown.value++
-      return nextTechnique(values.value, notes.value)
+      return nextTechnique(values.value, notes.value, solution.value)
     }
 
     function tick() {

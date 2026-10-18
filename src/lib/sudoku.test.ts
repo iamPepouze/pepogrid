@@ -200,39 +200,60 @@ describe('next technique', () => {
 
   /** A lesson's position, with its candidates as the player's notes: Sudoku Explainer's next step there is the lesson's technique. */
   function lessonPosition(key: Parameters<typeof positionOf>[0]) {
-    const { values, candidates } = positionOf(key)
-    return { values, notes: candidates }
+    const { puzzle, values, candidates } = positionOf(key)
+    return { values, notes: candidates, solution: solve(toGrid(puzzle))! }
   }
 
   it('names a hidden single on a fresh Easy puzzle', async () => {
     const [[puzzle]] = await loadBank('easy')
-    expect(nextTechnique(toGrid(puzzle), noNotes())).toEqual(technique('Hidden Single'))
+    expect(nextTechnique(toGrid(puzzle), noNotes(), solve(toGrid(puzzle))!)).toEqual(technique('Hidden Single'))
   })
 
   it('names a later technique when the player’s notes have already removed what an easier one would', () => {
-    const { values, notes } = lessonPosition('naked-pair')
-    expect(nextTechnique(values, noNotes())).toEqual(technique('Pointing'))
-    expect(nextTechnique(values, notes)).toEqual(technique('Naked Pair'))
+    const { values, notes, solution } = lessonPosition('naked-pair')
+    expect(nextTechnique(values, noNotes(), solution)).toEqual(technique('Pointing'))
+    expect(nextTechnique(values, notes, solution)).toEqual(technique('Naked Pair'))
   })
 
   it('treats a cell without notes as holding every digit its peers allow', () => {
-    const { values, notes } = lessonPosition('naked-pair')
+    const { values, notes, solution } = lessonPosition('naked-pair')
     const r3c4 = 2 * 9 + 3
     expect(notes[r3c4]).not.toBe(candidatesAt(values, r3c4))
     notes[r3c4] = 0
-    expect(nextTechnique(values, notes)).toEqual(technique('Claiming'))
+    expect(nextTechnique(values, notes, solution)).toEqual(technique('Claiming'))
   })
 
   it('prefers the earlier technique in SE’s order when two apply', () => {
-    const { values, notes } = lessonPosition('direct-pointing')
+    const { values, notes, solution } = lessonPosition('direct-pointing')
     // A naked single is there too, but SE tries Direct Pointing first.
     expect(values.some((v, i) => !v && popcount(notes[i]) === 1)).toBe(true)
-    expect(nextTechnique(values, notes)).toEqual(technique('Direct Pointing'))
+    expect(nextTechnique(values, notes, solution)).toEqual(technique('Direct Pointing'))
   })
 
   it('reports beyond XY-Wing on an Expert position that needs more', () => {
-    const { values, notes } = lessonPosition('unique-rectangle-1')
-    expect(nextTechnique(values, notes)).toEqual({ kind: 'beyond' })
+    const { values, notes, solution } = lessonPosition('unique-rectangle-1')
+    expect(nextTechnique(values, notes, solution)).toEqual({ kind: 'beyond' })
+  })
+
+  it('reports a mistake for a wrong digit', () => {
+    const { values, notes, solution } = lessonPosition('naked-pair')
+    const i = values.findIndex((v) => !v)
+    values[i] = (solution[i] % 9) + 1
+    notes[i] = 0
+    expect(nextTechnique(values, notes, solution)).toEqual({ kind: 'mistake' })
+  })
+
+  it('reports a mistake for notes missing the solution digit, with no wrong digit on the board', () => {
+    const { values, notes, solution } = lessonPosition('naked-pair')
+    const i = values.findIndex((v, k) => !v && popcount(notes[k]) > 1)
+    notes[i] &= ~bit(solution[i])
+    expect(values.every((v, k) => !v || v === solution[k])).toBe(true)
+    expect(nextTechnique(values, notes, solution)).toEqual({ kind: 'mistake' })
+  })
+
+  it('never reports a mistake for cells without notes', async () => {
+    const [[puzzle]] = await loadBank('expert')
+    expect(nextTechnique(toGrid(puzzle), noNotes(), solve(toGrid(puzzle))!).kind).not.toBe('mistake')
   })
 
   it('names a technique in every consistent mid-solve Hard position', async () => {
@@ -248,7 +269,7 @@ describe('next technique', () => {
         const others = digitsOf(candidatesAt(values, i)).filter((d) => d !== solution[i] && Math.random() < 0.5)
         return [solution[i], ...others].reduce((m, d) => m | bit(d), 0)
       })
-      expect(nextTechnique(values, notes).kind, p).toBe('technique')
+      expect(nextTechnique(values, notes, solution).kind, p).toBe('technique')
     }
   })
 })

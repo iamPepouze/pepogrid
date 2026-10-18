@@ -348,15 +348,21 @@ export function rateSE(puzzle: readonly number[], limit = Infinity): SeResult {
   return { se, hardest }
 }
 
-/** The easiest technique that makes progress from a position, by its SE name, or `beyond` when SE would need more than XY-Wing. */
-export type NextTechnique = { kind: 'technique'; technique: string } | { kind: 'beyond' }
+/**
+ * The easiest technique that makes progress from a position, by its SE name; `mistake` when the
+ * position can't lead to the solution; or `beyond` when SE would need more than XY-Wing.
+ */
+export type NextTechnique = { kind: 'technique'; technique: string } | { kind: 'mistake' } | { kind: 'beyond' }
 
 /**
  * The next technique from the player's digits and notes: the first of SE's techniques, in its
  * order, that places a digit or removes a candidate. A cell with notes holds those notes that
- * its peers allow; a cell without notes holds every digit its peers allow.
+ * its peers allow; a cell without notes holds every digit its peers allow. A digit that isn't the
+ * solution's, or notes that leave out the solution's digit, make it a mistake instead.
  */
-export function nextTechnique(values: readonly number[], notes: readonly number[]): NextTechnique {
+export function nextTechnique(values: readonly number[], notes: readonly number[], solution: readonly number[]): NextTechnique {
+  const wrong = (v: number, i: number) => (v ? v !== solution[i] : notes[i] !== 0 && !(notes[i] & bit(solution[i])))
+  if (values.some(wrong)) return { kind: 'mistake' }
   const candidates = values.map((v, i) => (v ? 0 : candidatesAt(values, i) & (notes[i] || ALL_DIGITS)))
   const b = new Board(values, candidates)
   for (const technique of SE_TECHNIQUES) {
