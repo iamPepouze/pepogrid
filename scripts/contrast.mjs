@@ -122,7 +122,7 @@ for (const [fg, bg, min, what] of PAIRS) {
   const issue = ALLOWED[`${fg} on ${bg} at ${min}`]
   const results = Object.entries(THEMES).map(([theme, t]) => {
     if (!t[fg] || !t[bg]) throw new Error(`${theme} theme has no ${t[fg] ? bg : fg}`)
-    return { theme, value: ratio(t[fg], t[bg]) }
+    return { theme, t, value: ratio(t[fg], t[bg]) }
   })
   const failing = results.filter((r) => r.value < min)
   // Rounded down, so 4.498 never shows as a passing 4.50.
@@ -131,9 +131,8 @@ for (const [fg, bg, min, what] of PAIRS) {
   if (failing.length && issue) allowed.push(`${line}, allowed by ${issue}`)
   else if (failing.length) problems.push(line)
   else if (issue) problems.push(`${line}: passes now, so remove its ${issue} allowance`)
-  for (const { theme } of failing) {
-    if (!fits(fg, THEMES[theme]) && !fits(bg, THEMES[theme])) stuck.push(`${fg} on ${bg} (${what}) in ${theme}`)
-  }
+  const stuckIn = failing.filter((r) => !fits(fg, r.t) && !fits(bg, r.t)).map((r) => r.theme)
+  if (stuckIn.length) stuck.push(`${fg} on ${bg} (${what}) in ${stuckIn.join(' and ')}`)
 }
 
 for (const line of allowed) console.log(`known: ${line}`)
