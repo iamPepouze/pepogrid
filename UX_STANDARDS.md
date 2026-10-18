@@ -15,7 +15,7 @@ A change that sets or changes a UX convention updates this file in the same chan
 
 ## Checking
 
-- **Contrast** is checked by `npm run contrast` ([contrast.mjs](scripts/contrast.mjs)), in CI: it checks both themes' tokens in [style.css](src/style.css) for the pairs of colours its `PAIRS` lists. A change that draws a token on a new background adds the pair there; a known failure is allowed there with its issue. Large text is at least 24px, or at least 18.66px when bold (600 or more). Board digits scale with the board, so they count as normal text: at 320px wide they are smallest.
+- **Contrast** is checked by `npm run contrast` ([contrast.mjs](scripts/contrast.mjs)), in CI: it checks both themes' tokens in [style.css](src/style.css) for the pairs of colours its `PAIRS` lists. A change that draws a token on a new background adds the pair there; a known failure is allowed there with its issue. A pair it lists as `stuck` can't be fixed by a new colour for either token, because each one's other pairs pull the opposite way, so its fix is a design call: split the token, or show the state by more than colour (a ring, a mark). Large text is at least 24px, or at least 18.66px when bold (600 or more). Board digits scale with the board, so they count as normal text: at 320px wide they are smallest.
 - **Layout** is checked at the drive-app skill's three sizes: 320 and 400px wide with touch, and 1200×800 without. Dark mode is checked too when colours change.
 - **Installed iOS app** behaviour is in [ios-installed-app.md](docs/ios-installed-app.md). Whatever only an iPhone or iPad shows becomes a `device-check:` line (CODING_STANDARDS.md T4).
 

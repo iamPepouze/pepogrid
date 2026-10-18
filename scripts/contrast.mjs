@@ -1,7 +1,8 @@
 // Checks the theme tokens in src/style.css against WCAG 2.2 contrast (UX_STANDARDS.md U11, U12),
 // in both themes, for the pairs of colours the app draws on each other that PAIRS lists.
 // A pair that already fails is allowed with the issue that tracks it, so CI stays green until the
-// fix lands; an allowed pair that passes fails the check, so its entry gets removed.
+// fix lands; an allowed pair that passes fails the check, so its entry gets removed. A failing pair
+// that no new colour for either token can fix is listed as stuck, without failing the check.
 // Usage: node scripts/contrast.mjs
 import { readFileSync } from 'node:fs'
 
@@ -110,7 +111,38 @@ for (const [fg, bg, min, what] of PAIRS) {
   else if (issue) problems.push(`${line}: passes now, so remove its ${issue} allowance`)
 }
 
+/**
+ * Whether some colour for `token` passes every pair it is in, in theme `t`, with the other tokens as
+ * they are. Each pair allows a luminance at or below one bound or at or above another; the windows
+ * that survive every pair are the luminances left to choose from.
+ */
+function fits(token, t) {
+  let windows = [[0, 1]]
+  for (const [fg, bg, min] of PAIRS) {
+    if (fg !== token && bg !== token) continue
+    const other = luminance(t[fg === token ? bg : fg]) + 0.05
+    const passing = [
+      [0, other / min - 0.05],
+      [min * other - 0.05, 1],
+    ]
+    windows = windows.flatMap(([lo, hi]) => passing.map(([a, b]) => [Math.max(lo, a), Math.min(hi, b)]))
+    windows = windows.filter(([lo, hi]) => lo <= hi)
+  }
+  return windows.length > 0
+}
+
+// A failing pair that neither of its tokens can fix needs a design call, not a new value.
+const stuck = []
+for (const [fg, bg, min, what] of PAIRS) {
+  for (const [theme, t] of Object.entries(THEMES)) {
+    if (ratio(t[fg], t[bg]) < min && !fits(fg, t) && !fits(bg, t)) stuck.push(`${fg} on ${bg} (${what}) in ${theme}`)
+  }
+}
+
 for (const line of allowed) console.log(`known: ${line}`)
+for (const line of stuck) {
+  console.log(`stuck: ${line}: no colour for either token passes all its pairs, so split a token or show it by more than colour`)
+}
 for (const line of problems) console.error(`FAIL: ${line}`)
 console.log(`${PAIRS.length} pairs checked in both themes: ${problems.length} failing, ${allowed.length} known.`)
 process.exitCode = problems.length ? 1 : 0
