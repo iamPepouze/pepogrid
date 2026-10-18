@@ -148,13 +148,13 @@ async function onTabKeydown(e: KeyboardEvent) {
 
         <template v-if="stats.families.length">
           <h3>Technique families</h3>
-          <dl class="list">
+          <dl class="list families">
             <div v-for="f in stats.families" :key="f.family">
               <dt>{{ f.family }}</dt>
               <dd>
                 <span class="stat-value">{{ f.solved }}/{{ f.played }}</span>
-                <span v-if="f.revealed" class="muted-note">· {{ f.revealed }} key technique revealed</span>
-                <span v-if="f.nextStepUsed" class="muted-note">· {{ f.nextStepUsed }} next step used</span>
+                <span v-if="f.revealed" class="muted-note">{{ f.revealed }} with key technique</span>
+                <span v-if="f.nextStepUsed" class="muted-note">{{ f.nextStepUsed }} with next step</span>
               </dd>
             </div>
           </dl>
@@ -218,14 +218,20 @@ async function onTabKeydown(e: KeyboardEvent) {
 
 .list dd {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
   align-items: baseline;
-  gap: 0 8px;
+  gap: 8px;
   margin: 0;
 }
 
-/* A muted note beside a value: a rating's range, a family's aided solves. On narrow phones a family's notes wrap under its value. */
+/* Each of a family's notes sits on its own line under its count, so the counts stay in one column. */
+.families dd {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+  text-align: right;
+}
+
+/* A muted note beside or under a value: a rating's range, a family's solves with help. */
 .muted-note {
   color: var(--muted);
   font-size: 0.85rem;

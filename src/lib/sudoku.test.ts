@@ -445,10 +445,12 @@ describe('statistics', () => {
       solved('hard', { hardest: 'X-Wing', nextStepsShown: 2 }),
       abandoned('hard', { hardest: 'X-Wing', nextStepsShown: 1 }),
       solved('hard', { hardest: 'X-Wing', nextStepsShown: 0 }),
+      solved('hard', { hardest: 'X-Wing', nextStepsShown: -1 }),
+      solved('hard', { hardest: 'X-Wing', nextStepsShown: '2' as unknown as number }),
       solved('hard', { hardest: 'XY-Wing', keyTechniqueRevealed: true }),
     ]
     expect(statisticsOf(results, 'hard').families).toEqual([
-      { family: 'Fish', solved: 2, played: 3, revealed: 0, nextStepUsed: 1 },
+      { family: 'Fish', solved: 4, played: 5, revealed: 0, nextStepUsed: 1 },
       { family: 'Wings', solved: 1, played: 1, revealed: 1, nextStepUsed: 0 },
     ])
   })
