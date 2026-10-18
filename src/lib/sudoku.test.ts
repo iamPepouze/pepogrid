@@ -445,14 +445,22 @@ describe('statistics', () => {
       solved('hard', { hardest: 'X-Wing', nextStepsShown: 2 }),
       abandoned('hard', { hardest: 'X-Wing', nextStepsShown: 1 }),
       solved('hard', { hardest: 'X-Wing', nextStepsShown: 0 }),
-      solved('hard', { hardest: 'X-Wing', nextStepsShown: -1 }),
-      solved('hard', { hardest: 'X-Wing', nextStepsShown: '2' as unknown as number }),
       solved('hard', { hardest: 'XY-Wing', keyTechniqueRevealed: true }),
     ]
     expect(statisticsOf(results, 'hard').families).toEqual([
-      { family: 'Fish', solved: 4, played: 5, revealed: 0, nextStepUsed: 1 },
+      { family: 'Fish', solved: 2, played: 3, revealed: 0, nextStepUsed: 1 },
       { family: 'Wings', solved: 1, played: 1, revealed: 1, nextStepUsed: 0 },
     ])
+  })
+
+  it('ignores a missing or malformed next-step count in a technique family', () => {
+    const results = [
+      solved('hard', { hardest: 'X-Wing' }),
+      solved('hard', { hardest: 'X-Wing', nextStepsShown: -1 }),
+      solved('hard', { hardest: 'X-Wing', nextStepsShown: '2' as unknown as number }),
+      solved('hard', { hardest: 'X-Wing', nextStepsShown: Number.NaN }),
+    ]
+    expect(statisticsOf(results, 'hard').families).toEqual([{ family: 'Fish', solved: 4, played: 4, revealed: 0, nextStepUsed: 0 }])
   })
 
   it('lists no technique families on Easy', () => {

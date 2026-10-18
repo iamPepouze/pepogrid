@@ -153,8 +153,8 @@ async function onTabKeydown(e: KeyboardEvent) {
               <dt>{{ f.family }}</dt>
               <dd>
                 <span class="stat-value">{{ f.solved }}/{{ f.played }}</span>
-                <span v-if="f.revealed" class="muted-note">{{ f.revealed }} with key technique</span>
-                <span v-if="f.nextStepUsed" class="muted-note">{{ f.nextStepUsed }} with next step</span>
+                <span v-if="f.revealed" class="muted-note">{{ f.revealed }} revealed the key technique</span>
+                <span v-if="f.nextStepUsed" class="muted-note">{{ f.nextStepUsed }} used the next step</span>
               </dd>
             </div>
           </dl>
@@ -228,7 +228,11 @@ async function onTabKeydown(e: KeyboardEvent) {
   flex-direction: column;
   align-items: flex-end;
   gap: 0;
-  text-align: right;
+}
+
+/* A note stays whole on narrow phones; the family's name wraps instead. */
+.families .muted-note {
+  white-space: nowrap;
 }
 
 /* A muted note beside or under a value: a rating's range, a family's solves with help. */

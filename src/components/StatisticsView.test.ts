@@ -61,7 +61,7 @@ describe('StatisticsView', () => {
     expect(section(view, 'Streaks')).toBe('Current 1 Best 1')
     expect(section(view, 'Ratings')).toBe('SE 3.5 3.0–4.0 HoDoKu 400 300–500')
     expect(view.find('[role="tabpanel"]').text()).toContain('Abandoned at 46% on average')
-    expect(section(view, 'Technique families')).toBe('Subsets 1/2 1 with key technique 1 with next step Intersections 1/1 1 with next step')
+    expect(section(view, 'Technique families')).toBe('Subsets 1/2 1 revealed the key technique 1 used the next step Intersections 1/1 1 used the next step')
 
     const recent = view.findAll('.recent li').map((li) => li.text().replace(/\s+/g, ' '))
     expect(recent).toHaveLength(3)
