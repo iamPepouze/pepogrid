@@ -230,9 +230,14 @@ async function onTabKeydown(e: KeyboardEvent) {
   gap: 0;
 }
 
-/* A note stays whole on narrow phones; the family's name wraps instead. */
-.families .muted-note {
-  white-space: nowrap;
+/* The notes take the room they need first, so the family's name wraps before a note does; a note breaks only when even that can't make room. */
+.families dt {
+  flex: 1 1 0;
+}
+
+.families dd {
+  flex: 0 1 auto;
+  text-align: right;
 }
 
 /* A muted note beside or under a value: a rating's range, a family's solves with help. */
