@@ -5,7 +5,7 @@ description: "Merge a PR once its check is green, return to an up-to-date main, 
 disable-model-invocation: true
 ---
 
-Land a PR: merge it, sync `main`, and clean up. Every gate below **stops** the skill: report what failed and change nothing more.
+Land a PR: merge it, sync `main`, and clean up. Every gate below **stops** the skill when it fails: report what failed and change nothing more. Gate 6 can also pass with a note for the report.
 
 ## 1. Gate
 
@@ -14,7 +14,9 @@ Land a PR: merge it, sync `main`, and clean up. Every gate below **stops** the s
 3. If the PR is MERGED, skip to **3. Sync**. If it is CLOSED, stop.
 4. Local and PR heads match: `git fetch`, then a local branch named `headRefName` exists and points at `headRefOid`. Otherwise stop: the branch is missing locally, has unpushed commits, or the PR has commits not seen locally.
 5. The title follows the "Branch names" rule in CLAUDE.md. Otherwise stop and quote the title; the wording on `main` is the user's call.
-6. The branch has had a review: the branch file of `headRefName` (CLAUDE.md's **Workflow**) has a `Reviewed up to:` line naming `headRefOid` or an ancestor of it (`git merge-base --is-ancestor <sha> <headRefOid>`). Commits after that line don't stop the merge: list them, `git log --oneline <sha>..<headRefOid>`, for the report. With no such line, or a commit that isn't an ancestor, stop and list `git log --oneline <base>..<headRefOid>`, where `<base>` is the fixed point CLAUDE.md's `/code-review` rule picks, with its ancestry tested against `headRefOid` rather than `HEAD`. Whether to run `/code-review` or land them unreviewed is the user's call.
+6. The branch has had a review. Read `<sha>` from the `Reviewed up to:` line of the branch file of `headRefName`, the line CLAUDE.md's `/code-review` rule reads, then run `git merge-base --is-ancestor <sha> <headRefOid>`:
+   - **Exit 0**: pass. If `<sha>` isn't `headRefOid`, list the commits landing unreviewed, `git log --oneline <sha>..<headRefOid>`, for the report.
+   - **No file or line, or any non-zero exit** (1 for not an ancestor, 128 for a commit unknown here): stop and list `git log --oneline origin/main..<headRefOid>`. Whether to run `/code-review` or land them unreviewed is the user's call.
 
 ## 2. Merge
 
