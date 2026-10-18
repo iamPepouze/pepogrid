@@ -40,9 +40,6 @@ jobs:
         run: docker compose -f .github/lint/compose.yml run --rm actionlint -color
       - name: Lint shell scripts
         run: docker compose -f .github/lint/compose.yml run --rm shellcheck scripts/*.sh
-      # ESLint, vue-tsc and Vitest all accept a stray Windows code-page byte.
-      - name: Check text files are UTF-8
-        run: scripts/check-utf8.sh
       - name: Validate dependabot.yml
         run: docker compose -f .github/lint/compose.yml run --rm dependabot-schema
       - uses: actions/setup-node@v7

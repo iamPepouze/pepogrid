@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "typecheck": "vue-tsc -b",
     "test": "vitest run",
-    "lint": "eslint .",
+    "lint": "eslint . && node scripts/check-utf8.mjs",
     "contrast": "node scripts/contrast.mjs"
   },
   "dependencies": {

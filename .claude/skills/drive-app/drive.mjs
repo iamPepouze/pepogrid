@@ -66,12 +66,24 @@ function solve(grid) {
  * page sees a mouse at any viewport size. `colorScheme` is the device theme the default *System*
  * setting follows. `storage` seeds localStorage, keyed as the stores persist
  * (`pepogrid.results`: `{ results: [...] }` built with `result()`, `pepogrid.settings`: `{ theme, ... }`), and the game
- * opens on it; objects are stored as JSON.
- * @param {{ reducedMotion?: 'reduce' | 'no-preference', viewport?: { width: number, height: number }, touch?: boolean, colorScheme?: 'light' | 'dark', storage?: Record<string, unknown> }} options
+ * opens on it; objects are stored as JSON. `textScale` enlarges the root font size, as a player's
+ * larger text setting does: 2 is UX_STANDARDS.md U19's 200%.
+ * @param {{ reducedMotion?: 'reduce' | 'no-preference', viewport?: { width: number, height: number }, touch?: boolean, colorScheme?: 'light' | 'dark', storage?: Record<string, unknown>, textScale?: number }} options
  */
-export async function openGame({ reducedMotion = 'no-preference', viewport = { width: 400, height: 800 }, touch = false, colorScheme = 'light', storage = {} } = {}) {
+export async function openGame({ reducedMotion = 'no-preference', viewport = { width: 400, height: 800 }, touch = false, colorScheme = 'light', storage = {}, textScale = 1 } = {}) {
   const browser = await chromium.launch({ channel: 'msedge' })
   const context = await browser.newContext({ viewport, reducedMotion, colorScheme, hasTouch: touch, isMobile: touch })
+  // On every load, so a reload keeps the size; the script can run before <html> exists, so it waits for it then.
+  if (textScale !== 1)
+    await context.addInitScript((scale) => {
+      const apply = () => {
+        if (!document.documentElement) return false
+        document.documentElement.style.fontSize = `${scale * 100}%`
+        return true
+      }
+      if (apply()) return
+      new MutationObserver((_, observer) => apply() && observer.disconnect()).observe(document, { childList: true })
+    }, textScale)
   const page = await context.newPage()
   const errors = []
   // Every screenshot path, listed by close() so the skill's Look step can be checked off.
@@ -142,16 +154,28 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
         const text = (el.getAttribute('aria-label')?.trim() || el.textContent || '').replace(/\s+/g, ' ').trim()
         return `${el.tagName.toLowerCase()}${role ? `[role=${role}]` : ''} "${text.length > max ? `${text.slice(0, max)}…` : text}"`
       }, FOCUS_TEXT_MAX),
-    /** Text of every button cut off: content wider than the button, or the button past the viewport's edge. */
+    /**
+     * Text cut off or spilling: every button whose content is wider than it or that passes the viewport's
+     * edge, and every other element holding its own text that is wider than its own box (it spills into
+     * its neighbour) or runs past its card (`.card`, `.surface`) or the viewport.
+     */
     clipped: () =>
-      page.evaluate(() =>
-        [...document.querySelectorAll('button')]
-          .filter((b) => {
-            const { left, right } = b.getBoundingClientRect()
-            return b.scrollWidth > b.clientWidth || left < 0 || right > innerWidth
-          })
-          .map((b) => b.textContent.trim()),
-      ),
+      page.evaluate(() => {
+        const past = (el, edge) => {
+          const { left, right } = el.getBoundingClientRect()
+          return left < edge.left - 0.5 || right > edge.right + 0.5
+        }
+        const viewport = { left: 0, right: innerWidth }
+        const buttons = [...document.querySelectorAll('button')].filter((b) => b.scrollWidth > b.clientWidth || past(b, viewport))
+        const text = [...document.querySelectorAll('body *:not(button, button *)')].filter((el) => {
+          if (!el.checkVisibility() || ![...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim())) return false
+          // An inline element has no box width of its own to spill out of.
+          const spills = getComputedStyle(el).display !== 'inline' && el.scrollWidth > el.clientWidth + 1
+          const card = el.closest('.card, .surface')
+          return spills || past(el, card ? card.getBoundingClientRect() : viewport)
+        })
+        return [...buttons, ...text].map((el) => el.textContent.trim())
+      }),
     /** Closes the browser and prints every screenshot this page saved. */
     close: async () => {
       if (shots.length) console.log(`Screenshots to look at:\n${shots.map((p) => `  ${p}`).join('\n')}`)

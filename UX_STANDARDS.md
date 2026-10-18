@@ -42,7 +42,7 @@ A change that sets or changes a UX convention updates this file in the same chan
 - **U16 Names, roles and states** (4.1.2, 1.3.1, 2.5.3). Every control has an accessible name that contains its visible label, and exposes its role and state (`aria-pressed`, `aria-selected`, disabled). Icon-only buttons get an `aria-label`. A cell reads "Row 3, column 4: 7, incorrect".
 - **U17 Status messages** (4.1.3). A change the player didn't move focus to, but needs to know about, is announced (`role="status"` or `aria-live`). The *Solved!* banner and a lesson's step caption.
 - **U18 Target size** (2.5.8). Every pointer target is at least 24×24 CSS px, or has 24px of space around it. U21 asks for more on the game's main controls.
-- **U19 Reflow and zoom** (1.4.10, 1.4.4, 1.3.4). At 320 CSS px wide, nothing scrolls sideways and no button text is cut off (drive-app's `clipped()`). Text can be zoomed to 200% without losing content. The app works in both orientations.
+- **U19 Reflow and zoom** (1.4.10, 1.4.4, 1.3.4). At 320 CSS px wide, nothing scrolls sideways and no text is cut off or spills into its neighbour (drive-app's `clipped()`). Text can be zoomed to 200% without losing content (drive-app's `textScale: 2`). The app works in both orientations.
 - **U20 Motion can be turned off** (2.3.3, 2.2.2). When the device asks for reduced motion, decorative animation stops (CODING_STANDARDS.md C3). 2.3.3 is level AAA, but this repo requires it. Anything that moves for more than 5 seconds can be paused. The completion glow is skipped under reduced motion.
 
 ## Mobile (judgement calls)
