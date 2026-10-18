@@ -27,6 +27,7 @@ Skills not in `skills-lock.json` are this repo's own. Re-apply these after updat
 - `to-spec`: place named tests by `CODING_STANDARDS.md`'s test-layout rules. Add a **UX decisions** section to the template, for a change players see.
 - `to-tickets`: place named tests by `CODING_STANDARDS.md`'s test-layout rules. An acceptance criterion goes to the ticket whose code exercises it, and a shape a later ticket reads is named in the earlier ticket's "What to build". A spec's UX decision goes the same way, under a **UX decisions** heading in both templates.
 - `pr`: an **On device** bullet in Evidence, from the branch file's `device-check:` line.
+- `model` in the frontmatter, which holds only for the turn that loads the skill: `opus` on `grill-me`, `grill-with-docs`, `wayfinder`, `to-spec`, `to-tickets`, `code-review`, `diagnosing-bugs`, `improve-codebase-architecture`, `triage`, `retro`, `implement-spec` and `teach`; `sonnet` on `implement`, `handoff`, `wait-what`, `to-questionnaire`, `setup-matt-pocock-skills` and `ask-matt`. Leave it off any skill another skill loads partway through (`grilling`, `tdd`, `pr`, …), so it never lowers the caller's model.
 
 ## Workflow
 

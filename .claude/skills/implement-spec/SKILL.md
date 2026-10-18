@@ -1,5 +1,6 @@
 ---
 name: implement-spec
+model: opus
 description: "Implement the result of /to-spec and /to-tickets in code."
 disable-model-invocation: true
 ---
