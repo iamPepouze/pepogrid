@@ -13,6 +13,9 @@ const root = fileURLToPath(new globalThis.URL('../../../', import.meta.url))
 export const PORT = 5199
 export const URL = `http://localhost:${PORT}/pepogrid/`
 
+/** Characters of a focused element's name that `focused()` keeps. */
+const FOCUS_TEXT_MAX = 40
+
 let resultCount = 0
 
 /**
@@ -83,6 +86,18 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
     cell: (i) => page.locator('.cell').nth(i),
     /** Number pad button for digit `d` (1-9). */
     pad: (d) => page.locator('.pad .digit').nth(d - 1),
+    /**
+     * The focused element by its aria-label, or its text when the label is missing or blank (aria-labelledby is not followed):
+     * `button "Back"`, `button[role=tab] "Hardest"`, `div[role=grid] "Sudoku board"`, or `body` (focus lost). The name is cut at FOCUS_TEXT_MAX.
+     */
+    focused: () =>
+      page.evaluate((max) => {
+        const el = document.activeElement
+        if (!el || el === document.body) return 'body'
+        const role = el.getAttribute('role')
+        const text = (el.getAttribute('aria-label')?.trim() || el.textContent || '').replace(/\s+/g, ' ').trim()
+        return `${el.tagName.toLowerCase()}${role ? `[role=${role}]` : ''} "${text.length > max ? `${text.slice(0, max)}…` : text}"`
+      }, FOCUS_TEXT_MAX),
     /** Text of every button cut off: content wider than the button, or the button past the viewport's edge. */
     clipped: () =>
       page.evaluate(() =>

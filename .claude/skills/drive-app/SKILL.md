@@ -50,7 +50,7 @@ To assert one is running, list `document.getAnimations().map((a) => a.animationN
 
 ## Focus
 
-Read where focus is with `document.activeElement` in `page.evaluate`, after each step that should move it (open, cancel, confirm). The browser is Chromium, which focuses a button on click; Safari doesn't, so a Safari tap is checked in the component tests, which click without focusing first.
+Log `await app.focused()` after each step that should move focus (open, cancel, confirm). The browser is Chromium, which focuses a button on click; Safari doesn't, so a Safari tap is checked in the component tests, which click without focusing first.
 
 ## Updates
 

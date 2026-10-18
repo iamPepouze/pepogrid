@@ -25,6 +25,7 @@ Skills not in `skills-lock.json` are this repo's own. Re-apply these after updat
 - `retro`: drop `disable-model-invocation`, so a retro asked for in words can run.
 - `code-review`: move the smell baseline into `SMELLS.md`, and give the Standards sub-agent its path instead of the pasted list.
 - `to-spec` and `to-tickets`: place named tests by `CODING_STANDARDS.md`'s test-layout rules.
+- `to-tickets`: an acceptance criterion goes to the ticket whose code exercises it, and a shape a later ticket reads is named in the earlier ticket's "What to build".
 - `pr`: an **On device** bullet in Evidence, from the branch file's `device-check:` line.
 
 ## Workflow
