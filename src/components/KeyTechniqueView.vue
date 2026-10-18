@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ArrowLeft } from '@lucide/vue'
 import { computed, ref } from 'vue'
+import { tabKeyTarget } from '../composables/tabKeys'
 import { lessonFor } from '../lib/lessons'
 import type { NextTechnique } from '../lib/rater'
 import LessonSectionBody from './LessonSectionBody.vue'
@@ -36,9 +37,7 @@ defineExpose({
  * choose one: choosing Hardest can ask for confirmation, so that waits for Enter, Space or a click.
  */
 function onTabKeydown(e: KeyboardEvent) {
-  const i = tabs.value.findIndex((t) => t === document.activeElement)
-  const last = TABS.length - 1
-  const next = { ArrowRight: i === last ? 0 : i + 1, ArrowLeft: i <= 0 ? last : i - 1, Home: 0, End: last }[e.key]
+  const next = tabKeyTarget(e.key, tabs.value.findIndex((t) => t === document.activeElement), TABS.length)
   if (next === undefined) return
   e.preventDefault()
   tabs.value[next]?.focus()

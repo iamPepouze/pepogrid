@@ -160,7 +160,7 @@ describe('key technique lessons', () => {
     for (const lesson of LESSONS) {
       for (const section of lesson.sections) {
         for (const example of section.examples) {
-          const position = positionOf(example)
+          const position = positionOf(example.position)
           const where = `${section.title}, ${example.position}`
           expect(section.techniques, where).toContain(position.technique)
           // Sudoku Explainer's summary opens with the step's own technique, so a position saved from the wrong step fails here.
@@ -198,11 +198,10 @@ describe('next technique', () => {
   const noNotes = () => new Array(81).fill(0)
   const technique = (name: string) => ({ kind: 'technique', technique: name })
 
-  /** A lesson's position, with its candidates as the player's notes: Sudoku Explainer's next step there is `technique`. */
-  function lessonPosition(key: string) {
-    const example = LESSONS.flatMap((l) => l.sections.flatMap((s) => s.examples)).find((e) => e.position === key)!
-    const { technique, puzzle, values, candidates } = positionOf(example)
-    return { technique, puzzle, values, notes: candidates }
+  /** A lesson's position, with its candidates as the player's notes: Sudoku Explainer's next step there is the lesson's technique. */
+  function lessonPosition(key: Parameters<typeof positionOf>[0]) {
+    const { values, candidates } = positionOf(key)
+    return { values, notes: candidates }
   }
 
   it('names a hidden single on a fresh Easy puzzle', async () => {

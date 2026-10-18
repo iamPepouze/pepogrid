@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ArrowLeft } from '@lucide/vue'
 import { computed, nextTick, ref } from 'vue'
+import { tabKeyTarget } from '../composables/tabKeys'
 import { DIFFICULTIES, LABELS, type Difficulty } from '../lib/difficulty'
 import { MAX_RESULTS, capReached, countsOf, formatDuration, statisticsOf, type Counts, type Spread, type StatResult } from '../lib/statistics'
 import { useResultsStore } from '../stores/results'
@@ -79,9 +80,7 @@ const recentFields = (r: StatResult) => [
 
 /** Arrow keys, Home and End move between tabs, as in the WAI-ARIA tabs pattern. */
 async function onTabKeydown(e: KeyboardEvent) {
-  const i = DIFFICULTIES.indexOf(selected.value)
-  const last = DIFFICULTIES.length - 1
-  const next = { ArrowRight: i === last ? 0 : i + 1, ArrowLeft: i === 0 ? last : i - 1, Home: 0, End: last }[e.key]
+  const next = tabKeyTarget(e.key, DIFFICULTIES.indexOf(selected.value), DIFFICULTIES.length)
   if (next === undefined) return
   e.preventDefault()
   selected.value = DIFFICULTIES[next]

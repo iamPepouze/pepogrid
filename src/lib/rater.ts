@@ -1,7 +1,8 @@
 /**
- * Puzzle rater emulating two reference tools, used to grade live-generated
- * puzzles (Easy to Hard). Expert and Master come from a bank rated by the real
- * tools (scripts/bank), so this rater only needs to cover the easier range:
+ * Puzzle rater emulating two reference tools. The bank scripts use it to
+ * pre-filter candidate puzzles before the real tools rate them (scripts/bank),
+ * and the app uses its SE techniques to find the player's next technique
+ * (`nextTechnique`). Both only need the easier range:
  *
  * - SE: Sudoku Explainer 1.2.1. At each step the first hint found, trying
  *   techniques in SE's fixed order, is applied; the rating is the highest step

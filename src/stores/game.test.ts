@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createApp, nextTick, toRaw } from 'vue'
-import { LESSONS, positionOf } from '../lib/lessons'
+import { positionOf } from '../lib/lessons'
 import { PEERS, ROWS, bit, digitsOf, rowOf, unitsOf } from '../lib/sudoku'
 import { useGameStore } from './game'
 import { useResultsStore } from './results'
@@ -16,6 +16,19 @@ function solve(game: Game) {
   game.puzzle.forEach((v, i) => {
     if (!v) place(game, [i], game.solution[i])
   })
+}
+
+/** Stands in for localStorage, which these Node tests lack. */
+const storage = new Map<string, string>()
+const storageLike = { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => void storage.set(key, value) }
+
+/** A fresh app start: a new Pinia that saves and loads the game as main.ts does, from `storage`. */
+function reload() {
+  const pinia = createPinia().use(createPersistedState({ key: (id) => `pepogrid.${id}`, storage: storageLike }))
+  // Pinia only applies plugins once it is installed in an app.
+  createApp({}).use(pinia)
+  setActivePinia(pinia)
+  return useGameStore()
 }
 
 describe('game store results', () => {
@@ -152,19 +165,6 @@ describe('key technique', () => {
   })
 
   describe('across a reload', () => {
-    /** Stands in for localStorage, which these Node tests lack. */
-    const storage = new Map<string, string>()
-    const storageLike = { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => void storage.set(key, value) }
-
-    /** A fresh app start: a new Pinia that saves and loads the game as main.ts does. */
-    function reload() {
-      const pinia = createPinia().use(createPersistedState({ key: (id) => `pepogrid.${id}`, storage: storageLike }))
-      // Pinia only applies plugins once it is installed in an app.
-      createApp({}).use(pinia)
-      setActivePinia(pinia)
-      return useGameStore()
-    }
-
     beforeEach(() => storage.clear())
 
     it('keeps the reveal', async () => {
@@ -221,8 +221,7 @@ describe('next step', () => {
     const game = useGameStore()
     await game.newGame('easy')
     // The Naked Pair lesson's position: without its notes, Pointing would come first.
-    const example = LESSONS.flatMap((l) => l.sections.flatMap((s) => s.examples)).find((e) => e.position === 'naked-pair')!
-    const { values, candidates } = positionOf(example)
+    const { values, candidates } = positionOf('naked-pair')
     game.$patch({ values, notes: candidates })
     expect(game.showNextStep()).toEqual({ kind: 'technique', technique: 'Naked Pair' })
   })
@@ -242,17 +241,6 @@ describe('next step', () => {
   })
 
   describe('across a reload', () => {
-    /** Stands in for localStorage, which these Node tests lack. */
-    const storage = new Map<string, string>()
-    const storageLike = { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => void storage.set(key, value) }
-
-    function reload() {
-      const pinia = createPinia().use(createPersistedState({ key: (id) => `pepogrid.${id}`, storage: storageLike }))
-      createApp({}).use(pinia)
-      setActivePinia(pinia)
-      return useGameStore()
-    }
-
     beforeEach(() => storage.clear())
 
     it('keeps the count', async () => {

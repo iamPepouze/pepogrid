@@ -1628,9 +1628,9 @@ export function lessonFor(technique: string): { lesson: Lesson; section: LessonS
   return lesson && section ? { lesson, section } : null
 }
 
-/** An example's position as grids: digits (0 for empty) and candidate masks. */
-export function positionOf(example: LessonExample) {
-  const p = positions[example.position] as LessonPosition
+/** A lesson position as grids, by its key in src/data/lesson-positions.json: digits (0 for empty) and candidate masks. */
+export function positionOf(key: LessonExample['position']) {
+  const p = positions[key] as LessonPosition
   return {
     technique: p.technique,
     summary: p.summary,
@@ -1661,7 +1661,7 @@ export interface LessonCell {
  * marked, struck or placed. A cell this step fills keeps its candidates, so its marks still check against them.
  */
 export function gridAt(example: LessonExample, index: number): LessonCell[] {
-  const { values, candidates } = positionOf(example)
+  const { values, candidates } = positionOf(example.position)
   for (const step of example.steps.slice(0, index)) {
     for (const [i, d] of step.eliminations ?? []) candidates[i] &= ~bit(d)
     if (step.placement) {

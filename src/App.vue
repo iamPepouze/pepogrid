@@ -48,21 +48,18 @@ const keyTechniqueTab = ref<KeyTechniqueTab>('next')
 const nextStep = ref<NextTechnique | null>(null)
 
 /**
- * Opens the key technique on Next step, asking first the first time in a game, since each look is
- * noted on the result.
+ * Asks before a look that the result notes, when `first` says it's the game's first; resolves whether
+ * the player goes ahead. The dialog is gone by then, so the caller can move focus.
  */
+async function confirmFirstLook(first: boolean, title: string, message: string, confirmLabel: string) {
+  return !first || ask({ title, message: `${message} It will be noted on this game’s result.`, confirmLabel, cancelLabel: 'Cancel' })
+}
+
+/** Opens the key technique on Next step, asking first the first time in a game. */
 async function openKeyTechnique(trigger: HTMLButtonElement) {
-  if (!game.nextStepsShown) {
-    const confirmed = await ask({
-      title: 'See your next step?',
-      message: 'You’ll see which technique your next step needs. It will be noted on this game’s result.',
-      confirmLabel: 'Show',
-      cancelLabel: 'Cancel',
-    })
-    if (!confirmed) {
-      trigger.focus()
-      return
-    }
+  if (!(await confirmFirstLook(!game.nextStepsShown, 'See your next step?', 'You’ll see which technique your next step needs.', 'Show'))) {
+    trigger.focus()
+    return
   }
   nextStep.value = game.showNextStep()
   keyTechniqueTab.value = 'next'
@@ -72,26 +69,13 @@ async function openKeyTechnique(trigger: HTMLButtonElement) {
   keyTechniqueView.value?.focusBack()
 }
 
-/**
- * Shows a tab. Hardest asks first the first time in a game, since revealing the hardest technique is
- * noted on the result; focus returns to the tab once the dialog closes.
- */
+/** Shows a tab. Hardest asks first the first time in a game; focus returns to the tab once the dialog closes. */
 async function selectKeyTechniqueTab(tab: KeyTechniqueTab) {
-  if (tab === 'hardest' && !game.keyTechniqueRevealed) {
-    const confirmed = await ask({
-      title: 'Reveal the key technique?',
-      message: 'You’ll see which technique this puzzle hinges on. It will be noted on this game’s result.',
-      confirmLabel: 'Reveal',
-      cancelLabel: 'Cancel',
-    })
-    if (confirmed) {
-      game.revealKeyTechnique()
-      keyTechniqueTab.value = tab
-    }
-    await nextTick()
-    keyTechniqueView.value?.focusTab(tab)
-    return
-  }
+  const first = tab === 'hardest' && !game.keyTechniqueRevealed
+  const confirmed = await confirmFirstLook(first, 'Reveal the key technique?', 'You’ll see which technique this puzzle hinges on.', 'Reveal')
+  if (first) keyTechniqueView.value?.focusTab(tab)
+  if (!confirmed) return
+  if (tab === 'hardest') game.revealKeyTechnique()
   keyTechniqueTab.value = tab
 }
 
