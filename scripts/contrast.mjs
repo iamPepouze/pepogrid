@@ -2,7 +2,7 @@
 // in both themes, for the pairs of colours the app draws on each other that PAIRS lists.
 // A pair that already fails is allowed with the issue that tracks it, so CI stays green until the
 // fix lands; an allowed pair that passes fails the check, so its entry gets removed. A failing pair
-// that no new colour for either token can fix is listed as stuck, without failing the check.
+// that no new colour for either token can fix is also listed as stuck; listing it adds no failure of its own.
 // Usage: node scripts/contrast.mjs
 import { readFileSync } from 'node:fs'
 
@@ -94,23 +94,6 @@ function ratio(a, b) {
   return (hi + 0.05) / (lo + 0.05)
 }
 
-const problems = []
-const allowed = []
-for (const [fg, bg, min, what] of PAIRS) {
-  const issue = ALLOWED[`${fg} on ${bg} at ${min}`]
-  const results = Object.entries(THEMES).map(([theme, t]) => {
-    if (!t[fg] || !t[bg]) throw new Error(`${theme} theme has no ${t[fg] ? bg : fg}`)
-    return { theme, value: ratio(t[fg], t[bg]) }
-  })
-  const failing = results.filter((r) => r.value < min)
-  // Rounded down, so 4.498 never shows as a passing 4.50.
-  const shown = results.map((r) => `${r.theme} ${(Math.floor(r.value * 100) / 100).toFixed(2)}`).join(', ')
-  const line = `${fg} on ${bg} (${what}): ${shown}, needs ${min}:1`
-  if (failing.length && issue) allowed.push(`${line}, allowed by ${issue}`)
-  else if (failing.length) problems.push(line)
-  else if (issue) problems.push(`${line}: passes now, so remove its ${issue} allowance`)
-}
-
 /**
  * Whether some colour for `token` passes every pair it is in, in theme `t`, with the other tokens as
  * they are. Each pair allows a luminance at or below one bound or at or above another; the windows
@@ -131,11 +114,25 @@ function fits(token, t) {
   return windows.length > 0
 }
 
-// A failing pair that neither of its tokens can fix needs a design call, not a new value.
+const problems = []
+const allowed = []
+// Failing pairs that neither of their tokens can fix: they need a design call, not a new value.
 const stuck = []
 for (const [fg, bg, min, what] of PAIRS) {
-  for (const [theme, t] of Object.entries(THEMES)) {
-    if (ratio(t[fg], t[bg]) < min && !fits(fg, t) && !fits(bg, t)) stuck.push(`${fg} on ${bg} (${what}) in ${theme}`)
+  const issue = ALLOWED[`${fg} on ${bg} at ${min}`]
+  const results = Object.entries(THEMES).map(([theme, t]) => {
+    if (!t[fg] || !t[bg]) throw new Error(`${theme} theme has no ${t[fg] ? bg : fg}`)
+    return { theme, value: ratio(t[fg], t[bg]) }
+  })
+  const failing = results.filter((r) => r.value < min)
+  // Rounded down, so 4.498 never shows as a passing 4.50.
+  const shown = results.map((r) => `${r.theme} ${(Math.floor(r.value * 100) / 100).toFixed(2)}`).join(', ')
+  const line = `${fg} on ${bg} (${what}): ${shown}, needs ${min}:1`
+  if (failing.length && issue) allowed.push(`${line}, allowed by ${issue}`)
+  else if (failing.length) problems.push(line)
+  else if (issue) problems.push(`${line}: passes now, so remove its ${issue} allowance`)
+  for (const { theme } of failing) {
+    if (!fits(fg, THEMES[theme]) && !fits(bg, THEMES[theme])) stuck.push(`${fg} on ${bg} (${what}) in ${theme}`)
   }
 }
 
@@ -144,5 +141,7 @@ for (const line of stuck) {
   console.log(`stuck: ${line}: no colour for either token passes all its pairs, so split a token or show it by more than colour`)
 }
 for (const line of problems) console.error(`FAIL: ${line}`)
-console.log(`${PAIRS.length} pairs checked in both themes: ${problems.length} failing, ${allowed.length} known.`)
+console.log(
+  `${PAIRS.length} pairs checked in both themes: ${problems.length} failing, ${allowed.length} known, ${stuck.length} stuck.`,
+)
 process.exitCode = problems.length ? 1 : 0

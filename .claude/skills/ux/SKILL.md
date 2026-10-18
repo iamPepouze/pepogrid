@@ -12,7 +12,7 @@ The owner is new to UX and learns it from you, so every question and finding car
 - one plain-words sentence on **why it matters to players**;
 - the **evidence**: the quoted hunk, the screenshot's path, or the line of the idea.
 
-Each claim about the app's current behaviour, each item of a list of cases included, is checked in the code before it is written, and each fact about players or a standard comes from a source you can name. This holds in every mode, and most of all for text published to an issue.
+Each claim about the app's current behaviour, including every item in a list of cases, is checked in the code before it is written, and each fact about players or a standard comes from a source you can name. This holds in every mode, and most of all for text published to an issue.
 
 > **U18 Target size, WCAG 2.5.8 (hard).** The new *Hint* button is 20×20px at 320px wide (`hint.png`). Players with shaky hands or big thumbs will hit its neighbours instead.
 
@@ -59,7 +59,7 @@ The whole app, once, plus the open issues.
    - every dialog: new game, reset statistics, each key technique tab's first opening;
    - Statistics, with no games and with games stored (drive-app's `result()`);
    - the key technique: both tabs, stepping through a lesson, a collapsed section opened.
-2. File each gap as its own GitHub issue, labelled `needs-triage`, through the [issue tracker](../../../docs/agents/issue-tracker.md). Group findings with one rule and one cause into one issue, and findings whose fix changes the same token too. A `stuck` pair from `npm run contrast` says its issue needs a design call. Search the open issues first, so none is filed twice. The body gives the finding as above and the screens where it shows.
+2. File each gap as its own GitHub issue, labelled `needs-triage`, through the [issue tracker](../../../docs/agents/issue-tracker.md). Group findings with one rule and one cause into one issue. Findings whose fixes change the same token go in one issue too, or, when one would be too broad, in issues that name each other as blockers. A `stuck` pair from `npm run contrast` says its issue needs a design call. Search the open issues first, so none is filed twice. The body gives the finding as above and the screens where it shows.
 3. Read every open spec and ticket. Each one that changes what players see gets a `## UX decisions` section added to its body, in the shape of the [to-spec](../to-spec/SKILL.md) template's section. Draft it from the rules and the issue, ask the owner wherever there's a real choice (as in **Idea**), and keep the rest of the body unchanged. Link a gap you filed in step 2 instead of repeating it.
 
 Done when every screen above has been checked against every rule or listed as unchecked in the report, every gap is an issue, and every open issue has been updated or judged not to change what players see.
