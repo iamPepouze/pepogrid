@@ -43,7 +43,8 @@ const solvedFigures = computed((): Figure[] => [
   { label: 'Average time', value: shown(stats.value.averageTime, formatDuration) },
   { label: 'Average mistakes', value: shown(stats.value.averageMistakes, tenths) },
   { label: 'Flawless', value: shown(stats.value.flawless, String) },
-  { label: 'Revealed', value: shown(stats.value.revealed, String) },
+  { label: 'Key technique revealed', value: shown(stats.value.revealed, String) },
+  { label: 'Next step used', value: shown(stats.value.nextStepUsed, String) },
 ])
 
 const streakFigures = computed((): Figure[] => [
@@ -152,7 +153,8 @@ async function onTabKeydown(e: KeyboardEvent) {
               <dt>{{ f.family }}</dt>
               <dd>
                 <span class="stat-value">{{ f.solved }}/{{ f.played }}</span>
-                <span v-if="f.revealed" class="muted-note">· {{ f.revealed }} revealed</span>
+                <span v-if="f.revealed" class="muted-note">· {{ f.revealed }} key technique revealed</span>
+                <span v-if="f.nextStepUsed" class="muted-note">· {{ f.nextStepUsed }} next step used</span>
               </dd>
             </div>
           </dl>
@@ -216,12 +218,14 @@ async function onTabKeydown(e: KeyboardEvent) {
 
 .list dd {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: baseline;
-  gap: 8px;
+  gap: 0 8px;
   margin: 0;
 }
 
-/* A muted note beside a value: a rating's range, a family's revealed solves. */
+/* A muted note beside a value: a rating's range, a family's aided solves. On narrow phones a family's notes wrap under its value. */
 .muted-note {
   color: var(--muted);
   font-size: 0.85rem;
