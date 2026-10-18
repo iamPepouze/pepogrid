@@ -2,7 +2,8 @@
 // dev server the drive-app skill starts, with a game loaded and ready to play. For service worker
 // checks, `preview()`, `deploy()` and `resume()` serve a build and stand in for a deploy.
 import { spawn } from 'node:child_process'
-import { appendFileSync } from 'node:fs'
+import { appendFileSync, readFileSync } from 'node:fs'
+import { basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
 
@@ -37,6 +38,28 @@ export function result(fields = {}) {
 
 /** The saved game (`pepogrid.game`, see src/stores/game.ts), or null before one exists. */
 const readSave = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('pepogrid.game') ?? 'null'))
+
+/**
+ * Fills `grid` (81 numbers, 0 for empty) by backtracking; returns it, or null when it has no solution.
+ * A solver of its own, since Node can't import src/lib's `solve`: sudoku.ts imports `./grid` with no file extension.
+ */
+function solve(grid) {
+  const i = grid.indexOf(0)
+  if (i < 0) return grid
+  const r = Math.floor(i / 9), c = i % 9
+  for (let d = 1; d <= 9; d++) {
+    let free = true
+    for (let k = 0; k < 9 && free; k++) {
+      const boxCell = (3 * Math.floor(r / 3) + Math.floor(k / 3)) * 9 + 3 * Math.floor(c / 3) + (k % 3)
+      free = grid[r * 9 + k] !== d && grid[k * 9 + c] !== d && grid[boxCell] !== d
+    }
+    if (!free) continue
+    grid[i] = d
+    if (solve(grid)) return grid
+    grid[i] = 0
+  }
+  return null
+}
 
 /**
  * `touch` emulates a phone (no hover, coarse pointer), which gets the touch layout; without it the
@@ -82,6 +105,27 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
     errors,
     /** The saved game: puzzle, solution, values, notes, mistakes… as 81-cell arrays. */
     save: () => readSave(page),
+    /**
+     * Makes lesson position `name` (a key of src/data/lesson-positions.json, such as `naked-pair` or
+     * `unique-rectangle-1`) the game in progress, with its digits and notes, and reloads. It reaches
+     * states a fresh puzzle rarely shows: a given next technique, "beyond XY-Wing" (`unique-rectangle-1`),
+     * a lesson with collapsed sections. The hardest technique stays the dealt puzzle's.
+     */
+    position: async (name) => {
+      const p = JSON.parse(readFileSync(`${root}src/data/lesson-positions.json`, 'utf8'))[name]
+      if (!p) throw new Error(`no lesson position "${name}"`)
+      const values = [...p.values].map(Number)
+      const game = {
+        puzzle: [...p.puzzle].map(Number), values, solution: solve(values.slice()),
+        notes: p.candidates.map((c) => [...c].reduce((mask, d) => mask | (1 << Number(d)), 0)),
+      }
+      await page.evaluate((fields) => {
+        const g = JSON.parse(localStorage.getItem('pepogrid.game'))
+        localStorage.setItem('pepogrid.game', JSON.stringify({ ...g, ...fields, history: [], completed: false, selected: null }))
+      }, game)
+      await page.reload()
+      await ready()
+    },
     /** Board cell `i`, row-major from 0. */
     cell: (i) => page.locator('.cell').nth(i),
     /** Number pad button for digit `d` (1-9). */
@@ -114,6 +158,33 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
       await browser.close()
     },
   }
+}
+
+/** Width of one screenshot in a sheet. */
+const SHEET_COLUMN_PX = 600
+/** Space between a sheet's screenshots, and around them. */
+const SHEET_GAP_PX = 16
+
+/**
+ * Tiles screenshots of one viewport width into one labelled image at `out`, so one Read shows a state
+ * in several themes or steps. Prints the sheet's path, which the skill's Look step then opens.
+ * @param {string[]} paths
+ * @param {string} out
+ * @param {number} columns screenshots to a row
+ */
+export async function sheet(paths, out, columns = 2) {
+  const tiles = paths
+    .map((p) => `<figure><figcaption>${basename(p)}</figcaption><img src="data:image/png;base64,${readFileSync(p).toString('base64')}"></figure>`)
+    .join('')
+  const browser = await chromium.launch({ channel: 'msedge' })
+  const page = await browser.newPage({ viewport: { width: columns * (SHEET_COLUMN_PX + SHEET_GAP_PX) + SHEET_GAP_PX, height: 600 } })
+  await page.setContent(`<style>
+    body { display: grid; grid-template-columns: repeat(${columns}, ${SHEET_COLUMN_PX}px); gap: ${SHEET_GAP_PX}px; align-items: start; margin: ${SHEET_GAP_PX}px; font: 14px system-ui; }
+    figure { margin: 0; } img { width: 100%; border: 1px solid #999; }
+  </style>${tiles}`)
+  await page.screenshot({ path: out, fullPage: true })
+  await browser.close()
+  console.log(`Sheet to look at:\n  ${out}`)
 }
 
 /**

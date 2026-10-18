@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "typecheck": "vue-tsc -b",
     "test": "vitest run",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "contrast": "node scripts/contrast.mjs"
   },
   "dependencies": {
     "@lucide/vue": "^1.56.0",

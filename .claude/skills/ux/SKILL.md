@@ -12,6 +12,8 @@ The owner is new to UX and learns it from you, so every question and finding car
 - one plain-words sentence on **why it matters to players**;
 - the **evidence**: the quoted hunk, the screenshot's path, or the line of the idea.
 
+Each claim about the app's current behaviour is checked in the code before it is written, and each fact about players or a standard comes from a source you can name. This holds in every mode, and most of all for text published to an issue.
+
 > **U18 Target size, WCAG 2.5.8 (hard).** The new *Hint* button is 20×20px at 320px wide (`hint.png`). Players with shaky hands or big thumbs will hit its neighbours instead.
 
 Pick the mode from what you were asked.
@@ -20,7 +22,7 @@ Pick the mode from what you were asked.
 
 A feature idea, or grilling a change players see.
 
-1. Read the code around what the idea touches, so each claim about the app's current behaviour is checked, not assumed.
+1. Read the code around what the idea touches.
 2. Walk the idea through every rule group. Each player-facing choice the idea leaves open becomes a question with a recommended answer: the states it has (U1's list), its feedback, its undo, its wording, its keyboard and touch paths, and how it fits at 320px wide. A choice a rule settles is stated, not asked.
 3. Ask the questions as CLAUDE.md's **Grilling** rule says. While grilling, they join the grilling's own rounds.
 
@@ -30,11 +32,11 @@ Done when every rule group has produced a question, settled a choice by a cited 
 
 An existing screen or state.
 
-1. Screenshot it with the [drive-app](../drive-app/SKILL.md) skill, at its three sizes and in dark mode, in every state the screen has.
-2. Check every rule against the screenshots, and compute contrast from the theme tokens as UX_STANDARDS.md's **Checking** says.
-3. Report the findings, hard ones first.
+1. Screenshot it with the [drive-app](../drive-app/SKILL.md) skill, at its three sizes and in dark mode, in every state the screen has. Tile each state's same-width screenshots with drive-app's `sheet()`, so each state takes fewer Reads.
+2. Check every rule against the screenshots, and check contrast as UX_STANDARDS.md's **Checking** says.
+3. Report the findings, hard ones first. List any state you couldn't reach as unchecked.
 
-Done when every screenshot has been opened and every rule has been checked against it.
+Done when every screenshot has been opened, every rule has been checked against it, and every state you couldn't reach is listed as unchecked.
 
 ## Review
 
@@ -53,11 +55,11 @@ The whole app, once, plus the open issues.
 
 1. Screenshot and check, as in **Screen**, each of these:
    - the game: board, number pad, controls, status bar, the solved banner;
-   - the header: difficulty menu, settings menu, *Install* and *Update*;
+   - the header: difficulty menu, settings menu, *Install* and *Update* (*Update* shows only on a build: drive-app's **Updates** section);
    - every dialog: new game, reset statistics, each key technique tab's first opening;
    - Statistics, with no games and with games stored (drive-app's `result()`);
    - the key technique: both tabs, stepping through a lesson, a collapsed section opened.
 2. File each gap as its own GitHub issue, labelled `needs-triage`, through the [issue tracker](../../../docs/agents/issue-tracker.md). Group findings with one rule and one cause into one issue. Search the open issues first, so none is filed twice. The body gives the finding as above and the screens where it shows.
-3. Read every open spec and ticket. Each one that changes what players see gets a `## UX decisions` section added to its body, in the shape of the [to-spec](../to-spec/SKILL.md) template's section. Draft it from the rules and the issue, check each claim about the app's current behaviour in the code (as in **Idea**), ask the owner wherever there's a real choice (as in **Idea**), and keep the rest of the body unchanged. Link a gap you filed in step 2 instead of repeating it.
+3. Read every open spec and ticket. Each one that changes what players see gets a `## UX decisions` section added to its body, in the shape of the [to-spec](../to-spec/SKILL.md) template's section. Draft it from the rules and the issue, ask the owner wherever there's a real choice (as in **Idea**), and keep the rest of the body unchanged. Link a gap you filed in step 2 instead of repeating it.
 
-Done when every screen above has been checked against every rule, every gap is an issue, and every open issue has been updated or judged not to change what players see.
+Done when every screen above has been checked against every rule or listed as unchecked in the report, every gap is an issue, and every open issue has been updated or judged not to change what players see.
