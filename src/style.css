@@ -19,6 +19,7 @@
   --text: #1a1a1a;
   --muted: #5f6368;
   --accent: #1565c0;
+  --accent-text: #1565c0;
   --on-accent: #ffffff;
   --button-bg: #ffffff;
   --button-border: #d0d5dd;
@@ -53,6 +54,7 @@
     --text: #e6e6e6;
     --muted: #9aa0a6;
     --accent: #1976d2;
+    --accent-text: #64b5f6;
     --on-accent: #ffffff;
     --button-bg: #1e1e1e;
     --button-border: #3a3a3a;
@@ -78,6 +80,7 @@
   --text: #e6e6e6;
   --muted: #9aa0a6;
   --accent: #1976d2;
+  --accent-text: #64b5f6;
   --on-accent: #ffffff;
   --button-bg: #1e1e1e;
   --button-border: #3a3a3a;
