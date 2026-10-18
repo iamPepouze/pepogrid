@@ -1,16 +1,16 @@
 ---
 name: code-review
 model: opus
-description: "Review the changes since a fixed point (commit, branch, tag, or merge-base) along three axes: Standards (does the code follow this repo's documented coding standards?), Spec (does the code match what the originating issue/spec asked for?) and UX (is the change good for players, by UX_STANDARDS.md?). Runs the reviews in parallel sub-agents and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to \"review since X\"."
+description: "Review the changes since a fixed point (commit, branch, tag, or merge-base) along up to three axes: Standards (does the code follow this repo's documented coding standards?), Spec (does the code match what the originating issue/spec asked for?) and UX (is the change good for players, by UX_STANDARDS.md?). Runs the reviews the diff needs in parallel sub-agents, reports them side by side and recommends what to fix. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to \"review since X\"."
 ---
 
-Three-axis review of the diff between `HEAD` and a fixed point the user supplies:
+Review of the diff, on up to three axes, between `HEAD` and a fixed point the user supplies:
 
 - **Standards**: does the code conform to this repo's documented coding standards?
 - **Spec**: does the code faithfully implement the originating issue / spec?
 - **UX**: is the change good for players, judged against [UX_STANDARDS.md](../../../UX_STANDARDS.md)?
 
-All three axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings.
+The axes the diff needs run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings. An axis the diff doesn't need is skipped, to save cost.
 
 The issue tracker should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
 
@@ -22,7 +22,7 @@ Whatever the user said is the fixed point (a commit SHA, branch name, tag, `main
 
 Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so the comparison is against the merge-base). Also note the list of commits via `git log <fixed-point>..HEAD --oneline`.
 
-Before going further, confirm the fixed point resolves (`git rev-parse <fixed-point>`) and the diff is non-empty. A bad ref or empty diff should fail here, not inside three parallel sub-agents.
+Before going further, confirm the fixed point resolves (`git rev-parse <fixed-point>`) and the diff is non-empty. A bad ref or empty diff should fail here, not inside the parallel sub-agents.
 
 ### 2. Identify the spec source
 
@@ -41,9 +41,9 @@ On top of whatever the repo documents, the Standards axis always carries the **s
 
 ### 4. Spawn the sub-agents in parallel
 
-Issue the sub-agent calls together, in the foreground, and aggregate the reports they return.
+Run only the axes the diff needs: Standards always; Spec unless there is no spec; UX per its rule below. Issue those sub-agent calls together, in the foreground, and aggregate the reports they return.
 
-**Standards sub-agent prompt** should include:
+**Standards sub-agent** runs with `model: sonnet`; Spec and UX run on this skill's model. Its prompt should include:
 
 - The full diff command and commit list.
 - The list of standards-source files you found in step 3, **plus the absolute path of [SMELLS.md](SMELLS.md)** for the sub-agent to read.
@@ -64,13 +64,25 @@ If the spec is missing, skip the Spec sub-agent and note this in the final repor
 - The absolute paths of [UX_STANDARDS.md](../../../UX_STANDARDS.md) and of the [ux](../ux/SKILL.md) skill.
 - The brief: "Follow the ux skill's **Review** mode."
 
-It runs on every review: when nothing players see changed, it reports so.
+It runs when the diff touches what players see: `src/` (except tests), `index.html`, `public/` or `icons/`. Add it for any other change players would notice (wording in `GLOSSARY.md`, say); never drop it when those paths changed. Otherwise skip it.
 
 ### 5. Aggregate
 
-Present the three reports under `## Standards`, `## Spec` and `## UX` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings, because the axes are deliberately separate (see _Why separate axes_).
+Before reporting, re-check each hard-violation finding from the Standards sub-agent against the standard it cites, in the diff itself. Drop one that doesn't hold, and say how many you dropped. Judgement calls and smells aren't re-checked.
+
+Present the reports of the axes that ran under `## Standards`, `## Spec` and `## UX` headings, verbatim or lightly cleaned, and name each skipped axis with its reason. Do **not** merge or rerank findings, because the axes are deliberately separate (see _Why separate axes_).
 
 End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes: that's the reranking the separation exists to prevent.
+
+### 6. Recommend
+
+Always end with `## Recommendation`: for each finding, **fix** or **skip** with a one-line reason, then one verdict:
+
+- **Land as is**: nothing worth fixing. A normal outcome.
+- **Fix these, no re-review needed**: the fixes are wording, renames or small local edits.
+- **Fix these, then re-review**: a fix changes behaviour or adds code beyond the flagged lines.
+
+The recommendation is advice across axes; the reports above stay unranked.
 
 ## Why separate axes
 
