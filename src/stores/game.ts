@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { pickFromBank } from '../lib/bank'
 import { DIFFICULTIES, HODOKU_LEVELS, type Difficulty, type Rating } from '../lib/difficulty'
+import { nextTechnique, type NextTechnique } from '../lib/rater'
 import { PEERS, UNITS, bit, candidatesAt, colOf, rowOf, unitsOf } from '../lib/sudoku'
 import { gridToString, useResultsStore, type Outcome } from './results'
 
@@ -68,6 +69,8 @@ export const useGameStore = defineStore(
     const notesMode = ref(false)
     /** True once the player has revealed this game's key technique; the result records it. */
     const keyTechniqueRevealed = ref(false)
+    /** How many times the player opened this game's next step; the result records it. */
+    const nextStepsShown = ref(0)
     /** SE and HoDoKu ratings of the puzzle (from the bank). */
     const rating = ref<Rating | null>(null)
     /** Bank indexes already played per tier, to avoid repeats. */
@@ -147,6 +150,7 @@ export const useGameStore = defineStore(
         hodokuLevel: rating.value!.hodokuLevel,
         hardest: rating.value!.hardest,
         keyTechniqueRevealed: keyTechniqueRevealed.value,
+        nextStepsShown: nextStepsShown.value,
       })
     }
 
@@ -183,6 +187,7 @@ export const useGameStore = defineStore(
       selected.value = null
       notesMode.value = false
       keyTechniqueRevealed.value = false
+      nextStepsShown.value = 0
       newlyComplete.value = null
     }
 
@@ -293,6 +298,12 @@ export const useGameStore = defineStore(
       keyTechniqueRevealed.value = true
     }
 
+    /** Finds the next technique from the player's digits and notes, and counts the look on the result. */
+    function showNextStep(): NextTechnique {
+      nextStepsShown.value++
+      return nextTechnique(values.value, notes.value)
+    }
+
     function tick() {
       if (!completed.value) elapsed.value++
     }
@@ -306,6 +317,7 @@ export const useGameStore = defineStore(
         Number.isInteger(elapsed.value) &&
         typeof completed.value === 'boolean' &&
         typeof keyTechniqueRevealed.value === 'boolean' &&
+        Number.isInteger(nextStepsShown.value) &&
         Array.isArray(history.value) &&
         isRating(rating.value) &&
         (selected.value === null || (Number.isInteger(selected.value) && selected.value >= 0 && selected.value < 81))
@@ -326,6 +338,7 @@ export const useGameStore = defineStore(
       selected,
       notesMode,
       keyTechniqueRevealed,
+      nextStepsShown,
       rating,
       bankUsed,
       familyPlayed,
@@ -349,6 +362,7 @@ export const useGameStore = defineStore(
       undo,
       toggleNotesMode,
       revealKeyTechnique,
+      showNextStep,
       tick,
       isValid,
     }

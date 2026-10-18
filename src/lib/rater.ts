@@ -17,6 +17,7 @@
  */
 import type { HodokuLevel } from './difficulty'
 import {
+  ALL_DIGITS,
   BOXES,
   COLS,
   PEERS,
@@ -34,9 +35,10 @@ class Board {
   readonly cand: number[]
   empties: number
 
-  constructor(puzzle: readonly number[]) {
+  /** With `candidates`, starts from those masks instead of every digit the placed ones allow. */
+  constructor(puzzle: readonly number[], candidates?: readonly number[]) {
     this.values = puzzle.slice()
-    this.cand = this.values.map((v, i) => (v ? 0 : candidatesAt(this.values, i)))
+    this.cand = candidates ? candidates.slice() : this.values.map((v, i) => (v ? 0 : candidatesAt(this.values, i)))
     this.empties = this.values.filter((v) => !v).length
   }
 
@@ -343,6 +345,24 @@ export function rateSE(puzzle: readonly number[], limit = Infinity): SeResult {
     }
   }
   return { se, hardest }
+}
+
+/** The easiest technique that makes progress from a position, by its SE name, or `beyond` when SE would need more than XY-Wing. */
+export type NextTechnique = { kind: 'technique'; technique: string } | { kind: 'beyond' }
+
+/**
+ * The next technique from the player's digits and notes: the first of SE's techniques, in its
+ * order, that places a digit or removes a candidate. A cell with notes holds those notes that
+ * its peers allow; a cell without notes holds every digit its peers allow.
+ */
+export function nextTechnique(values: readonly number[], notes: readonly number[]): NextTechnique {
+  const candidates = values.map((v, i) => (v ? 0 : candidatesAt(values, i) & (notes[i] || ALL_DIGITS)))
+  const b = new Board(values, candidates)
+  for (const technique of SE_TECHNIQUES) {
+    const step = technique(b)
+    if (step) return { kind: 'technique', technique: step.name }
+  }
+  return { kind: 'beyond' }
 }
 
 /* ------------------------------------------------------------------ */

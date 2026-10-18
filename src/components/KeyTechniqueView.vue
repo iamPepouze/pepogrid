@@ -2,20 +2,56 @@
 import { ArrowLeft } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { lessonFor } from '../lib/lessons'
+import type { NextTechnique } from '../lib/rater'
 import LessonSectionBody from './LessonSectionBody.vue'
 
-const props = defineProps<{ technique: string }>()
-const emit = defineEmits<{ back: [] }>()
+export type KeyTechniqueTab = 'next' | 'hardest'
+
+const props = defineProps<{
+  /** The tab shown; its parent chooses it, since Hardest may need confirming first. */
+  tab: KeyTechniqueTab
+  nextStep: NextTechnique
+  /** The puzzle's hardest technique, by its SE name. */
+  hardest: string
+}>()
+const emit = defineEmits<{ back: []; select: [tab: KeyTechniqueTab] }>()
+
+const TABS: { id: KeyTechniqueTab; label: string }[] = [
+  { id: 'next', label: 'Next step' },
+  { id: 'hardest', label: 'Hardest' },
+]
 
 const backButton = ref<HTMLButtonElement | null>(null)
+const tabs = ref<HTMLButtonElement[]>([])
 
 defineExpose({
   /** Focuses Back: the Technique button that opened the view is hidden behind it. */
   focusBack: () => backButton.value?.focus(),
+  /** Focuses a tab, for when a confirmation that the tab asked for closes. */
+  focusTab: (tab: KeyTechniqueTab) => tabs.value[TABS.findIndex((t) => t.id === tab)]?.focus(),
+})
+
+/**
+ * Arrow keys, Home and End move focus between the tabs, as in the WAI-ARIA tabs pattern, but don't
+ * choose one: choosing Hardest can ask for confirmation, so that waits for Enter, Space or a click.
+ */
+function onTabKeydown(e: KeyboardEvent) {
+  const i = tabs.value.findIndex((t) => t === document.activeElement)
+  const last = TABS.length - 1
+  const next = { ArrowRight: i === last ? 0 : i + 1, ArrowLeft: i <= 0 ? last : i - 1, Home: 0, End: last }[e.key]
+  if (next === undefined) return
+  e.preventDefault()
+  tabs.value[next]?.focus()
+}
+
+/** The technique the shown tab names, or null when the next step is beyond XY-Wing. */
+const technique = computed(() => {
+  if (props.tab === 'hardest') return props.hardest
+  return props.nextStep.kind === 'technique' ? props.nextStep.technique : null
 })
 
 /** The lesson and section teaching the technique, or null while it has none. */
-const found = computed(() => lessonFor(props.technique))
+const found = computed(() => (technique.value ? lessonFor(technique.value) : null))
 
 /** The family's other sections, in the lesson's order, kept reachable below the one that opens. */
 const others = computed(() => found.value?.lesson.sections.filter((s) => s !== found.value?.section) ?? [])
@@ -31,26 +67,58 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
       <h2 id="key-technique-title">Key technique</h2>
     </div>
 
-    <div class="card surface">
-      <p class="lead">This puzzle’s hardest technique is</p>
-      <p class="technique">{{ technique }}</p>
-      <p v-if="found" class="note">{{ found.lesson.text }}</p>
-      <p v-else class="note">A lesson on this technique is coming.</p>
+    <div class="tabs" role="tablist" aria-label="Technique" @keydown="onTabKeydown">
+      <button
+        v-for="t in TABS"
+        :id="`key-technique-tab-${t.id}`"
+        :key="t.id"
+        ref="tabs"
+        type="button"
+        role="tab"
+        aria-controls="key-technique-panel"
+        :aria-selected="t.id === tab"
+        :tabindex="t.id === tab ? 0 : -1"
+        @click="emit('select', t.id)"
+      >
+        {{ t.label }}
+      </button>
     </div>
 
-    <section v-if="found" class="card surface section" aria-labelledby="lesson-section-title">
-      <h3 id="lesson-section-title">{{ found.section.title }}</h3>
-      <LessonSectionBody :section="found.section" />
-    </section>
+    <div id="key-technique-panel" class="panel" role="tabpanel" :aria-labelledby="`key-technique-tab-${tab}`">
+      <div v-if="technique === null" class="card surface">
+        <p class="lead">Your next step needs a technique beyond XY-Wing</p>
+      </div>
 
-    <details v-for="other in others" :key="other.title" class="card surface">
-      <summary>{{ other.title }}</summary>
-      <LessonSectionBody :section="other" />
-    </details>
+      <template v-else>
+        <div class="card surface">
+          <p class="lead">{{ tab === 'next' ? 'Your next step needs' : 'This puzzle’s hardest technique is' }}</p>
+          <p class="technique">{{ technique }}</p>
+          <p v-if="found" class="note">{{ found.lesson.text }}</p>
+          <p v-else class="note">A lesson on this technique is coming.</p>
+        </div>
+
+        <section v-if="found" class="card surface section" aria-labelledby="lesson-section-title">
+          <h3 id="lesson-section-title">{{ found.section.title }}</h3>
+          <LessonSectionBody :section="found.section" />
+        </section>
+
+        <details v-for="other in others" :key="other.title" class="card surface">
+          <summary>{{ other.title }}</summary>
+          <LessonSectionBody :section="other" />
+        </details>
+      </template>
+    </div>
   </section>
 </template>
 
 <style scoped>
+/* The panel's cards keep the view's spacing between them. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+}
+
 .card {
   padding: 16px;
 }

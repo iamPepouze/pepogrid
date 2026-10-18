@@ -217,8 +217,35 @@ button.surface:disabled {
   cursor: progress;
 }
 
+/* A view's row of tabs: Statistics' difficulties, the key technique's Next step and Hardest. */
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tabs button {
+  /* Sized from the label, so Medium gets the room it needs on the narrowest phones. */
+  flex: 1 1 auto;
+  min-height: 36px;
+  padding: 6px 4px;
+  border: 1px solid var(--button-border);
+  border-radius: 999px;
+  background: var(--button-bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.tabs button[aria-selected='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
 @media (hover: hover) and (pointer: fine) {
-  :is(.icon-button, button.surface):hover:not(:disabled) {
+  :is(.icon-button, button.surface):hover:not(:disabled),
+  .tabs button:hover:not([aria-selected='true']) {
     background: var(--peer);
   }
 }

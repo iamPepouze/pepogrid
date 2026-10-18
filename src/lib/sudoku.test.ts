@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import sample from './__fixtures__/rated-sample.json'
 import { loadBank, pickFromBank } from './bank'
 import { DIFFICULTIES, TIERS, familyOf, techniqueFamily, tierOf, type Difficulty, type HodokuLevel } from './difficulty'
-import { PEERS, UNITS, bit } from './grid'
+import { PEERS, UNITS, bit, candidatesAt, digitsOf, popcount } from './grid'
 import { LESSONS, gridAt, lessonFor, positionOf, summaryTechnique } from './lessons'
-import { rateHodoku, rateSE } from './rater'
+import { nextTechnique, rateHodoku, rateSE } from './rater'
 import { capReached, countsOf, formatDuration, statisticsOf, type StatResult } from './statistics'
 import { countSolutions, randomSolution, solve } from './sudoku'
 import { applyTransform, randomTransform } from './transform'
@@ -190,6 +190,66 @@ describe('key technique lessons', () => {
           })
         }
       }
+    }
+  })
+})
+
+describe('next technique', () => {
+  const noNotes = () => new Array(81).fill(0)
+  const technique = (name: string) => ({ kind: 'technique', technique: name })
+
+  /** A lesson's position, with its candidates as the player's notes: Sudoku Explainer's next step there is `technique`. */
+  function lessonPosition(key: string) {
+    const example = LESSONS.flatMap((l) => l.sections.flatMap((s) => s.examples)).find((e) => e.position === key)!
+    const { technique, puzzle, values, candidates } = positionOf(example)
+    return { technique, puzzle, values, notes: candidates }
+  }
+
+  it('names a hidden single on a fresh Easy puzzle', async () => {
+    const [[puzzle]] = await loadBank('easy')
+    expect(nextTechnique(toGrid(puzzle), noNotes())).toEqual(technique('Hidden Single'))
+  })
+
+  it('names a later technique when the player’s notes have already removed what an easier one would', () => {
+    const { values, notes } = lessonPosition('naked-pair')
+    expect(nextTechnique(values, noNotes())).toEqual(technique('Pointing'))
+    expect(nextTechnique(values, notes)).toEqual(technique('Naked Pair'))
+  })
+
+  it('treats a cell without notes as holding every digit its peers allow', () => {
+    const { values, notes } = lessonPosition('naked-pair')
+    const r3c4 = 2 * 9 + 3
+    expect(notes[r3c4]).not.toBe(candidatesAt(values, r3c4))
+    notes[r3c4] = 0
+    expect(nextTechnique(values, notes)).toEqual(technique('Claiming'))
+  })
+
+  it('prefers the earlier technique in SE’s order when two apply', () => {
+    const { values, notes } = lessonPosition('direct-pointing')
+    // A naked single is there too, but SE tries Direct Pointing first.
+    expect(values.some((v, i) => !v && popcount(notes[i]) === 1)).toBe(true)
+    expect(nextTechnique(values, notes)).toEqual(technique('Direct Pointing'))
+  })
+
+  it('reports beyond XY-Wing on an Expert position that needs more', () => {
+    const { values, notes } = lessonPosition('unique-rectangle-1')
+    expect(nextTechnique(values, notes)).toEqual({ kind: 'beyond' })
+  })
+
+  it('names a technique in every consistent mid-solve Hard position', async () => {
+    for (const [p] of (await loadBank('hard')).slice(0, 50)) {
+      const puzzle = toGrid(p)
+      const solution = solve(puzzle)!
+      const empties = [...puzzle.keys()].filter((i) => !puzzle[i])
+      // Half the empty cells placed; the rest noted with their solution digit and a random share of the others their peers allow.
+      const values = puzzle.slice()
+      empties.filter((_, k) => k % 2 === 0).forEach((i) => (values[i] = solution[i]))
+      const notes = values.map((v, i) => {
+        if (v) return 0
+        const others = digitsOf(candidatesAt(values, i)).filter((d) => d !== solution[i] && Math.random() < 0.5)
+        return [solution[i], ...others].reduce((m, d) => m | bit(d), 0)
+      })
+      expect(nextTechnique(values, notes).kind, p).toBe('technique')
     }
   })
 })

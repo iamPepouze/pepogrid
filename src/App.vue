@@ -4,7 +4,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import AppDialog, { type DialogContent } from './components/AppDialog.vue'
 import DifficultyMenu from './components/DifficultyMenu.vue'
 import GameControls from './components/GameControls.vue'
-import KeyTechniqueView from './components/KeyTechniqueView.vue'
+import KeyTechniqueView, { type KeyTechniqueTab } from './components/KeyTechniqueView.vue'
 import NumberPad from './components/NumberPad.vue'
 import SettingsMenu from './components/SettingsMenu.vue'
 import StatisticsView from './components/StatisticsView.vue'
@@ -13,6 +13,7 @@ import { useInstall } from './composables/useInstall'
 import { useTheme } from './composables/useTheme'
 import { useUpdate } from './composables/useUpdate'
 import { HODOKU_LABELS, LABELS, TIERS, type Difficulty } from './lib/difficulty'
+import type { NextTechnique } from './lib/rater'
 import { formatDuration } from './lib/statistics'
 import { useGameStore } from './stores/game'
 import { useResultsStore } from './stores/results'
@@ -42,26 +43,56 @@ function toggleStatistics() {
 const keyTechniqueView = ref<InstanceType<typeof KeyTechniqueView> | null>(null)
 /** The Technique button that opened the key technique: focus returns there when the view closes. */
 let keyTechniqueOpener: HTMLButtonElement | null = null
+const keyTechniqueTab = ref<KeyTechniqueTab>('next')
+/** The next technique found when the view opened, kept for the whole visit so switching tabs doesn't count it again. */
+const nextStep = ref<NextTechnique | null>(null)
 
-/** Opens the key technique, asking first the first time in a game, since revealing it is noted on the result. */
+/**
+ * Opens the key technique on Next step, asking first the first time in a game, since each look is
+ * noted on the result.
+ */
 async function openKeyTechnique(trigger: HTMLButtonElement) {
-  if (!game.keyTechniqueRevealed) {
+  if (!game.nextStepsShown) {
     const confirmed = await ask({
-      title: 'Reveal the key technique?',
-      message: 'You’ll see which technique this puzzle hinges on. It will be noted on this game’s result.',
-      confirmLabel: 'Reveal',
+      title: 'See your next step?',
+      message: 'You’ll see which technique your next step needs. It will be noted on this game’s result.',
+      confirmLabel: 'Show',
       cancelLabel: 'Cancel',
     })
     if (!confirmed) {
       trigger.focus()
       return
     }
-    game.revealKeyTechnique()
   }
+  nextStep.value = game.showNextStep()
+  keyTechniqueTab.value = 'next'
   keyTechniqueOpener = trigger
   view.value = 'keyTechnique'
   await nextTick()
   keyTechniqueView.value?.focusBack()
+}
+
+/**
+ * Shows a tab. Hardest asks first the first time in a game, since revealing the hardest technique is
+ * noted on the result; focus returns to the tab once the dialog closes.
+ */
+async function selectKeyTechniqueTab(tab: KeyTechniqueTab) {
+  if (tab === 'hardest' && !game.keyTechniqueRevealed) {
+    const confirmed = await ask({
+      title: 'Reveal the key technique?',
+      message: 'You’ll see which technique this puzzle hinges on. It will be noted on this game’s result.',
+      confirmLabel: 'Reveal',
+      cancelLabel: 'Cancel',
+    })
+    if (confirmed) {
+      game.revealKeyTechnique()
+      keyTechniqueTab.value = tab
+    }
+    await nextTick()
+    keyTechniqueView.value?.focusTab(tab)
+    return
+  }
+  keyTechniqueTab.value = tab
 }
 
 async function closeKeyTechnique() {
@@ -301,11 +332,14 @@ onBeforeUnmount(() => {
     />
 
     <KeyTechniqueView
-      v-if="view === 'keyTechnique' && game.rating"
+      v-if="view === 'keyTechnique' && game.rating && nextStep"
       ref="keyTechniqueView"
       class="view-area"
-      :technique="game.rating.hardest"
+      :tab="keyTechniqueTab"
+      :next-step="nextStep"
+      :hardest="game.rating.hardest"
       @back="closeKeyTechnique"
+      @select="selectKeyTechniqueTab"
     />
 
     <!-- Hidden rather than unmounted, so the board's element and the layout's observers outlive a look at another view. -->

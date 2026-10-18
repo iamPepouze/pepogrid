@@ -193,31 +193,6 @@ async function onTabKeydown(e: KeyboardEvent) {
   font-weight: 600;
 }
 
-.tabs {
-  display: flex;
-  gap: 4px;
-}
-
-.tabs button {
-  /* Sized from the label, so Medium gets the room it needs on the narrowest phones. */
-  flex: 1 1 auto;
-  min-height: 36px;
-  padding: 6px 4px;
-  border: 1px solid var(--button-border);
-  border-radius: 999px;
-  background: var(--button-bg);
-  color: var(--text);
-  font: inherit;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.tabs button[aria-selected='true'] {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
 .empty {
   margin: 0;
   color: var(--muted);
@@ -281,11 +256,5 @@ async function onTabKeydown(e: KeyboardEvent) {
 .reset {
   align-self: center;
   padding: 6px 16px;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .tabs button:hover:not([aria-selected='true']) {
-    background: var(--peer);
-  }
 }
 </style>
