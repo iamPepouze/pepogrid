@@ -22,7 +22,7 @@ Pick the mode from what you were asked.
 
 A feature idea, or grilling a change players see.
 
-1. Read the code around what the idea touches, so each claim about the app's current behaviour is checked, not assumed.
+1. Read the code around what the idea touches.
 2. Walk the idea through every rule group. Each player-facing choice the idea leaves open becomes a question with a recommended answer: the states it has (U1's list), its feedback, its undo, its wording, its keyboard and touch paths, and how it fits at 320px wide. A choice a rule settles is stated, not asked.
 3. Ask the questions as CLAUDE.md's **Grilling** rule says. While grilling, they join the grilling's own rounds.
 
@@ -32,7 +32,7 @@ Done when every rule group has produced a question, settled a choice by a cited 
 
 An existing screen or state.
 
-1. Screenshot it with the [drive-app](../drive-app/SKILL.md) skill, at its three sizes and in dark mode, in every state the screen has.
+1. Screenshot it with the [drive-app](../drive-app/SKILL.md) skill, at its three sizes and in dark mode, in every state the screen has. Tile each state's same-width screenshots with drive-app's `sheet()`, so each state takes fewer Reads.
 2. Check every rule against the screenshots, and check contrast as UX_STANDARDS.md's **Checking** says.
 3. Report the findings, hard ones first. List any state you couldn't reach as unchecked.
 

@@ -32,7 +32,7 @@ description: "Drive PepoGrid in a real browser. Use to see a UI change working, 
 
    The step is done when the script has printed `app.errors` (an empty list), and `app.clipped()` (an empty list) at all three sizes for a layout change, and saved a screenshot of every state the change touches. A re-run after a follow-up fix screenshots only the states that fix touches, clipped to the element.
 
-3. **Look** at every screenshot with Read. Rendered is not the same as correct. Screenshots of one state at the same width (the two phone sizes, light and dark) can be tiled first with `drive.mjs`'s `sheet(paths, out, columns)`, so one Read shows them all; opening the sheet counts as opening each of them. `app.close()` prints each one it saved; the step is done when every printed path has been opened and the branch file's spec has a `drive-app: <states checked>, <date>` line, so the reviewer, who sees only the diff, knows the check ran.
+3. **Look** at every screenshot with Read. Rendered is not the same as correct. Screenshots of one state at the same viewport width (400px in light and dark, say) can be tiled first with `drive.mjs`'s `sheet(paths, out, columns)`, which scales every tile to one width, so mixed widths would distort it; so one Read shows them all; opening the sheet counts as opening each of them. `app.close()` prints each one it saved; the step is done when every printed path has been opened and the branch file's spec has a `drive-app: <states checked>, <date>` line, so the reviewer, who sees only the diff, knows the check ran.
 
 4. **Stop** the server by its port's PID. The background job's own PID is npm's wrapper, and killing it leaves Vite running:
 

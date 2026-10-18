@@ -1,5 +1,5 @@
 // Checks the theme tokens in src/style.css against WCAG 2.2 contrast (UX_STANDARDS.md U11, U12),
-// in both themes, for every pair of colours the app draws on each other, listed in PAIRS.
+// in both themes, for the pairs of colours the app draws on each other that PAIRS lists.
 // A pair that already fails is allowed with the issue that tracks it, so CI stays green until the
 // fix lands; an allowed pair that passes fails the check, so its entry gets removed.
 // Usage: node scripts/contrast.mjs
@@ -23,11 +23,14 @@ const ALLOWED = {
   '--accent on --selected': '#75',
   '--selected on --cell': '#66',
   '--selected on --peer': '#66',
+  '--accent on --page': '#77',
+  '--accent on --peer': '#77',
+  '--button-border on --button-bg': '#77',
 }
 
 /**
- * [foreground token, background token, minimum, what it is]: every pair the app draws.
- * Disabled controls are exempt (WCAG 1.4.3), so they aren't listed.
+ * [foreground token, background token, minimum, what it is]. A change that draws a token on a new
+ * background adds the pair here. Disabled controls are exempt (WCAG 1.4.3), so they aren't listed.
  */
 const PAIRS = [
   // Board and lesson digits. A digit is normal text at 320px wide, where cells are smallest.
@@ -50,9 +53,14 @@ const PAIRS = [
   ['--accent', '--on-accent', TEXT, 'the active Notes badge'],
   ['--user-digit', '--button-bg', TEXT, 'a number pad digit'],
   ['--note', '--button-bg', TEXT, 'a number pad digit in notes mode'],
+  // Text, so held to 4.5:1, which also covers the focus ring's 3:1 on the page.
+  ['--accent', '--page', TEXT, 'the Install and Update pills, the focus ring'],
+  ['--accent', '--peer', TEXT, 'a hovered pill'],
+  ['--text', '--peer', TEXT, 'a hovered button, the solved banner'],
+  ['--muted', '--peer', TEXT, "the solved banner's ratings"],
   // States and controls (U12).
-  ['--accent', '--page', UI, 'the focus ring, a selected tab'],
   ['--accent', '--button-bg', UI, 'a selected tab beside the others'],
+  ['--button-border', '--button-bg', UI, "the settings switch's track when off"],
   ['--selected', '--cell', UI, 'the selected cell'],
   ['--selected', '--peer', UI, 'the selected cell among its peers'],
 ]

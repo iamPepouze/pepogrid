@@ -39,7 +39,10 @@ export function result(fields = {}) {
 /** The saved game (`pepogrid.game`, see src/stores/game.ts), or null before one exists. */
 const readSave = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('pepogrid.game') ?? 'null'))
 
-/** Fills `grid` (81 numbers, 0 for empty) by backtracking; returns it, or null when it has no solution. */
+/**
+ * Fills `grid` (81 numbers, 0 for empty) by backtracking; returns it, or null when it has no solution.
+ * A copy of src/lib's `solve`, since this plain .mjs runs under Node, which can't import that TypeScript.
+ */
 function solve(grid) {
   const i = grid.indexOf(0)
   if (i < 0) return grid
@@ -159,21 +162,24 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
 
 /** Width of one screenshot in a sheet. */
 const SHEET_COLUMN_PX = 600
+/** Space between a sheet's screenshots, and around them. */
+const SHEET_GAP_PX = 16
 
 /**
- * Tiles screenshots into one labelled image at `out`, `columns` to a row, so one Read shows a state
- * at every size and theme. Prints the sheet's path, which the skill's Look step then opens.
+ * Tiles screenshots of one viewport width into one labelled image at `out`, so one Read shows a state
+ * in several themes or steps. Prints the sheet's path, which the skill's Look step then opens.
  * @param {string[]} paths
  * @param {string} out
+ * @param {number} columns screenshots to a row
  */
 export async function sheet(paths, out, columns = 2) {
   const tiles = paths
     .map((p) => `<figure><figcaption>${basename(p)}</figcaption><img src="data:image/png;base64,${readFileSync(p).toString('base64')}"></figure>`)
     .join('')
   const browser = await chromium.launch({ channel: 'msedge' })
-  const page = await browser.newPage({ viewport: { width: columns * (SHEET_COLUMN_PX + 16), height: 600 } })
+  const page = await browser.newPage({ viewport: { width: columns * (SHEET_COLUMN_PX + SHEET_GAP_PX) + SHEET_GAP_PX, height: 600 } })
   await page.setContent(`<style>
-    body { display: grid; grid-template-columns: repeat(${columns}, ${SHEET_COLUMN_PX}px); gap: 16px; align-items: start; margin: 8px; font: 14px system-ui; }
+    body { display: grid; grid-template-columns: repeat(${columns}, ${SHEET_COLUMN_PX}px); gap: ${SHEET_GAP_PX}px; align-items: start; margin: ${SHEET_GAP_PX}px; font: 14px system-ui; }
     figure { margin: 0; } img { width: 100%; border: 1px solid #999; }
   </style>${tiles}`)
   await page.screenshot({ path: out, fullPage: true })
