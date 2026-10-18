@@ -22,7 +22,7 @@ export const nonGivensOf = (game: Game, cells: readonly number[]) => cells.filte
 
 /**
  * The non-given cells of a row with two or more of them, where each one's column and box keep
- * a non-given cell outside the row, so filling them completes only the row.
+ * a non-given cell outside the row, and so does its digit, so filling them completes only the row.
  */
 export function quietRow(game: Game) {
   const row = ROWS.find((r) => {
@@ -31,7 +31,8 @@ export function quietRow(game: Game) {
       cells.length >= 2 &&
       cells.every((i) => {
         const [, column, box] = unitsOf(i)
-        return [column, box].every((u) => u.some((j) => game.puzzle[j] === 0 && rowOf(j) !== rowOf(i)))
+        const open = (j: number) => game.puzzle[j] === 0 && rowOf(j) !== rowOf(i)
+        return [column, box].every((u) => u.some(open)) && game.solution.some((d, j) => d === game.solution[i] && open(j))
       })
     )
   })
