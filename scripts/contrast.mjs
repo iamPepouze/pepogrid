@@ -1,7 +1,8 @@
 // Checks the theme tokens in src/style.css against WCAG 2.2 contrast (UX_STANDARDS.md U11, U12),
 // in both themes, for the pairs of colours the app draws on each other that PAIRS lists.
 // A pair that already fails is allowed with the issue that tracks it, so CI stays green until the
-// fix lands; an allowed pair that passes fails the check, so its entry gets removed.
+// fix lands; an allowed pair that passes fails the check, so its entry gets removed. A failing pair
+// that no new colour for either token can fix is also listed as stuck; listing it adds no failure of its own.
 // Usage: node scripts/contrast.mjs
 import { readFileSync } from 'node:fs'
 
@@ -93,13 +94,35 @@ function ratio(a, b) {
   return (hi + 0.05) / (lo + 0.05)
 }
 
+/**
+ * Whether some colour for `token` passes every pair it is in, in theme `t`, with the other tokens as
+ * they are. Each pair allows a luminance at or below one bound or at or above another; the windows
+ * that survive every pair are the luminances left to choose from.
+ */
+function fits(token, t) {
+  let windows = [[0, 1]]
+  for (const [fg, bg, min] of PAIRS) {
+    if (fg !== token && bg !== token) continue
+    const other = luminance(t[fg === token ? bg : fg]) + 0.05
+    const passing = [
+      [0, other / min - 0.05],
+      [min * other - 0.05, 1],
+    ]
+    windows = windows.flatMap(([lo, hi]) => passing.map(([a, b]) => [Math.max(lo, a), Math.min(hi, b)]))
+    windows = windows.filter(([lo, hi]) => lo <= hi)
+  }
+  return windows.length > 0
+}
+
 const problems = []
 const allowed = []
+// Failing pairs that neither of their tokens can fix: they need a design call, not a new value.
+const stuck = []
 for (const [fg, bg, min, what] of PAIRS) {
   const issue = ALLOWED[`${fg} on ${bg} at ${min}`]
   const results = Object.entries(THEMES).map(([theme, t]) => {
     if (!t[fg] || !t[bg]) throw new Error(`${theme} theme has no ${t[fg] ? bg : fg}`)
-    return { theme, value: ratio(t[fg], t[bg]) }
+    return { theme, t, value: ratio(t[fg], t[bg]) }
   })
   const failing = results.filter((r) => r.value < min)
   // Rounded down, so 4.498 never shows as a passing 4.50.
@@ -108,9 +131,16 @@ for (const [fg, bg, min, what] of PAIRS) {
   if (failing.length && issue) allowed.push(`${line}, allowed by ${issue}`)
   else if (failing.length) problems.push(line)
   else if (issue) problems.push(`${line}: passes now, so remove its ${issue} allowance`)
+  const stuckIn = failing.filter((r) => !fits(fg, r.t) && !fits(bg, r.t)).map((r) => r.theme)
+  if (stuckIn.length) stuck.push(`${fg} on ${bg} (${what}) in ${stuckIn.join(' and ')}`)
 }
 
 for (const line of allowed) console.log(`known: ${line}`)
+for (const line of stuck) {
+  console.log(`stuck: ${line}: no colour for either token passes all its pairs, so split a token or show it by more than colour`)
+}
 for (const line of problems) console.error(`FAIL: ${line}`)
-console.log(`${PAIRS.length} pairs checked in both themes: ${problems.length} failing, ${allowed.length} known.`)
+console.log(
+  `${PAIRS.length} pairs checked in both themes: ${problems.length} failing, ${allowed.length} known, ${stuck.length} stuck.`,
+)
 process.exitCode = problems.length ? 1 : 0
