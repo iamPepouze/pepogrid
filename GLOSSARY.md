@@ -40,7 +40,7 @@ A small digit the player writes in a cell as a reminder; notes are the player's 
 _Avoid_: Pencil mark, candidate
 
 **Mistake**:
-A placed digit that differs from the solution; it is shown as wrong and counted, but never ends the game.
+A placed digit that differs from the solution; it is shown as wrong and counted, but never ends the game. A cell's notes that leave out its solution digit are a mistake too, but only the next technique says so: they are neither shown as wrong nor counted.
 _Avoid_: Error
 
 ## Play
