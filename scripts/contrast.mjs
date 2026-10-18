@@ -61,7 +61,9 @@ const PAIRS = [
   // States and controls (U12).
   ['--accent', '--page', UI, 'the focus ring, a selected tab'],
   ['--accent', '--button-bg', UI, 'a selected tab beside the others'],
-  ['--muted', '--button-bg', UI, "the settings switch's track when off"],
+  ['--switch-off', '--button-bg', UI, "the settings switch's track when off"],
+  // The switch's thumb is a literal #fff, the same white as --on-accent.
+  ['--on-accent', '--switch-off', UI, "the settings switch's thumb on its off track"],
   ['--selected', '--cell', UI, 'the selected cell'],
   ['--selected', '--peer', UI, 'the selected cell among its peers'],
 ]
