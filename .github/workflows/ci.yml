@@ -51,6 +51,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - run: npm run contrast
       - run: npm test
       # Only a PR has changes against main to rerun; a deploy builds main itself.
       - name: Rerun changed tests under fixed seeds

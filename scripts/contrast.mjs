@@ -1,0 +1,105 @@
+// Checks the theme tokens in src/style.css against WCAG 2.2 contrast (UX_STANDARDS.md U11, U12),
+// in both themes, for every pair of colours the app draws on each other, listed in PAIRS.
+// A pair that already fails is allowed with the issue that tracks it, so CI stays green until the
+// fix lands; an allowed pair that passes fails the check, so its entry gets removed.
+// Usage: node scripts/contrast.mjs
+import { readFileSync } from 'node:fs'
+
+/** WCAG minimums: normal text, and a control's or state's look (U12). */
+const TEXT = 4.5
+const UI = 3
+
+/** Failing pairs, `<foreground> on <background>`, with the issue that tracks each. */
+const ALLOWED = {
+  '--user-digit on --same-digit': '#64',
+  '--user-digit on --conflict': '#64',
+  '--user-digit on --selected': '#64',
+  '--wrong-digit on --peer': '#64',
+  '--wrong-digit on --same-digit': '#64',
+  '--wrong-digit on --conflict': '#64',
+  '--wrong-digit on --selected': '#64',
+  '--note on --selected': '#64',
+  '--accent on --cell': '#75',
+  '--accent on --selected': '#75',
+  '--selected on --cell': '#66',
+  '--selected on --peer': '#66',
+}
+
+/**
+ * [foreground token, background token, minimum, what it is]: every pair the app draws.
+ * Disabled controls are exempt (WCAG 1.4.3), so they aren't listed.
+ */
+const PAIRS = [
+  // Board and lesson digits. A digit is normal text at 320px wide, where cells are smallest.
+  ...['--cell', '--peer', '--same-digit', '--conflict', '--selected'].flatMap((bg) => [
+    ['--given-digit', bg, TEXT, 'a given'],
+    ['--user-digit', bg, TEXT, "a player's digit"],
+    ['--wrong-digit', bg, TEXT, 'a wrong digit'],
+  ]),
+  // Notes sit only in empty cells, which are never tinted as the same digit or as a clash.
+  ...['--cell', '--peer', '--selected'].map((bg) => ['--note', bg, TEXT, 'a note']),
+  ['--accent', '--cell', TEXT, "a lesson's marked candidate"],
+  ['--accent', '--selected', TEXT, "a lesson's marked candidate"],
+  // Chrome text.
+  ['--text', '--page', TEXT, 'body text'],
+  ['--text', '--button-bg', TEXT, 'a button or card'],
+  ['--muted', '--page', TEXT, 'muted text'],
+  ['--muted', '--button-bg', TEXT, 'muted text in a card'],
+  ['--muted', '--badge-bg', TEXT, 'the Notes badge'],
+  ['--on-accent', '--accent', TEXT, 'a selected tab or primary button'],
+  ['--accent', '--on-accent', TEXT, 'the active Notes badge'],
+  ['--user-digit', '--button-bg', TEXT, 'a number pad digit'],
+  ['--note', '--button-bg', TEXT, 'a number pad digit in notes mode'],
+  // States and controls (U12).
+  ['--accent', '--page', UI, 'the focus ring, a selected tab'],
+  ['--accent', '--button-bg', UI, 'a selected tab beside the others'],
+  ['--selected', '--cell', UI, 'the selected cell'],
+  ['--selected', '--peer', UI, 'the selected cell among its peers'],
+]
+
+const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
+
+/** The `--token: #hex` declarations in the first block opened by `selector`. */
+function tokens(selector) {
+  const start = css.indexOf(`${selector} {`)
+  if (start < 0) throw new Error(`style.css has no "${selector} {" block`)
+  const block = css.slice(start, css.indexOf('}', start))
+  return Object.fromEntries([...block.matchAll(/(--[\w-]+):\s*(#[0-9a-f]{6})\b/gi)].map((m) => [m[1], m[2]]))
+}
+
+const THEMES = { light: tokens(':root'), dark: tokens(":root[data-theme='dark']") }
+
+function luminance(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const v = parseInt(hex.slice(i, i + 2), 16) / 255
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+function ratio(a, b) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
+  return (hi + 0.05) / (lo + 0.05)
+}
+
+const problems = []
+const allowed = []
+for (const [fg, bg, min, what] of PAIRS) {
+  const issue = ALLOWED[`${fg} on ${bg}`]
+  const results = Object.entries(THEMES).map(([theme, t]) => {
+    if (!t[fg] || !t[bg]) throw new Error(`${theme} theme has no ${t[fg] ? bg : fg}`)
+    return { theme, value: ratio(t[fg], t[bg]) }
+  })
+  const failing = results.filter((r) => r.value < min)
+  // Rounded down, so 4.498 never shows as a passing 4.50.
+  const shown = results.map((r) => `${r.theme} ${(Math.floor(r.value * 100) / 100).toFixed(2)}`).join(', ')
+  const line = `${fg} on ${bg} (${what}): ${shown}, needs ${min}:1`
+  if (failing.length && issue) allowed.push(`${line}, allowed by ${issue}`)
+  else if (failing.length) problems.push(line)
+  else if (issue) problems.push(`${line}: passes now, so remove its ${issue} allowance`)
+}
+
+for (const line of allowed) console.log(`known: ${line}`)
+for (const line of problems) console.error(`FAIL: ${line}`)
+console.log(`${PAIRS.length} pairs checked in both themes: ${problems.length} failing, ${allowed.length} known.`)
+process.exitCode = problems.length ? 1 : 0
