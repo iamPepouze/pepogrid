@@ -156,7 +156,7 @@ fieldset + fieldset {
   height: 22px;
   margin: 0;
   border-radius: 999px;
-  background: var(--button-border);
+  background: var(--switch-off);
   cursor: pointer;
   transition: background 0.15s;
 }

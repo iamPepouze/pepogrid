@@ -27,9 +27,6 @@ const ALLOWED = {
   '--accent on --selected at 4.5': '#75',
   '--selected on --cell at 3': '#66',
   '--selected on --peer at 3': '#66',
-  '--accent on --page at 4.5': '#77',
-  '--accent on --peer at 4.5': '#77',
-  '--button-border on --button-bg at 3': '#77',
 }
 
 /**
@@ -57,14 +54,16 @@ const PAIRS = [
   ['--accent', '--on-accent', TEXT, 'the active Notes badge'],
   ['--user-digit', '--button-bg', TEXT, 'a number pad digit'],
   ['--note', '--button-bg', TEXT, 'a number pad digit in notes mode'],
-  ['--accent', '--page', TEXT, 'the Install and Update pills'],
-  ['--accent', '--peer', TEXT, 'a hovered pill'],
+  ['--accent-text', '--page', TEXT, 'the Install and Update pills'],
+  ['--accent-text', '--peer', TEXT, 'a hovered pill'],
   ['--text', '--peer', TEXT, 'a hovered button, the solved banner'],
   ['--muted', '--peer', TEXT, "the solved banner's ratings"],
   // States and controls (U12).
   ['--accent', '--page', UI, 'the focus ring, a selected tab'],
   ['--accent', '--button-bg', UI, 'a selected tab beside the others'],
-  ['--button-border', '--button-bg', UI, "the settings switch's track when off"],
+  ['--switch-off', '--button-bg', UI, "the settings switch's track when off"],
+  // The switch's thumb is a literal #fff, the same white as --on-accent.
+  ['--on-accent', '--switch-off', UI, "the settings switch's thumb on its off track"],
   ['--selected', '--cell', UI, 'the selected cell'],
   ['--selected', '--peer', UI, 'the selected cell among its peers'],
 ]

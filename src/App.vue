@@ -425,10 +425,10 @@ onBeforeUnmount(() => {
 /* Install and Update: shown only when they apply. */
 .pill {
   padding: 5px 10px;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--accent-text);
   border-radius: 999px;
   background: transparent;
-  color: var(--accent);
+  color: var(--accent-text);
   font: inherit;
   font-size: 0.8rem;
   font-weight: 600;
