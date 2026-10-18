@@ -43,7 +43,10 @@ function onTabKeydown(e: KeyboardEvent) {
   tabs.value[next]?.focus()
 }
 
-/** The technique the shown tab names, or null when the next step is beyond XY-Wing. */
+/** The next step's answer without a technique, shown in place of one on Next step. */
+const answer = computed(() => (props.tab === 'next' && props.nextStep.kind !== 'technique' ? props.nextStep.kind : null))
+
+/** The technique the shown tab names, or null when it names none. */
 const technique = computed(() => {
   if (props.tab === 'hardest') return props.hardest
   return props.nextStep.kind === 'technique' ? props.nextStep.technique : null
@@ -84,7 +87,12 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
     </div>
 
     <div id="key-technique-panel" class="panel" role="tabpanel" :aria-labelledby="`key-technique-tab-${tab}`">
-      <div v-if="technique === null" class="card surface">
+      <div v-if="answer === 'mistake'" class="card surface">
+        <p class="headline">Your grid has a mistake</p>
+        <p class="note">Check your digits and notes: one of them rules out the solution.</p>
+      </div>
+
+      <div v-else-if="answer === 'beyond'" class="card surface">
         <p class="lead">Your next step needs a technique beyond XY-Wing</p>
       </div>
 
@@ -149,7 +157,9 @@ details[open] summary {
   margin-bottom: 10px;
 }
 
-.technique {
+/* An answer with no technique leads with itself, as large as a technique's name. */
+.technique,
+.headline {
   margin: 4px 0 12px;
   font-size: 1.4rem;
   font-weight: 600;

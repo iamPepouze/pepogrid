@@ -3,7 +3,7 @@ import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createApp, nextTick, toRaw } from 'vue'
 import { positionOf } from '../lib/lessons'
-import { PEERS, ROWS, bit, digitsOf, rowOf, unitsOf } from '../lib/sudoku'
+import { PEERS, ROWS, bit, digitsOf, rowOf, solve as solutionOf, unitsOf } from '../lib/sudoku'
 import { useGameStore } from './game'
 import { useResultsStore } from './results'
 import { crossingColumn, fill, nonGivensOf, place, quietRow, type Game } from './testing'
@@ -221,9 +221,19 @@ describe('next step', () => {
     const game = useGameStore()
     await game.newGame('easy')
     // The Naked Pair lesson's position: without its notes, Pointing would come first.
-    const { values, candidates } = positionOf('naked-pair')
-    game.$patch({ values, notes: candidates })
+    const { puzzle, values, candidates } = positionOf('naked-pair')
+    const givens = [...puzzle].map(Number)
+    game.$patch({ puzzle: givens, solution: solutionOf(givens)!, values, notes: candidates })
     expect(game.showNextStep()).toEqual({ kind: 'technique', technique: 'Naked Pair' })
+  })
+
+  it('says the grid has a mistake when a placed digit is wrong', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const i = game.puzzle.indexOf(0)
+    place(game, [i], (game.solution[i] % 9) + 1)
+    expect(game.showNextStep()).toEqual({ kind: 'mistake' })
+    expect(game.nextStepsShown).toBe(1)
   })
 
   it('records on a solved or abandoned result how many next steps were shown', async () => {

@@ -88,7 +88,7 @@ The in-game view with two tabs: Next step names the next technique, and Hardest 
 _Avoid_: Hint, tip, help
 
 **Next technique**:
-The easiest technique that makes progress from the player's current digits and notes, tried in Sudoku Explainer's order up to XY-Wing.
+The easiest technique that makes progress from the player's current digits and notes, tried in Sudoku Explainer's order up to XY-Wing. A grid with a wrong digit, or notes missing a cell's solution digit, has a mistake instead.
 _Avoid_: Hint
 
 **Lesson**:
