@@ -120,7 +120,7 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
     /** Shows the header's *Install* pill, as Chromium does when the app can be installed. */
     offerInstall: () => page.evaluate(() => {
       const e = new Event('beforeinstallprompt')
-      Object.assign(e, { prompt: async () => {}, userChoice: new Promise(() => {}) })
+      Object.assign(e, { prompt: async () => {}, userChoice: Promise.resolve({ outcome: 'dismissed' }) })
       window.dispatchEvent(e)
     }),
     /**
