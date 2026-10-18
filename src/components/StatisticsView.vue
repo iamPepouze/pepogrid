@@ -228,6 +228,11 @@ async function onTabKeydown(e: KeyboardEvent) {
  * The notes take the room they need first, so the family's name wraps before a note does. When the name's
  * longest word and the notes can't share a line, as with large text on a phone, the count and its notes drop under the name.
  */
+.families {
+  /* 8px more than other lists, so a family's stacked notes read as one block, apart from the next family's name. */
+  gap: 12px;
+}
+
 .families > div {
   flex-wrap: wrap;
   row-gap: 0;
