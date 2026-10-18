@@ -24,6 +24,7 @@
   --button-bg: #ffffff;
   --button-border: #d0d5dd;
   --switch-off: #5f6368;
+  --switch-thumb: #ffffff;
   --badge-bg: #eceff1;
   --shadow: 0 8px 24px rgb(0 0 0 / 0.14);
 
@@ -60,6 +61,7 @@
     --button-bg: #1e1e1e;
     --button-border: #3a3a3a;
     --switch-off: #6b7075;
+    --switch-thumb: #ffffff;
     --badge-bg: #2c2c2c;
     --shadow: 0 8px 24px rgb(0 0 0 / 0.5);
   }
@@ -87,6 +89,7 @@
   --button-bg: #1e1e1e;
   --button-border: #3a3a3a;
   --switch-off: #6b7075;
+  --switch-thumb: #ffffff;
   --badge-bg: #2c2c2c;
   --shadow: 0 8px 24px rgb(0 0 0 / 0.5);
 }

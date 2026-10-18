@@ -117,6 +117,12 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
     errors,
     /** The saved game: puzzle, solution, values, notes, mistakes… as 81-cell arrays. */
     save: () => readSave(page),
+    /** Shows the header's *Install* pill, as Chromium does when the app can be installed. */
+    offerInstall: () => page.evaluate(() => {
+      const e = new Event('beforeinstallprompt')
+      Object.assign(e, { prompt: async () => {}, userChoice: Promise.resolve({ outcome: 'dismissed' }) })
+      window.dispatchEvent(e)
+    }),
     /**
      * Makes lesson position `name` (a key of src/data/lesson-positions.json, such as `naked-pair` or
      * `unique-rectangle-1`) the game in progress, with its digits and notes, and reloads. It reaches
