@@ -1,6 +1,6 @@
 ---
 name: land
-model: haiku
+model: sonnet
 description: "Merge a PR once its check is green, return to an up-to-date main, and delete merged branches with their branch files."
 disable-model-invocation: true
 ---
@@ -14,7 +14,7 @@ Land a PR: merge it, sync `main`, and clean up. Every gate below **stops** the s
 3. If the PR is MERGED, skip to **3. Sync**. If it is CLOSED, stop.
 4. Local and PR heads match: `git fetch`, then a local branch named `headRefName` exists and points at `headRefOid`. Otherwise stop: the branch is missing locally, has unpushed commits, or the PR has commits not seen locally.
 5. The title follows the "Branch names" rule in CLAUDE.md. Otherwise stop and quote the title; the wording on `main` is the user's call.
-6. Review has caught up: the branch file of `headRefName` (CLAUDE.md's **Workflow**) has a `Reviewed up to:` line naming `headRefOid`. Otherwise stop and list the unreviewed commits, `git log --oneline <base>..<headRefOid>`, where `<base>` is the fixed point CLAUDE.md's `/code-review` rule picks, with its ancestry tested against `headRefOid` rather than `HEAD`. Whether to run `/code-review` or land them unreviewed is the user's call.
+6. The branch has had a review: the branch file of `headRefName` (CLAUDE.md's **Workflow**) has a `Reviewed up to:` line naming `headRefOid` or an ancestor of it (`git merge-base --is-ancestor <sha> <headRefOid>`). Commits after that line don't stop the merge: list them, `git log --oneline <sha>..<headRefOid>`, for the report. With no such line, or a commit that isn't an ancestor, stop and list `git log --oneline <base>..<headRefOid>`, where `<base>` is the fixed point CLAUDE.md's `/code-review` rule picks, with its ancestry tested against `headRefOid` rather than `HEAD`. Whether to run `/code-review` or land them unreviewed is the user's call.
 
 ## 2. Merge
 
@@ -41,4 +41,4 @@ For every local branch except `main`, list its merged PRs' heads with `gh pr lis
 
 ## 5. Report
 
-List the PR merged (or "none"), the `main` commit now checked out, each branch and branch file deleted, and each branch kept with its reason. If this run merged a PR whose title isn't a retro's (`chore: apply the … retro`), end with one line offering `/retro` on the session.
+List the PR merged (or "none"), the commits it landed after its last review (from gate 6, or "none"), the `main` commit now checked out, each branch and branch file deleted, and each branch kept with its reason. If this run merged a PR whose title isn't a retro's (`chore: apply the … retro`), end with one line offering `/retro` on the session.
