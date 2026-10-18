@@ -42,6 +42,8 @@ const PAIRS = [
   ]),
   // Notes sit only in empty cells, which are never tinted as the same digit or as a clash.
   ...['--cell', '--peer', '--selected'].map((bg) => ['--note', bg, TEXT, 'a note']),
+  // A faded lesson cell draws in --muted. It is never highlighted (sudoku.test.ts), so --selected isn't its background.
+  ['--muted', '--cell', TEXT, 'a faded lesson cell'],
   ['--accent', '--cell', TEXT, "a lesson's marked candidate"],
   ['--accent', '--selected', TEXT, "a lesson's marked candidate"],
   // Chrome text.

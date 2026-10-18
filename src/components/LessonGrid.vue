@@ -62,9 +62,10 @@ function labelOf(cell: LessonCell, i: number) {
   background: var(--selected);
 }
 
-/* Out of the step: faded, so the pattern stands out. */
-.cell.faded > * {
-  opacity: 0.3;
+/* Out of the step: muted rather than translucent, so the pattern stands out and the digits still read (U11). */
+.cell.faded .digit,
+.cell.faded .candidates {
+  color: var(--muted);
 }
 
 .digit {

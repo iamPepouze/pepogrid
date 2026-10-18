@@ -185,6 +185,8 @@ describe('key technique lessons', () => {
               expect(grid[i]?.placed, `${at}: cell ${i} is placed by this step, so it can't be a reason for it`).toBe(false)
               expect(step.focus, `${at}: source cell ${i} is drawn faded`).toContain(i)
             }
+            // A faded cell is drawn in --muted, which is only checked for contrast on --cell, not on a highlight.
+            for (const i of step.highlight ?? []) expect(step.focus, `${at}: highlighted cell ${i} is drawn faded`).toContain(i)
             for (const [i, d] of step.eliminations ?? []) expect(d, `${at}: eliminates the solution at ${i}`).not.toBe(solution[i])
             if (step.placement) expect(step.placement[1], `${at}: places a wrong digit`).toBe(solution[step.placement[0]])
           })
