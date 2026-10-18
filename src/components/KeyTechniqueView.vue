@@ -158,21 +158,18 @@ details[open] summary {
 }
 
 /* An answer with no technique leads with itself, as large as a technique's name. */
+.technique,
 .headline {
   margin: 0;
-}
-
-.headline + .note {
-  margin-top: 8px;
+  font-size: 1.4rem;
+  font-weight: 600;
 }
 
 .technique {
   margin: 4px 0 12px;
 }
 
-.technique,
-.headline {
-  font-size: 1.4rem;
-  font-weight: 600;
+.headline + .note {
+  margin-top: 8px;
 }
 </style>
