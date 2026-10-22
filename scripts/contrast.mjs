@@ -25,8 +25,6 @@ const ALLOWED = {
   '--note on --selected at 4.5': '#64',
   '--accent on --cell at 4.5': '#75',
   '--accent on --selected at 4.5': '#75',
-  '--selected on --cell at 3': '#66',
-  '--selected on --peer at 3': '#66',
 }
 
 /**
@@ -66,8 +64,13 @@ const PAIRS = [
   ['--switch-off', '--button-bg', UI, "the settings switch's track when off"],
   ['--switch-thumb', '--switch-off', UI, "the settings switch's thumb on its off track"],
   ['--switch-thumb', '--accent', UI, "the settings switch's thumb on its on track"],
-  ['--selected', '--cell', UI, 'the selected cell'],
-  ['--selected', '--peer', UI, 'the selected cell among its peers'],
+  // The selected cell's ring, against what sits on either side of it: the cell's own fill and its neighbours'.
+  ...['--selected', '--cell', '--peer', '--same-digit', '--conflict'].map((bg) => [
+    '--accent-text',
+    bg,
+    UI,
+    "the selected cell's ring",
+  ]),
 ]
 
 const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')

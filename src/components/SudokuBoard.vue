@@ -155,8 +155,10 @@ function cellLabel(i: number) {
   background: var(--conflict);
 }
 
+/* The ring sits inside the cell, under the digit and notes, so the grid lines and the cell's size don't change. */
 .cell.selected {
   background: var(--selected);
+  box-shadow: inset 0 0 0 2px var(--accent-text);
 }
 
 .cell.given,
@@ -187,6 +189,11 @@ function cellLabel(i: number) {
   animation:
     swell var(--glow-duration) ease-in-out var(--glow-delay, 0ms),
     settle var(--glow-duration) ease-in-out var(--glow-delay, 0ms) backwards;
+}
+
+/* The wash stays inside the selected cell's ring, so it can't dilute the ring's contrast. */
+.cell.selected.glow::before {
+  inset: 2px;
 }
 
 /* A soft wash of color and a gentle swell, played when a digit or unit becomes complete. */
