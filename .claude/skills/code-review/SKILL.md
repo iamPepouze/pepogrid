@@ -43,7 +43,7 @@ On top of whatever the repo documents, the Standards axis always carries the **s
 
 Run only the axes the diff needs: Standards always; Spec unless there is no spec; UX per its rule below. Issue those sub-agent calls together, in the foreground, and aggregate the reports they return.
 
-**Standards sub-agent** runs with `model: sonnet`; Spec and UX run on this skill's model. Its prompt should include:
+**Standards sub-agent** runs with `model: sonnet`; Spec and UX run with `model: opus`, set on each call so they never depend on the session's model. Its prompt should include:
 
 - The full diff command and commit list.
 - The list of standards-source files you found in step 3, **plus the absolute path of [SMELLS.md](SMELLS.md)** for the sub-agent to read.
