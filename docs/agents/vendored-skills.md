@@ -3,7 +3,7 @@
 Skills listed in `skills-lock.json` are vendored; the rest are this repo's own. Re-apply these local edits after updating the vendored skills:
 
 - `retro`: drop `disable-model-invocation`, so a retro asked for in words can run.
-- `code-review`: move the smell baseline into `SMELLS.md`, and give the Standards sub-agent its path instead of the pasted list. Add a third parallel axis, **UX**, whose sub-agent follows the `ux` skill's Review mode. Skip UX when nothing players see changed. Run the Standards sub-agent on `sonnet`, and have the orchestrator re-check its hard violations. End with a **Recommendation** step.
+- `code-review`: move the smell baseline into `SMELLS.md`, and give the Standards sub-agent its path instead of the pasted list. Add a third parallel axis, **UX**, whose sub-agent follows the `ux` skill's Review mode. Skip UX when nothing players see changed. Run the Standards sub-agent on `sonnet` and the Spec and UX sub-agents on `opus`, each set on its call, and have the orchestrator re-check its hard violations. End with a **Recommendation** step.
 - `implement-spec`: run its exploration, implementer and merger sub-agents with `model: sonnet`. Step 7 fixes what the review's recommendation marks **fix**, and re-reviews if its verdict says to.
 - `ask-matt`: describe `/code-review` by what it checks, leaving its axes to its skill.
 - `to-spec`: place named tests by `CODING_STANDARDS.md`'s test-layout rules. Add a **UX decisions** section to the template, for a change players see.
