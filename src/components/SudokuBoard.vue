@@ -191,6 +191,11 @@ function cellLabel(i: number) {
     settle var(--glow-duration) ease-in-out var(--glow-delay, 0ms) backwards;
 }
 
+/* The wash stays inside the selected cell's ring, so it can't dilute the ring's contrast. */
+.cell.selected.glow::before {
+  inset: 2px;
+}
+
 /* A soft wash of color and a gentle swell, played when a digit or unit becomes complete. */
 @keyframes glow {
   40% {
