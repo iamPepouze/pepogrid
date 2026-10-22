@@ -11,8 +11,16 @@ const TEXT = 4.5
 const UI = 3
 
 /**
- * Failing pairs, `<foreground> on <background> at <minimum>`, with the issue that tracks each. The
- * minimum is part of the key, so a pair allowed as text is still held to 3:1 as a control.
+ * The completion glow's wash (`.cell.glow::before` in SudokuBoard.vue) is `--accent` over the cell at
+ * up to this opacity, the `glow` keyframes' peak. A pair marked `GLOW` is checked on that blend.
+ */
+const GLOW_OPACITY = 0.28
+const GLOW = 'in the glow'
+
+/**
+ * Failing pairs, `<foreground> on <background> at <minimum>` (then ` in the glow` for a glow pair), with
+ * the issue that tracks each. The minimum is part of the key, so a pair allowed as text is still held
+ * to 3:1 as a control.
  */
 const ALLOWED = {
   '--user-digit on --same-digit at 4.5': '#64',
@@ -23,13 +31,19 @@ const ALLOWED = {
   '--wrong-digit on --conflict at 4.5': '#64',
   '--wrong-digit on --selected at 4.5': '#64',
   '--note on --selected at 4.5': '#64',
+  '--user-digit on --cell at 4.5 in the glow': '#95',
+  '--user-digit on --peer at 4.5 in the glow': '#95',
+  '--user-digit on --same-digit at 4.5 in the glow': '#95',
+  '--user-digit on --conflict at 4.5 in the glow': '#95',
+  '--user-digit on --selected at 4.5 in the glow': '#95',
   '--accent on --cell at 4.5': '#75',
   '--accent on --selected at 4.5': '#75',
 }
 
 /**
- * [foreground token, background token, minimum, what it is], kept as UX_STANDARDS.md's **Checking**
- * says. Disabled controls are exempt (WCAG 1.4.3), so they aren't listed.
+ * [foreground token, background token, minimum, what it is, GLOW when the background is under the
+ * glow's wash], kept as UX_STANDARDS.md's **Checking** says. Disabled controls are exempt (WCAG
+ * 1.4.3), so they aren't listed.
  */
 const PAIRS = [
   // Board and lesson digits. A digit is normal text at 320px wide, where cells are smallest.
@@ -37,6 +51,11 @@ const PAIRS = [
     ['--given-digit', bg, TEXT, 'a given'],
     ['--user-digit', bg, TEXT, "a player's digit"],
     ['--wrong-digit', bg, TEXT, 'a wrong digit'],
+  ]),
+  // A digit swells in the glow and is drawn over its wash, so its background is the blend.
+  ...['--cell', '--peer', '--same-digit', '--conflict', '--selected'].flatMap((bg) => [
+    ['--given-digit', bg, TEXT, 'a given', GLOW],
+    ['--user-digit', bg, TEXT, "a player's digit", GLOW],
   ]),
   // Notes sit only in empty cells, which are never tinted as the same digit or as a clash.
   ...['--cell', '--peer', '--selected'].map((bg) => ['--note', bg, TEXT, 'a note']),
@@ -93,6 +112,16 @@ function luminance(hex) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
+/** `over` laid on `under` at `opacity`, as sRGB channels blend in CSS. */
+function blend(over, under, opacity) {
+  const channels = [1, 3, 5].map((i) => {
+    const o = parseInt(over.slice(i, i + 2), 16)
+    const u = parseInt(under.slice(i, i + 2), 16)
+    return Math.round(o * opacity + u * (1 - opacity))
+  })
+  return `#${channels.map((c) => c.toString(16).padStart(2, '0')).join('')}`
+}
+
 function ratio(a, b) {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
   return (hi + 0.05) / (lo + 0.05)
@@ -105,8 +134,9 @@ function ratio(a, b) {
  */
 function fits(token, t) {
   let windows = [[0, 1]]
-  for (const [fg, bg, min] of PAIRS) {
-    if (fg !== token && bg !== token) continue
+  for (const [fg, bg, min, , glow] of PAIRS) {
+    // A glow pair's background is a blend of two tokens, so no one token's colour settles it.
+    if (glow || (fg !== token && bg !== token)) continue
     const other = luminance(t[fg === token ? bg : fg]) + 0.05
     const passing = [
       [0, other / min - 0.05],
@@ -122,20 +152,20 @@ const problems = []
 const allowed = []
 // Failing pairs that neither of their tokens can fix: they need a design call, not a new value.
 const stuck = []
-for (const [fg, bg, min, what] of PAIRS) {
-  const issue = ALLOWED[`${fg} on ${bg} at ${min}`]
+for (const [fg, bg, min, what, glow] of PAIRS) {
+  const issue = ALLOWED[`${fg} on ${bg} at ${min}${glow ? ` ${glow}` : ''}`]
   const results = Object.entries(THEMES).map(([theme, t]) => {
-    if (!t[fg] || !t[bg]) throw new Error(`${theme} theme has no ${t[fg] ? bg : fg}`)
-    return { theme, t, value: ratio(t[fg], t[bg]) }
+    if (!t[fg] || !t[bg] || !t['--accent']) throw new Error(`${theme} theme has no ${t[fg] ? bg : fg}`)
+    return { theme, t, value: ratio(t[fg], glow ? blend(t['--accent'], t[bg], GLOW_OPACITY) : t[bg]) }
   })
   const failing = results.filter((r) => r.value < min)
   // Rounded down, so 4.498 never shows as a passing 4.50.
   const shown = results.map((r) => `${r.theme} ${(Math.floor(r.value * 100) / 100).toFixed(2)}`).join(', ')
-  const line = `${fg} on ${bg} (${what}): ${shown}, needs ${min}:1`
+  const line = `${fg} on ${bg}${glow ? ` ${glow}` : ''} (${what}): ${shown}, needs ${min}:1`
   if (failing.length && issue) allowed.push(`${line}, allowed by ${issue}`)
   else if (failing.length) problems.push(line)
   else if (issue) problems.push(`${line}: passes now, so remove its ${issue} allowance`)
-  const stuckIn = failing.filter((r) => !fits(fg, r.t) && !fits(bg, r.t)).map((r) => r.theme)
+  const stuckIn = glow ? [] : failing.filter((r) => !fits(fg, r.t) && !fits(bg, r.t)).map((r) => r.theme)
   if (stuckIn.length) stuck.push(`${fg} on ${bg} (${what}) in ${stuckIn.join(' and ')}`)
 }
 
