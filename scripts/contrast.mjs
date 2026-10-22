@@ -153,18 +153,22 @@ const allowed = []
 // Failing pairs that neither of their tokens can fix: they need a design call, not a new value.
 const stuck = []
 for (const [fg, bg, min, what, glow] of PAIRS) {
-  const issue = ALLOWED[`${fg} on ${bg} at ${min}${glow ? ` ${glow}` : ''}`]
+  const where = glow ? ` ${glow}` : ''
+  const issue = ALLOWED[`${fg} on ${bg} at ${min}${where}`]
   const results = Object.entries(THEMES).map(([theme, t]) => {
-    if (!t[fg] || !t[bg] || !t['--accent']) throw new Error(`${theme} theme has no ${t[fg] ? bg : fg}`)
+    for (const token of glow ? [fg, bg, '--accent'] : [fg, bg]) {
+      if (!t[token]) throw new Error(`${theme} theme has no ${token}`)
+    }
     return { theme, t, value: ratio(t[fg], glow ? blend(t['--accent'], t[bg], GLOW_OPACITY) : t[bg]) }
   })
   const failing = results.filter((r) => r.value < min)
   // Rounded down, so 4.498 never shows as a passing 4.50.
   const shown = results.map((r) => `${r.theme} ${(Math.floor(r.value * 100) / 100).toFixed(2)}`).join(', ')
-  const line = `${fg} on ${bg}${glow ? ` ${glow}` : ''} (${what}): ${shown}, needs ${min}:1`
+  const line = `${fg} on ${bg}${where} (${what}): ${shown}, needs ${min}:1`
   if (failing.length && issue) allowed.push(`${line}, allowed by ${issue}`)
   else if (failing.length) problems.push(line)
   else if (issue) problems.push(`${line}: passes now, so remove its ${issue} allowance`)
+  // A glow pair is never listed as stuck: fits() leaves it out, as its background is a blend of two tokens.
   const stuckIn = glow ? [] : failing.filter((r) => !fits(fg, r.t) && !fits(bg, r.t)).map((r) => r.theme)
   if (stuckIn.length) stuck.push(`${fg} on ${bg} (${what}) in ${stuckIn.join(' and ')}`)
 }
