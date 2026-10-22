@@ -155,8 +155,10 @@ function cellLabel(i: number) {
   background: var(--conflict);
 }
 
+/* The ring sits inside the cell, under the digit and notes, so the grid lines and the cell's size don't change. */
 .cell.selected {
   background: var(--selected);
+  box-shadow: inset 0 0 0 2px var(--accent-text);
 }
 
 .cell.given,

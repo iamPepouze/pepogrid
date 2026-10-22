@@ -54,7 +54,7 @@ A change that sets or changes a UX convention updates this file in the same chan
 
 ## Sudoku conventions (judgement calls)
 
-- **U25 Selection highlights**. The selected cell is the strongest highlight, then the cells holding the same digit, then its row, column and box. Each can be told apart from the others. `--selected`, `--same-digit` and `--peer`, with *Highlight matching numbers* to turn off the digit tint.
+- **U25 Selection highlights**. The selected cell, marked by a 2px ring in `--accent-text`, is the strongest highlight, then the cells holding the same digit, then its row, column and box. Each can be told apart from the others. `--selected`, `--same-digit` and `--peer`, with *Highlight matching numbers* to turn off the digit tint.
 - **U26 Givens look fixed**. Givens look different from the player's digits, and can't be changed. Givens are dark and bold, and the player's digits are blue.
 - **U27 Notes in fixed spots**. A cell's notes sit in a 3×3 layout where each digit always has the same spot, and placing a digit clears it from the notes in its row, column and box.
 - **U28 A number pad in order**. The pad shows 1–9 in order, and a digit that is complete stops being offered. A complete digit's button greys out and stops responding.
