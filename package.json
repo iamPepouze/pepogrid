@@ -15,8 +15,8 @@
     "contrast": "node scripts/contrast.mjs"
   },
   "dependencies": {
-    "@lucide/vue": "^1.56.0",
-    "pinia": "^4.0.3",
+    "@lucide/vue": "^1.58.0",
+    "pinia": "^4.1.0",
     "pinia-plugin-persistedstate": "^4.7.1",
     "vue": "^3.5.44"
   },
@@ -27,14 +27,14 @@
     "@vue/tsconfig": "^0.9.1",
     "eslint": "^10.12.0",
     "eslint-plugin-vue": "^10.11.1",
-    "happy-dom": "^21.0.1",
+    "happy-dom": "^21.0.3",
     "playwright-core": "^1.64.1",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.2",
     "vite": "^8.3.4",
     "vite-plugin-pwa": "^2.0.0",
-    "vitest": "^5.0.4",
+    "vitest": "^5.0.5",
     "vue-tsc": "^3.3.13"
   },
   "devEngines": {
