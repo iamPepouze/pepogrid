@@ -22,7 +22,7 @@ A change that sets or changes a UX convention updates this file in the same chan
 ## Usability (judgement calls)
 
 - **U1 Visible status** (N1). Every action shows its result at once, and every state a control or view can be in is designed and visible: loading, disabled, active, empty, error, done. *Fill notes* greys out when it would change nothing, and the status bar counts mistakes as they happen.
-- **U2 The player's words** (N2). Labels use the words Sudoku players use and the terms in [GLOSSARY.md](GLOSSARY.md), never internal names. *Notes*, *Key technique*, and technique names as Sudoku Explainer and HoDoKu give them.
+- **U2 The player's words** (N2). Labels use the words Sudoku players use and the terms in [GLOSSARY.md](GLOSSARY.md), never internal names. *Notes*, *Key technique*, and technique names as the players of each language know them: translated where the language has a settled name (French *Singleton caché*), in English where its players use English (X-Wing). GLOSSARY.md gives each term's French and German word.
 - **U3 A way back** (N3). Every change to the board can be undone, every view that stands in for the game has *Back*, and every dialog closes with Cancel, `Esc` or a tap outside. One Undo after *Fill notes* brings back the notes the player had.
 - **U4 Consistency** (N4). The same thing looks and behaves the same everywhere. Statistics and the key technique share one look for their tab rows, cards and *Back* button, in the same places (CODING_STANDARDS.md C6).
 - **U5 Error prevention** (N5). Before an action destroys something Undo can't bring back, the app asks first. A control that would do nothing is disabled. *New game* asks when the game in progress has a digit or a note, and a complete digit's pad button greys out.
@@ -44,6 +44,7 @@ A change that sets or changes a UX convention updates this file in the same chan
 - **U18 Target size** (2.5.8). Every pointer target is at least 24×24 CSS px, or has 24px of space around it. U21 asks for more on the game's main controls.
 - **U19 Reflow and zoom** (1.4.10, 1.4.4, 1.3.4). At 320 CSS px wide, nothing scrolls sideways and no text is cut off or spills into its neighbour (drive-app's `clipped()`). Text can be zoomed to 200% without losing content (drive-app's `textScale: 2`). The app works in both orientations.
 - **U20 Motion can be turned off** (2.3.3, 2.2.2). When the device asks for reduced motion, decorative animation stops (CODING_STANDARDS.md C3). 2.3.3 is level AAA, but this repo requires it. Anything that moves for more than 5 seconds can be paused. The completion glow is skipped under reduced motion.
+- **U31 Language of the page** (3.1.1). `<html lang>` is the language the app is shown in, set before first paint, so a screen reader pronounces French as French. Picking a language in Settings reloads the app in it.
 
 ## Mobile (judgement calls)
 

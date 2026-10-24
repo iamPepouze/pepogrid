@@ -3,6 +3,7 @@ import sample from './__fixtures__/rated-sample.json'
 import { loadBank, pickFromBank } from './bank'
 import { DIFFICULTIES, TIERS, familyOf, techniqueFamily, tierOf, type Difficulty, type HodokuLevel } from './difficulty'
 import { PEERS, UNITS, bit, candidatesAt, digitsOf, popcount } from './grid'
+import { resolveLanguage } from './language'
 import { LESSONS, gridAt, lessonFor, positionOf, summaryTechnique } from './lessons'
 import { nextTechnique, rateHodoku, rateSE } from './rater'
 import { capReached, countsOf, formatDuration, statisticsOf, type StatResult } from './statistics'
@@ -498,5 +499,32 @@ describe('statistics', () => {
     expect(formatDuration(3599)).toBe('59:59')
     expect(formatDuration(3600)).toBe('1:00:00')
     expect(formatDuration(37_230)).toBe('10:20:30')
+  })
+})
+
+describe('language', () => {
+  it('uses the first supported device language', () => {
+    expect(resolveLanguage(['fr'], 'system')).toBe('fr')
+    expect(resolveLanguage(['de', 'fr'], 'system')).toBe('de')
+  })
+
+  it('matches a regional variant on its base language, whatever its case', () => {
+    expect(resolveLanguage(['fr-CA'], 'system')).toBe('fr')
+    expect(resolveLanguage(['de-CH'], 'system')).toBe('de')
+    expect(resolveLanguage(['EN-gb'], 'system')).toBe('en')
+  })
+
+  it('skips an unsupported language for a supported one after it', () => {
+    expect(resolveLanguage(['nl', 'de'], 'system')).toBe('de')
+  })
+
+  it('falls back to English when no device language is supported', () => {
+    expect(resolveLanguage(['es', 'it-IT'], 'system')).toBe('en')
+    expect(resolveLanguage([], 'system')).toBe('en')
+  })
+
+  it('lets an explicit setting override the device', () => {
+    expect(resolveLanguage(['fr'], 'de')).toBe('de')
+    expect(resolveLanguage(['de'], 'en')).toBe('en')
   })
 })

@@ -10,6 +10,7 @@ import SettingsMenu from './components/SettingsMenu.vue'
 import StatisticsView from './components/StatisticsView.vue'
 import SudokuBoard from './components/SudokuBoard.vue'
 import { useInstall } from './composables/useInstall'
+import { useDocumentLanguage } from './composables/useI18n'
 import { useTheme } from './composables/useTheme'
 import { useUpdate } from './composables/useUpdate'
 import { HODOKU_LABELS, LABELS, TIERS, type Difficulty } from './lib/difficulty'
@@ -24,6 +25,7 @@ const results = useResultsStore()
 if (!game.isValid()) loadGame('easy', { recordAbandoned: false })
 
 useTheme()
+useDocumentLanguage()
 const { canInstall, install } = useInstall()
 const { canUpdate, update } = useUpdate()
 
