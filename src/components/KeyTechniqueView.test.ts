@@ -224,7 +224,7 @@ describe('KeyTechniqueView', () => {
       const view = mountView('Direct Hidden Triplet')
 
       expect(view.find('.note').text()).toBe(f.note)
-      const name = f.language === 'fr' ? 'Triplet caché direct' : 'Direktes verstecktes Tripel'
+      const name = f.language === 'fr' ? 'Triplet caché direct' : 'Direkter versteckter Dreier'
       expect(view.find('.technique').text()).toBe(name)
       expect(view.find('h3').text()).toBe(name)
       expect(view.find('h3').attributes('lang')).toBeUndefined()

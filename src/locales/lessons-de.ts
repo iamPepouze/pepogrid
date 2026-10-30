@@ -49,13 +49,13 @@ export const deLessons: LessonTexts = {
         ],
       },
       {
-        text: 'Drei Ziffern, deren einzige Plätze in einer Einheit dieselben drei Zellen sind, bilden ein verstecktes Tripel. Die drei Zellen müssen diese Ziffern enthalten, also fallen ihre anderen Kandidaten weg. Nicht jede Zelle braucht alle drei Ziffern als Kandidaten: Entscheidend ist, dass die Ziffern keinen anderen Platz haben.',
+        text: 'Drei Ziffern, deren einzige Plätze in einer Einheit dieselben drei Zellen sind, bilden ein versteckter Dreier. Die drei Zellen müssen diese Ziffern enthalten, also fallen ihre anderen Kandidaten weg. Nicht jede Zelle braucht alle drei Ziffern als Kandidaten: Entscheidend ist, dass die Ziffern keinen anderen Platz haben.',
         examples: [
           [
             'Zeile 7 braucht noch eine 1, eine 2, eine 3, eine 4, eine 8 und eine 9. Wohin können ihre 3, ihre 4 und ihre 9?',
-            'Alle drei sind nur in den Spalten 5, 6 und 7 Kandidaten. Drei Ziffern, drei Zellen: Diese Zellen müssen sie enthalten, in beliebiger Reihenfolge. Das ist ein verstecktes Tripel, auch wenn nur eine der Zellen alle drei hat.',
+            'Alle drei sind nur in den Spalten 5, 6 und 7 Kandidaten. Drei Ziffern, drei Zellen: Diese Zellen müssen sie enthalten, in beliebiger Reihenfolge. Das ist ein versteckter Dreier, auch wenn nur eine der Zellen alle drei hat.',
             'Da die 3, die 4 und die 9 diese Zellen belegen, passt dort nichts anderes: Ihre anderen Kandidaten fallen weg.',
-            'Die 8 in Zeile 7 hat nur noch einen Platz, Spalte 1, also kommt die 8 dorthin. Das versteckte Tripel führte direkt zu einem Single: Deshalb heißt es direkt.',
+            'Die 8 in Zeile 7 hat nur noch einen Platz, Spalte 1, also kommt die 8 dorthin. Der versteckte Dreier führte direkt zu einem Single: Deshalb heißt es direkt.',
           ],
         ],
       },
@@ -110,21 +110,21 @@ export const deLessons: LessonTexts = {
         ],
       },
       {
-        text: 'Drei Zellen einer Einheit, deren Kandidaten zusammen nur drei Ziffern sind, bilden ein nacktes Tripel. Die drei Ziffern füllen diese Zellen in beliebiger Reihenfolge, also kann keine andere Zelle der Einheit sie aufnehmen. Eine Zelle braucht nicht alle drei: Zellen mit einer 4 oder 5, einer 5 oder 6 und einer 4 oder 6 sind auch ein Tripel.',
+        text: 'Drei Zellen einer Einheit, deren Kandidaten zusammen nur drei Ziffern sind, bilden ein nackter Dreier. Die drei Ziffern füllen diese Zellen in beliebiger Reihenfolge, also kann keine andere Zelle der Einheit sie aufnehmen. Eine Zelle braucht nicht alle drei: Zellen mit einer 4 oder 5, einer 5 oder 6 und einer 4 oder 6 sind auch ein Tripel.',
         examples: [
           [
             'Spalte 8 hat sechs leere Zellen. Sieh dir die Zeilen 2, 4 und 5 an: Jede kann nur eine 4, eine 5 oder eine 6 aufnehmen.',
-            'Drei Zellen, drei Ziffern: Die 4, die 5 und die 6 füllen diese Zellen in beliebiger Reihenfolge. Das ist ein nacktes Tripel.',
+            'Drei Zellen, drei Ziffern: Die 4, die 5 und die 6 füllen diese Zellen in beliebiger Reihenfolge. Das ist ein nackter Dreier.',
             'Da diese drei Ziffern vergeben sind, kann keine andere Zelle in Spalte 8 sie aufnehmen: Die 4 und die 5 in Zeile 3 entfallen.',
           ],
         ],
       },
       {
-        text: 'Vier Zellen einer Einheit, deren Kandidaten zusammen nur vier Ziffern sind, bilden ein nacktes Quadrupel. Die vier Ziffern füllen diese Zellen in beliebiger Reihenfolge, also kann keine andere Zelle der Einheit sie aufnehmen. Wie beim Tripel braucht eine Zelle nicht alle vier.',
+        text: 'Vier Zellen einer Einheit, deren Kandidaten zusammen nur vier Ziffern sind, bilden ein nackter Vierer. Die vier Ziffern füllen diese Zellen in beliebiger Reihenfolge, also kann keine andere Zelle der Einheit sie aufnehmen. Wie beim Dreier braucht eine Zelle nicht alle vier.',
         examples: [
           [
             'Der Block unten links hat neun leere Zellen. Sieh dir vier davon an: die drei in Zeile 7 und Zeile 8, Spalte 3.',
-            'Zusammen enthalten sie nur eine 1, 2, 5 oder 9. Vier Zellen, vier Ziffern: Diese Ziffern füllen diese Zellen in beliebiger Reihenfolge. Das ist ein nacktes Quadrupel.',
+            'Zusammen enthalten sie nur eine 1, 2, 5 oder 9. Vier Zellen, vier Ziffern: Diese Ziffern füllen diese Zellen in beliebiger Reihenfolge. Das ist ein nackter Vierer.',
             'Da diese vier Ziffern vergeben sind, kann keine andere Zelle im Block sie aufnehmen: Die 9 in Zeile 8, Spalte 2 und die 1 und die 2 in Zeile 9, Spalte 3 entfallen.',
           ],
         ],
@@ -140,11 +140,11 @@ export const deLessons: LessonTexts = {
         ],
       },
       {
-        text: 'Drei Ziffern, deren einzige Plätze in einer Einheit dieselben drei Zellen sind, bilden ein verstecktes Tripel. Die drei Zellen müssen diese Ziffern aufnehmen, also entfallen ihre anderen Kandidaten. Nicht jede Zelle braucht alle drei Ziffern als Kandidaten: Entscheidend ist, dass die Ziffern keinen anderen Platz haben.',
+        text: 'Drei Ziffern, deren einzige Plätze in einer Einheit dieselben drei Zellen sind, bilden ein versteckter Dreier. Die drei Zellen müssen diese Ziffern aufnehmen, also entfallen ihre anderen Kandidaten. Nicht jede Zelle braucht alle drei Ziffern als Kandidaten: Entscheidend ist, dass die Ziffern keinen anderen Platz haben.',
         examples: [
           [
             'Der Block rechts in der Mitte braucht noch jede Ziffer außer der 2. Wohin können seine 1, seine 8 und seine 9?',
-            'Alle drei sind nur in Zeile 5, Spalte 9 und Zeile 6, Spalten 8 und 9 Kandidaten. Drei Ziffern, drei Zellen: Diese Zellen müssen sie aufnehmen, in beliebiger Reihenfolge. Das ist ein verstecktes Tripel, auch wenn Zeile 5, Spalte 9 keine 9 hat.',
+            'Alle drei sind nur in Zeile 5, Spalte 9 und Zeile 6, Spalten 8 und 9 Kandidaten. Drei Ziffern, drei Zellen: Diese Zellen müssen sie aufnehmen, in beliebiger Reihenfolge. Das ist ein versteckter Dreier, auch wenn Zeile 5, Spalte 9 keine 9 hat.',
             'Da 1, 8 und 9 diese Zellen belegen, passt dort nichts anderes: Die 6 und die 7 in Zeile 5, Spalte 9 entfallen.',
           ],
         ],
@@ -326,8 +326,8 @@ export const deLessons: LessonTexts = {
             'Hier hat jede leere Zelle genau zwei Kandidaten, außer zwei in Zeile 4: Spalte 3 mit einer 1, einer 3 und einer 9 sowie Spalte 6 mit einer 5, einer 8 und einer 9.',
             'Spalte 3 hat drei Plätze für eine 3, einen zu viel, und Spalte 6 drei für eine 9. Ohne diese 3 und diese 9 hätte jeder Kandidat in jeder seiner Einheiten genau zwei Plätze: Das Gitter wäre ein BUG, ohne Lösung oder mit mehreren.',
             'Also ist Zeile 4, Spalte 3 die 3, oder Zeile 4, Spalte 6 ist die 9. Zusammen wirken sie wie eine Zelle der Zeile 4, die eine 3 oder eine 9 enthält.',
-            'Zeile 4, Spalte 1 enthält eine 3 oder eine 4 und Spalte 9 eine 4 oder eine 9. Mit dieser einen Zelle sind das drei Plätze für drei Ziffern, die 3, die 4 und die 9: ein nacktes Tripel in Zeile 4.',
-            'Also kann keine Zelle der Zeile 4 außerhalb des Tripels sie enthalten: Die 3 in Spalte 2 entfällt. Das ist ein BUG vom Typ 3.',
+            'Zeile 4, Spalte 1 enthält eine 3 oder eine 4 und Spalte 9 eine 4 oder eine 9. Mit dieser einen Zelle sind das drei Plätze für drei Ziffern, die 3, die 4 und die 9: ein nackter Dreier in Zeile 4.',
+            'Also kann keine Zelle der Zeile 4 außerhalb des Dreiers sie enthalten: Die 3 in Spalte 2 entfällt. Das ist ein BUG vom Typ 3.',
           ],
         ],
       },
