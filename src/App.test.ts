@@ -239,6 +239,17 @@ describe('App', () => {
       expect(app.find('.win button').text()).toBe('Nochmal spielen')
     })
 
+    it('words the German new game dialog without gluing the difficulty onto a noun', async () => {
+      useSettingsStore().language = 'de'
+      const app = await mountApp()
+      makeProgress()
+
+      await app.find('.topbar button[aria-label="Neues Spiel"]').trigger('click')
+
+      expect(app.find('dialog').text()).toContain('Neues Spiel (Leicht) starten?')
+      expect(app.find('dialog').text()).toContain('Dein aktuelles Spiel (Leicht) geht verloren.')
+    })
+
     it('writes the SE rating with the language’s decimal mark', async () => {
       useSettingsStore().language = 'fr'
       await useGameStore().newGame('expert')
@@ -259,7 +270,7 @@ describe('App', () => {
       await app.find('.topbar button[aria-label="Neues Spiel"]').trigger('click')
       await flushPromises()
 
-      expect(app.find('dialog').text()).toContain('Neues Leicht-Rätsel konnte nicht geladen werden')
+      expect(app.find('dialog').text()).toContain('Neues Rätsel (Leicht) konnte nicht geladen werden')
     })
   })
 

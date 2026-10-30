@@ -149,6 +149,7 @@ _French_: Note SE · _German_: SE-Wertung
 **HoDoKu level**:
 HoDoKu's own grade for a puzzle: Easy, Medium, Hard, Unfair or Extreme. "Level" is reserved for this.
 _Avoid_: Difficulty
+_French_ and _German_: kept as HoDoKu's own English grades
 
 **HoDoKu score**:
 HoDoKu's sum of the weights of every step in its solve; a high score can raise the HoDoKu level.

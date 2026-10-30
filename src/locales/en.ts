@@ -28,7 +28,7 @@ export const en = {
   },
   /** The keyboard hints under the game: key names are each keyboard's own. */
   hints: { shift: 'Shift', ctrl: 'Ctrl', del: 'Del', digit: 'digit', place: 'place', note: 'note', notesMode: 'notes mode', fillNotes: 'fill notes', erase: 'erase', undo: 'undo', arrows: 'arrows move' },
-  controls: { undo: 'Undo', erase: 'Erase', notes: 'Notes', fillNotes: 'Fill notes', technique: 'Technique' },
+  controls: { on: 'ON', off: 'OFF', undo: 'Undo', erase: 'Erase', notes: 'Notes', fillNotes: 'Fill notes', technique: 'Technique' },
   numberPad: 'Number pad',
   difficultyMenu: 'Difficulty',
   board: {

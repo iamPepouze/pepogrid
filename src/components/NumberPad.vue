@@ -64,7 +64,7 @@ onBeforeUnmount(cancelPress)
 .pad {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
-  /* 4px between digits: at 200% text the digits' own width leaves a pad the height-fitted board squeezes no room for 6px. */
+  /* 4px between digits, not 6px: at 200% text the digits are as wide as the board allows, and the extra 16px keeps the pad inside it. */
   gap: 6px 4px;
 }
 

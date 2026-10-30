@@ -4,6 +4,8 @@ import { useI18n } from '../composables/useI18n'
 import { useGameStore } from '../stores/game'
 
 const { t } = useI18n()
+/** A label's name for assistive technology: the soft hyphens that let it break on screen taken out. */
+const plain = (label: string) => label.replaceAll(String.fromCharCode(0xad), '')
 const game = useGameStore()
 /** `keyTechnique` passes the button, so focus can return to it: Safari doesn't focus a tapped button. */
 const emit = defineEmits<{ keyTechnique: [trigger: HTMLButtonElement] }>()
@@ -12,7 +14,7 @@ const emit = defineEmits<{ keyTechnique: [trigger: HTMLButtonElement] }>()
 <template>
   <div class="controls-box">
     <div class="controls">
-      <button type="button" class="control" :disabled="!game.history.length || game.completed" @click="game.undo">
+      <button type="button" class="control" :aria-label="plain(t.controls.undo)" :disabled="!game.history.length || game.completed" @click="game.undo">
         <Undo2 class="icon" aria-hidden="true" />
         <span>{{ t.controls.undo }}</span>
       </button>
@@ -30,7 +32,7 @@ const emit = defineEmits<{ keyTechnique: [trigger: HTMLButtonElement] }>()
       >
         <Pencil class="icon" aria-hidden="true" />
         <span>{{ t.controls.notes }}</span>
-        <span class="badge" aria-hidden="true">{{ game.notesMode ? 'ON' : 'OFF' }}</span>
+        <span class="badge" aria-hidden="true">{{ game.notesMode ? t.controls.on : t.controls.off }}</span>
       </button>
       <button type="button" class="control" :disabled="!game.canFillNotes" @click="game.fillNotes">
         <WandSparkles class="icon" aria-hidden="true" />
