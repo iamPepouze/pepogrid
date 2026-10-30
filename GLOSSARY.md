@@ -158,7 +158,7 @@ _French_: Score HoDoKu · _German_: HoDoKu-Punkte
 **Hardest technique**:
 The technique behind a puzzle's SE rating.
 _Avoid_: Hardest step
-_French_: Technique la plus dure · _German_: Schwierigste Technik. Technique names follow what each language's players say: Hidden/Naked Single *Singleton caché* / *Singleton nu*, *Versteckter Single* / *Nackter Single*; Hidden/Naked Pair, Triplet, Quad *Paire cachée*, *Triplet nu*, *Quadruplet nu*…, *Verstecktes Paar*, *Nacktes Tripel*, *Nacktes Quadrupel*…, with "Direct" as *directe* / *Direktes*. Patterns players call by their English name (X-Wing, Swordfish, XY-Wing, Unique Rectangle, BUG, chains, cycles) stay English.
+_French_: Technique la plus dure · _German_: Schwierigste Technik. Technique names follow what each language's players say: Hidden/Naked Single *Singleton caché* / *Singleton nu*, *Versteckter Single* / *Nackter Single*; Hidden/Naked Pair, Triplet, Quad *Paire cachée*, *Triplet nu*, *Quadruplet nu*…, *Verstecktes Paar*, *Nackter Dreier*, *Nackter Vierer*…, with "Direct" as *directe* / *Direkter* (*Direktes* for a pair). Patterns players call by their English name (Pointing, Claiming, X-Wing, Swordfish, XY-Wing, Unique Rectangle, BUG, chains, cycles) stay English.
 
 **Difficulty rule**:
 The SE rating picks a puzzle's difficulty, and its HoDoKu level must match that difficulty, or the puzzle is unusable.

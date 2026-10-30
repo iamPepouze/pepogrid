@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, onTestFinished } from 'vitest'
+import { LESSON_LANGUAGES } from '../locales'
 import { useSettingsStore } from '../stores/settings'
 import type { NextTechnique } from '../lib/rater'
 import KeyTechniqueView, { type KeyTechniqueTab } from './KeyTechniqueView.vue'
@@ -213,11 +214,17 @@ describe('KeyTechniqueView', () => {
     })
 
     it.each(LANGUAGES)('shows an untranslated lesson in English under the note in $language', (f) => {
+      // Every family gets translated, so the language here leaves Hidden subsets out. A new object, since lessons are cached per language.
+      const real = LESSON_LANGUAGES[f.language]!
+      LESSON_LANGUAGES[f.language] = { ...real, texts: Object.fromEntries(Object.entries(real.texts).filter(([family]) => family !== 'Hidden subsets')) }
+      onTestFinished(() => {
+        LESSON_LANGUAGES[f.language] = real
+      })
       useSettingsStore().language = f.language
       const view = mountView('Direct Hidden Triplet')
 
       expect(view.find('.note').text()).toBe(f.note)
-      const name = f.language === 'fr' ? 'Triplet caché direct' : 'Direktes verstecktes Tripel'
+      const name = f.language === 'fr' ? 'Triplet caché direct' : 'Direkter versteckter Dreier'
       expect(view.find('.technique').text()).toBe(name)
       expect(view.find('h3').text()).toBe(name)
       expect(view.find('h3').attributes('lang')).toBeUndefined()

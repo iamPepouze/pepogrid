@@ -154,10 +154,10 @@ const translatedLessons = (['fr', 'de'] as const).flatMap((language) =>
 )
 
 describe('key technique lessons', () => {
-  it('translates the Singles and Naked Single lessons into French and German, and only those', () => {
+  it('translates every family of lessons into French and German, and only those it lists', () => {
     for (const language of ['fr', 'de'] as const) {
       const families = LESSONS.filter((l) => lessonFor(l.sections[0].techniques[0], LESSON_LANGUAGES[language])?.fallback === false).map((l) => l.family)
-      expect(families, language).toEqual(['Singles', 'Naked Single'])
+      expect(families, language).toEqual(['Singles', 'Naked Single', 'Hidden subsets', 'Intersections', 'Subsets', 'Fish', 'Wings', 'Uniqueness', 'BUG', 'Exclusion', 'Cycles', 'Forcing chains'])
     }
   })
 
