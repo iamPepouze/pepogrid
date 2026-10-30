@@ -18,20 +18,27 @@ description: "Drive PepoGrid in a real browser. Use to see a UI change working, 
 
    ```js
    import { openGame } from 'file:///<repo root>/.claude/skills/drive-app/drive.mjs'
+   // many-files: the script saves screenshots, and the scripted-writes hook denies a script that writes unless it says so
+   import { openGame, only } from 'file:///<repo root>/.claude/skills/drive-app/drive.mjs'
    const out = process.argv[2] // the scratchpad
-   const app = await openGame()
-   const g = await app.save()
-   const i = g.puzzle.findIndex((v) => v === 0)
-   await app.cell(i).click()
-   await app.pad(g.solution[i]).click()
-   await app.page.screenshot({ path: `${out}/board.png`, clip: { x: 0, y: 80, width: 400, height: 390 } })
-   console.log(app.errors)
-   await app.close()
+   for (const [label, viewport] of [['320x1', { width: 320, height: 800 }], ['400x1', { width: 400, height: 800 }]]) {
+     if (!only(label)) continue
+     const app = await openGame({ viewport, touch: true })
+     const g = await app.save()
+     const i = g.puzzle.findIndex((v) => v === 0)
+     await app.cell(i).click()
+     await app.pad(g.solution[i]).click()
+     await app.page.screenshot({ path: `${out}/board-${label}.png`, clip: { x: 0, y: 80, width: 400, height: 390 } })
+     console.log(app.errors)
+     await app.close()
+   }
    ```
+
+   `node script.mjs <scratchpad> --only 400x1` runs just that open (`--only de,320x2` takes a comma-separated list; without it every open runs).
 
    `playwright-core` resolves through `drive.mjs`, so the script runs from anywhere. Without `touch: true`, the page sees a mouse at every width, so a phone-sized viewport alone still renders the desktop styles. For a layout change, open the game three times: at 320 and 400 px wide with `touch: true` (the narrowest phone and a typical one), and at 1200 × 800 without. Then open 320 and 400 again with `textScale: 2`, UX_STANDARDS.md U19's 200% text. Seed the widest content the view can hold: the longest one-word name, two-digit counts, every optional note shown. A colour change also runs once with `colorScheme: 'dark'`. A rule for the installed iOS app never applies in Chromium: [ios-installed-app.md](../../../docs/ios-installed-app.md) says what can still be checked here. A view that shows saved data takes it through `storage`, so the first load already has it; build stored results with `drive.mjs`'s `result(fields)`. A state a fresh puzzle rarely shows (a given next technique, "beyond XY-Wing", a lesson with collapsed sections) comes from `app.position(name)`, which loads a lesson position as the game in progress, and `app.offerInstall()` shows the *Install* pill (call it again after any reload).
 
-   The step is done when the script has printed `app.errors` (an empty list), and `app.clipped()` (an empty list, or only entries an open issue already tracks, named with it in the `drive-app:` line) for a layout change at all five opens (320, 400 and 1200, then 320 and 400 at `textScale: 2`), and saved a screenshot of every state the change touches, each taken from the element with `locator.screenshot()` rather than a fixed rectangle, which misses the element when the layout moves it. Each screenshot shows the state the script set up: check it first (`await locator.isChecked()`, `isVisible()`, throwing on a mismatch) and wait out any transition, or open with `reducedMotion: 'reduce'`, so a mid-slide frame never counts. A re-run after a follow-up fix screenshots only the states that fix touches.
+   The step is done when the script has printed `app.errors` (an empty list), and `app.clipped()` (an empty list, or only entries an open issue already tracks, named with it in the `drive-app:` line) for a layout change at all five opens (320, 400 and 1200, then 320 and 400 at `textScale: 2`), and saved a screenshot of every state the change touches, each taken from the element with `locator.screenshot()` rather than a fixed rectangle, which misses the element when the layout moves it. A view that scrolls inside the page (Statistics, the key technique) is shot once at its top as well as at the state under test, or with `page.screenshot({ fullPage: true })`, so its title, tabs and notes get checked too. Each screenshot shows the state the script set up: check it first (`await locator.isChecked()`, `isVisible()`, throwing on a mismatch) and wait out any transition, or open with `reducedMotion: 'reduce'`, so a mid-slide frame never counts. A re-run after a follow-up fix screenshots only the states that fix touches: pass `--only` with their labels rather than re-running every open.
 
 3. **Look** at every screenshot with Read. Rendered is not the same as correct. Screenshots of one state can be tiled first with `drive.mjs`'s `sheet(paths, out, columns)`, so one Read shows them all; opening the sheet counts as opening each of them. Tiles keep their aspect ratio at one column width, so tile screenshots of the same viewport width (400px in light and dark, say), or they come out at different zoom levels. `app.close()` prints each one it saved; the step is done when every printed path has been opened and the branch file's spec has a `drive-app: <states checked>; sheets <paths>, <date>` line, so the reviewer, who sees only the diff, knows the check ran and opens your sheets instead of screenshotting again (a state with no sheet lists its screenshot's path).
 
