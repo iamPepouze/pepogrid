@@ -3,14 +3,25 @@ name: Publish image
 on:
   push:
     branches: [main]
-  workflow_dispatch:
+  # A PR that touches the image runs everything except the push, since nothing else builds the Dockerfile before main.
+  pull_request:
+    branches: [main]
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - nginx.conf
+      - scripts/smoke-image.sh
+      - .github/workflows/image.yml
+      - vite.config.ts
+      - package-lock.json
 
 permissions:
   contents: read
 
-# One publish at a time, in push order; let a running one finish rather than cancel it.
+# One publish at a time; let a running one finish rather than cancel it. GitHub keeps only the newest waiting run,
+# so a burst of pushes publishes the first and the last, and skips the commits between: the newest image is what counts.
 concurrency:
-  group: image
+  group: image-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -19,10 +30,14 @@ env:
 jobs:
   # The same checks a PR must pass. deploy.yml runs them too, so a failed Pages deploy never blocks the image.
   check:
+    # A PR already has its own check run.
+    if: github.event_name == 'push'
     uses: ./.github/workflows/ci.yml
 
   image:
     needs: check
+    # check is skipped on a PR, which would skip this job too.
+    if: ${{ !failure() && !cancelled() }}
     # Built natively: the Cluster runs linux/arm64 only, so there is no emulation and no other platform.
     runs-on: ubuntu-24.04-arm
     permissions:
@@ -52,6 +67,7 @@ jobs:
         run: docker logs pepogrid
       # Only now, with every check green, does anything leave the runner.
       - name: Push
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
