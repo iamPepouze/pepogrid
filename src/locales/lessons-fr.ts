@@ -62,7 +62,7 @@ export const frLessons: LessonTexts = {
     ],
   },
   Intersections: {
-    text: 'Un bloc croise une ligne ou une colonne en trois cases. Quand toutes les places d’un chiffre dans un bloc sont dans une même ligne ou colonne, le chiffre de cette ligne est dans le bloc, donc le reste de la ligne ne peut pas le contenir. C’est Pointing. Claiming fonctionne à l’inverse : quand toutes les places d’un chiffre dans une ligne sont dans un même bloc, le reste du bloc ne peut pas le contenir.',
+    text: 'Un bloc croise une ligne ou une colonne en trois cases. Quand toutes les places d’un chiffre dans un bloc sont dans une même ligne ou colonne, le chiffre de cette ligne est dans le bloc, donc le reste de la ligne ne peut pas le contenir. C’est Pointing (le pointage). Claiming fonctionne à l’inverse : quand toutes les places d’un chiffre dans une ligne sont dans un même bloc, le reste du bloc ne peut pas le contenir.',
     sections: [
       {
         text: 'Choisis un bloc et un chiffre dont il a encore besoin. Si toutes les cases du bloc ayant ce candidat sont dans la même ligne ou colonne, le bloc pointe le long de cette ligne : le chiffre est exclu du reste de la ligne, hors du bloc.',
@@ -100,41 +100,41 @@ export const frLessons: LessonTexts = {
     text: 'Un sous-ensemble relie quelques cases d’une unité à autant de chiffres. Dans un sous-ensemble nu, les candidats de ces cases sont uniquement ces chiffres : ils remplissent donc les cases, et le reste de l’unité ne peut pas les contenir. Dans un sous-ensemble caché, ces chiffres n’ont pas d’autre place dans l’unité : les cases les contiennent, et leurs autres candidats disparaissent.',
     sections: [
       {
-        text: 'Cherche deux cases d’une ligne, d’une colonne ou d’un bloc qui ont les deux mêmes candidats et aucun autre. L’une contient chaque chiffre, dans un certain ordre : aucune autre case de cette unité ne peut donc en contenir un.',
+        text: 'Cherche deux cases d’une ligne, d’une colonne ou d’un bloc qui ont les deux mêmes candidats et aucun autre. L’une contient chaque chiffre, dans un ordre quelconque : aucune autre case de cette unité ne peut donc en contenir un.',
         examples: [
           [
             'La colonne 8 a cinq cases vides. Regarde les lignes 3 et 4 : chacune ne peut contenir qu’un 5 ou un 7.',
-            'Deux cases, deux chiffres : l’une est le 5 et l’autre le 7, dans un certain ordre. C’est une paire nue.',
+            'Deux cases, deux chiffres : l’une est le 5 et l’autre le 7, dans un ordre quelconque. C’est une paire nue.',
             'Le 5 et le 7 étant pris, aucune autre case de la colonne 8 ne peut les contenir : le 5 en ligne 5 et les 7 en lignes 7 et 9 disparaissent.',
           ],
         ],
       },
       {
-        text: 'Trois cases d’une unité dont les candidats, ensemble, ne sont que trois chiffres forment un triplet nu. Les trois chiffres remplissent ces cases, dans un certain ordre : aucune autre case de l’unité ne peut les contenir. Une case n’a pas besoin des trois : des cases avec un 4 ou un 5, un 5 ou un 6, et un 4 ou un 6 forment aussi un triplet.',
+        text: 'Trois cases d’une unité dont les candidats, ensemble, ne sont que trois chiffres forment un triplet nu. Les trois chiffres remplissent ces cases, dans un ordre quelconque : aucune autre case de l’unité ne peut les contenir. Une case n’a pas besoin des trois : des cases avec un 4 ou un 5, un 5 ou un 6, et un 4 ou un 6 forment aussi un triplet.',
         examples: [
           [
             'La colonne 8 a six cases vides. Regarde les lignes 2, 4 et 5 : chacune ne peut contenir qu’un 4, un 5 ou un 6.',
-            'Trois cases, trois chiffres : le 4, le 5 et le 6 remplissent ces cases, dans un certain ordre. C’est un triplet nu.',
+            'Trois cases, trois chiffres : le 4, le 5 et le 6 remplissent ces cases, dans un ordre quelconque. C’est un triplet nu.',
             'Ces trois chiffres étant pris, aucune autre case de la colonne 8 ne peut les contenir : le 4 et le 5 en ligne 3 disparaissent.',
           ],
         ],
       },
       {
-        text: 'Quatre cases d’une unité dont les candidats, ensemble, ne sont que quatre chiffres forment un quadruplet nu. Les quatre chiffres remplissent ces cases, dans un certain ordre : aucune autre case de l’unité ne peut les contenir. Comme pour un triplet, une case n’a pas besoin des quatre.',
+        text: 'Quatre cases d’une unité dont les candidats, ensemble, ne sont que quatre chiffres forment un quadruplet nu. Les quatre chiffres remplissent ces cases, dans un ordre quelconque : aucune autre case de l’unité ne peut les contenir. Comme pour un triplet, une case n’a pas besoin des quatre.',
         examples: [
           [
             'Le bloc en bas à gauche a neuf cases vides. Regarde-en quatre : les trois de la ligne 7 et la ligne 8, colonne 3.',
-            'Ensemble, elles ne contiennent qu’un 1, un 2, un 5 ou un 9. Quatre cases, quatre chiffres : ces chiffres remplissent ces cases, dans un certain ordre. C’est un quadruplet nu.',
+            'Ensemble, elles ne contiennent qu’un 1, un 2, un 5 ou un 9. Quatre cases, quatre chiffres : ces chiffres remplissent ces cases, dans un ordre quelconque. C’est un quadruplet nu.',
             'Ces quatre chiffres étant pris, aucune autre case du bloc ne peut les contenir : le 9 en ligne 8, colonne 2 et le 1 et le 2 en ligne 9, colonne 3 disparaissent.',
           ],
         ],
       },
       {
-        text: 'Cherche deux chiffres dont une unité a besoin et dont les seules places sont les deux mêmes cases. Ces cases doivent contenir la paire, dans un certain ordre : tout autre candidat qu’elles ont disparaît. La paire se cachait parmi ces candidats.',
+        text: 'Cherche deux chiffres dont une unité a besoin et dont les seules places sont les deux mêmes cases. Ces cases doivent contenir la paire, dans un ordre quelconque : tout autre candidat qu’elles ont disparaît. La paire se cachait parmi ces candidats.',
         examples: [
           [
             'Le bloc en bas au milieu a encore besoin d’un 2, d’un 3, d’un 5, d’un 6, d’un 7, d’un 8 et d’un 9. Où peuvent aller son 8 et son 9 ?',
-            'Chacun n’est candidat que dans la ligne 9, colonnes 5 et 6. Deux chiffres, deux cases : ces cases doivent contenir le 8 et le 9, dans un certain ordre. C’est une paire cachée.',
+            'Chacun n’est candidat que dans la ligne 9, colonnes 5 et 6. Deux chiffres, deux cases : ces cases doivent contenir le 8 et le 9, dans un ordre quelconque. C’est une paire cachée.',
             'Le 8 et le 9 prenant les deux cases, rien d’autre n’y tient : le 3 en colonne 5 et le 5 en colonne 6 disparaissent.',
           ],
         ],
@@ -144,7 +144,7 @@ export const frLessons: LessonTexts = {
         examples: [
           [
             'Le bloc au milieu à droite a encore besoin de tous les chiffres sauf le 2. Où peuvent aller son 1, son 8 et son 9 ?',
-            'Tous trois ne sont candidats que dans la ligne 5, colonne 9 et la ligne 6, colonnes 8 et 9. Trois chiffres, trois cases : ces cases doivent les contenir, dans un certain ordre. C’est un triplet caché, même si la ligne 5, colonne 9 n’a pas de 9.',
+            'Tous trois ne sont candidats que dans la ligne 5, colonne 9 et la ligne 6, colonnes 8 et 9. Trois chiffres, trois cases : ces cases doivent les contenir, dans un ordre quelconque. C’est un triplet caché, même si la ligne 5, colonne 9 n’a pas de 9.',
             'Le 1, le 8 et le 9 prenant ces cases, rien d’autre n’y tient : le 6 et le 7 en ligne 5, colonne 9 disparaissent.',
           ],
         ],
@@ -180,29 +180,29 @@ export const frLessons: LessonTexts = {
     ],
   },
   Wings: {
-    text: 'Une wing est une case pivot et deux ailes : des voisines du pivot avec deux candidats chacune, qui partagent un chiffre. Quoi que contienne le pivot, ce chiffre finit dans l’une des cases du motif, donc une case voisine de toutes celles qui peuvent le contenir ne peut pas le contenir non plus.',
+    text: 'Une wing est une case pivot et deux pinces : des voisines du pivot avec deux candidats chacune, qui partagent un chiffre. Quoi que contienne le pivot, ce chiffre finit dans l’une des cases du motif, donc une case voisine de toutes celles qui peuvent le contenir ne peut pas le contenir non plus.',
     sections: [
       {
-        text: 'Le pivot a deux candidats, X et Y. Une aile a X et Z, l’autre Y et Z. Si le pivot est X, la première aile garde Z ; s’il est Y, c’est la seconde. Dans les deux cas une aile contient Z, donc Z disparaît de toute case voisine des deux ailes.',
+        text: 'Le pivot a deux candidats, X et Y. Une pince a X et Z, l’autre Y et Z. Si le pivot est X, la première pince garde Z ; s’il est Y, c’est la seconde. Dans les deux cas une pince contient Z, donc Z disparaît de toute case voisine des deux pinces.',
         examples: [
           [
             'La ligne 1, colonne 2 ne peut contenir qu’un 1 ou un 7. C’est le pivot.',
             'Si le pivot est 1, la ligne 1, colonne 4, dans la même ligne, ne peut pas être 1, donc il lui reste son 2.',
             'Si le pivot est 7 au contraire, la ligne 3, colonne 3, dans le même bloc, ne peut pas être 7, donc il lui reste son 2.',
-            'Dans les deux cas, l’une des deux ailes est un 2. C’est un XY-Wing : un pivot et deux ailes.',
-            'La ligne 3, colonne 5 est voisine des deux ailes : elle partage la ligne 3 avec l’une et le bloc en haut au milieu avec l’autre. Quelle que soit l’aile qui est le 2, cette case ne peut pas l’être, donc son 2 disparaît.',
+            'Dans les deux cas, l’une des deux pinces est un 2. C’est un XY-Wing : un pivot et deux pinces.',
+            'La ligne 3, colonne 5 est voisine des deux pinces : elle partage la ligne 3 avec l’une et le bloc en haut au milieu avec l’autre. Quelle que soit la pince qui est le 2, cette case ne peut pas l’être, donc son 2 disparaît.',
           ],
         ],
       },
       {
-        text: 'Un XYZ-Wing est un XY-Wing dont le pivot peut aussi contenir le chiffre partagé : le pivot a X, Y et Z, une aile X et Z, l’autre Y et Z. Quoi que contienne le pivot, Z finit dans le pivot ou une aile, donc Z disparaît de toute case voisine des trois.',
+        text: 'Un XYZ-Wing est un XY-Wing dont le pivot peut aussi contenir le chiffre partagé : le pivot a X, Y et Z, une pince X et Z, l’autre Y et Z. Quoi que contienne le pivot, Z finit dans le pivot ou une pince, donc Z disparaît de toute case voisine des trois.',
         examples: [
           [
             'La ligne 8, colonne 6 peut contenir un 6, un 8 ou un 9. C’est le pivot.',
             'Si le pivot est 6, la ligne 3, colonne 6, dans la même colonne, ne peut pas être 6, donc il lui reste son 8.',
             'Si le pivot est 9, la ligne 8, colonne 5, dans la même ligne, ne peut pas être 9, donc il lui reste son 8.',
             'Et si le pivot n’est ni l’un ni l’autre, c’est lui le 8. Dans tous les cas, l’une des trois cases est un 8. C’est un XYZ-Wing.',
-            'La ligne 7, colonne 6 est voisine des trois : elle partage la colonne 6 avec le pivot et une aile, et le bloc en bas au milieu avec le pivot et l’autre. Quelle que soit celle qui est le 8, cette case ne peut pas l’être, donc son 8 disparaît.',
+            'La ligne 7, colonne 6 est voisine des trois : elle partage la colonne 6 avec le pivot et une pince, et le bloc en bas au milieu avec le pivot et l’autre. Quelle que soit celle qui est le 8, cette case ne peut pas l’être, donc son 8 disparaît.',
           ],
         ],
       },
