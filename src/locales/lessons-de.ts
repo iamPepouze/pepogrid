@@ -49,7 +49,7 @@ export const deLessons: LessonTexts = {
         ],
       },
       {
-        text: 'Drei Ziffern, deren einzige Plätze in einer Einheit dieselben drei Zellen sind, bilden ein versteckter Dreier. Die drei Zellen müssen diese Ziffern enthalten, also fallen ihre anderen Kandidaten weg. Nicht jede Zelle braucht alle drei Ziffern als Kandidaten: Entscheidend ist, dass die Ziffern keinen anderen Platz haben.',
+        text: 'Drei Ziffern, deren einzige Plätze in einer Einheit dieselben drei Zellen sind, bilden einen versteckten Dreier. Die drei Zellen müssen diese Ziffern enthalten, also fallen ihre anderen Kandidaten weg. Nicht jede Zelle braucht alle drei Ziffern als Kandidaten: Entscheidend ist, dass die Ziffern keinen anderen Platz haben.',
         examples: [
           [
             'Zeile 7 braucht noch eine 1, eine 2, eine 3, eine 4, eine 8 und eine 9. Wohin können ihre 3, ihre 4 und ihre 9?',
@@ -110,7 +110,7 @@ export const deLessons: LessonTexts = {
         ],
       },
       {
-        text: 'Drei Zellen einer Einheit, deren Kandidaten zusammen nur drei Ziffern sind, bilden ein nackter Dreier. Die drei Ziffern füllen diese Zellen in beliebiger Reihenfolge, also kann keine andere Zelle der Einheit sie aufnehmen. Eine Zelle braucht nicht alle drei: Zellen mit einer 4 oder 5, einer 5 oder 6 und einer 4 oder 6 sind auch ein Tripel.',
+        text: 'Drei Zellen einer Einheit, deren Kandidaten zusammen nur drei Ziffern sind, bilden einen nackten Dreier. Die drei Ziffern füllen diese Zellen in beliebiger Reihenfolge, also kann keine andere Zelle der Einheit sie aufnehmen. Eine Zelle braucht nicht alle drei: Zellen mit einer 4 oder 5, einer 5 oder 6 und einer 4 oder 6 sind auch ein Dreier.',
         examples: [
           [
             'Spalte 8 hat sechs leere Zellen. Sieh dir die Zeilen 2, 4 und 5 an: Jede kann nur eine 4, eine 5 oder eine 6 aufnehmen.',
@@ -120,7 +120,7 @@ export const deLessons: LessonTexts = {
         ],
       },
       {
-        text: 'Vier Zellen einer Einheit, deren Kandidaten zusammen nur vier Ziffern sind, bilden ein nackter Vierer. Die vier Ziffern füllen diese Zellen in beliebiger Reihenfolge, also kann keine andere Zelle der Einheit sie aufnehmen. Wie beim Dreier braucht eine Zelle nicht alle vier.',
+        text: 'Vier Zellen einer Einheit, deren Kandidaten zusammen nur vier Ziffern sind, bilden einen nackten Vierer. Die vier Ziffern füllen diese Zellen in beliebiger Reihenfolge, also kann keine andere Zelle der Einheit sie aufnehmen. Wie beim Dreier braucht eine Zelle nicht alle vier.',
         examples: [
           [
             'Der Block unten links hat neun leere Zellen. Sieh dir vier davon an: die drei in Zeile 7 und Zeile 8, Spalte 3.',
@@ -140,7 +140,7 @@ export const deLessons: LessonTexts = {
         ],
       },
       {
-        text: 'Drei Ziffern, deren einzige Plätze in einer Einheit dieselben drei Zellen sind, bilden ein versteckter Dreier. Die drei Zellen müssen diese Ziffern aufnehmen, also entfallen ihre anderen Kandidaten. Nicht jede Zelle braucht alle drei Ziffern als Kandidaten: Entscheidend ist, dass die Ziffern keinen anderen Platz haben.',
+        text: 'Drei Ziffern, deren einzige Plätze in einer Einheit dieselben drei Zellen sind, bilden einen versteckten Dreier. Die drei Zellen müssen diese Ziffern aufnehmen, also entfallen ihre anderen Kandidaten. Nicht jede Zelle braucht alle drei Ziffern als Kandidaten: Entscheidend ist, dass die Ziffern keinen anderen Platz haben.',
         examples: [
           [
             'Der Block rechts in der Mitte braucht noch jede Ziffer außer der 2. Wohin können seine 1, seine 8 und seine 9?',
