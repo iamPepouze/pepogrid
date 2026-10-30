@@ -55,6 +55,9 @@ const cells = computed(() => gridAt(props.example, index.value))
 }
 
 .counter {
+  flex: 1;
+  min-width: min(8em, 100%);
+  text-align: center;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
