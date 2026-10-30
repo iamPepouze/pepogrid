@@ -212,6 +212,23 @@ describe('App', () => {
   })
 
   describe('in French and German', () => {
+    it('words the reset statistics dialog in French and German', async () => {
+      for (const [language, button, title, confirm] of [
+        ['fr', 'Statistiques', 'Réinitialiser les statistiques ?', 'Réinitialiser'],
+        ['de', 'Statistik', 'Statistik zurücksetzen?', 'Zurücksetzen'],
+      ] as const) {
+        useSettingsStore().language = language
+        seedResult('hard', 'completed')
+        const app = await mountApp()
+        await app.find(`.topbar button[aria-label="${button}"]`).trigger('click')
+        await app.find('.statistics button.reset').trigger('click')
+
+        expect(app.find('dialog').text()).toContain(title)
+        expect(app.findAll('dialog button').map((b) => b.text())).toEqual([language === 'fr' ? 'Annuler' : 'Abbrechen', confirm])
+        app.unmount()
+      }
+    })
+
     it('words the header, status bar and new game dialog in French', async () => {
       useSettingsStore().language = 'fr'
       const app = await mountApp()

@@ -11,7 +11,12 @@ export function useI18n() {
   const locale = computed(() => LOCALES[language.value])
   /** A rating or an average to one decimal, with the language's decimal mark: 7.2, or 7,2 in French and German. */
   const formatTenths = (n: number) => new Intl.NumberFormat(locale.value, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n)
-  return { language, t, locale, formatTenths }
+  /** A share of 0-1 as a whole percent, as the language writes it: 45%, or 45 % in French and German. */
+  const formatPercent = (share: number) => new Intl.NumberFormat(locale.value, { style: 'percent', maximumFractionDigits: 0 }).format(share)
+  /** The day, month and time of a date, with the year when `withYear`, in the app's language and not the device's. */
+  const formatDateTime = (date: Date, withYear: boolean) =>
+    date.toLocaleString(locale.value, { day: 'numeric', month: 'short', year: withYear ? 'numeric' : undefined, hour: '2-digit', minute: '2-digit' })
+  return { language, t, locale, formatTenths, formatPercent, formatDateTime }
 }
 
 /** Keeps `<html lang>` at the app's language. Call once, from App; index.html sets it before first paint. */

@@ -3,6 +3,7 @@ import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { Difficulty } from '../lib/difficulty'
+import { useSettingsStore } from '../stores/settings'
 import { seedResult } from '../stores/testing'
 import StatisticsView from './StatisticsView.vue'
 
@@ -130,6 +131,61 @@ describe('StatisticsView', () => {
     expect(reset().element.disabled).toBe(false)
     await reset().trigger('click')
     expect(view.emitted('reset')).toEqual([[reset().element]])
+  })
+
+  describe('in French and German', () => {
+    const seedMixed = () => {
+      seedResult('hard', 'completed', { endedAt: '2026-10-01T10:00:00Z', elapsed: 300, mistakes: 2, se: 3.0, hodokuScore: 300, hardest: 'Pointing', nextStepsShown: 2, keyTechniqueRevealed: true })
+      seedResult('hard', 'completed', { endedAt: '2026-10-02T10:00:00Z', mistakes: 1, se: 4.2, hardest: 'Naked Pair' })
+      seedResult('hard', 'abandoned', { endedAt: '2026-10-03T10:00:00Z', mistakes: 0, se: 3.5, progress: 46, hardest: 'Naked Pair' })
+      seedResult('hard', 'abandoned', { endedAt: '2026-10-04T10:00:00Z', progress: 10, hardest: 'Naked Pair' })
+      seedResult('hard', 'completed', { endedAt: '2026-10-05T10:00:00Z', mistakes: 1, se: 3.5, hardest: 'Naked Pair' })
+      seedResult('hard', 'completed', { endedAt: '2026-10-06T10:00:00Z', mistakes: 1, se: 3.5, hardest: 'Naked Pair' })
+    }
+
+    it('writes decimals with a comma and the solve rate as a French player does', () => {
+      useSettingsStore().language = 'fr'
+      seedMixed()
+      const view = mountView('hard')
+
+      expect(view.find('.summary').text()).toMatch(/Taux de réussite\s*67[\u00a0\u202f]%/)
+      expect(section(view, 'Parties résolues')).toContain('Erreurs en moyenne 1,3')
+      expect(section(view, 'Notes')).toBe('Note SE 3,6 3,0–4,2 Score HoDoKu 225 200–300')
+      expect(view.find('[role="tabpanel"]').text()).toMatch(/Abandonnées à 28[\u00a0\u202f]% en moyenne/)
+    })
+
+    it('words the labels, tabs and technique families in French, and the dates in French', () => {
+      useSettingsStore().language = 'fr'
+      seedMixed()
+      const view = mountView('hard')
+
+      expect(view.find('h2').text()).toBe('Statistiques')
+      expect(view.findAll('[role="tab"]').map((t) => t.text())).toEqual(['Facile', 'Moyen', 'Difficile', 'Expert', 'Maître'])
+      expect(section(view, 'Familles de techniques')).toBe('Sous-ensembles 3/5 Intersections 1/1 1 a révélé la technique clé 1 a utilisé la prochaine étape')
+      expect(view.findAll('.recent li')[0].text()).toMatch(/^\d+ oct\.?,? .* · Résolue · .* · 1 erreur · SE 3,5$/)
+      expect(view.findAll('button').map((b) => b.text())).toContain('Réinitialiser les statistiques')
+    })
+
+    it('words the labels and families in German, and the dates in German', () => {
+      useSettingsStore().language = 'de'
+      seedMixed()
+      const view = mountView('hard')
+
+      expect(view.find('.summary').text()).toMatch(/Lösungsquote\s*67[\u00a0\u202f]%/)
+      expect(section(view, 'Technikfamilien')).toBe('Teilmengen 3/5 Schnittmengen 1/1 1 hat die Schlüsseltechnik aufgedeckt 1 hat den nächsten Schritt genutzt')
+      expect(view.findAll('.recent li')[0].text()).toMatch(/^\d+\. Okt\.?,? .* · Gelöst · .* · 1 Fehler · SE 3,5$/)
+      expect(view.findAll('button').map((b) => b.text())).toContain('Zurück')
+    })
+
+    it('shows a dash in French for what needs a solved game, and says "no games" in French', async () => {
+      useSettingsStore().language = 'fr'
+      seedResult('master', 'abandoned')
+      const view = mountView('master')
+
+      expect(section(view, 'Parties résolues')).toBe('Meilleur temps — Temps moyen — Erreurs en moyenne — Sans faute — Technique clé révélée — Prochaine étape utilisée —')
+      await view.findAll('[role="tab"]').find((t) => t.text() === 'Facile')!.trigger('click')
+      expect(view.find('[role="tabpanel"]').text()).toBe('Aucune partie en Facile pour l’instant.')
+    })
   })
 
   it('emits back when Back is pressed', async () => {

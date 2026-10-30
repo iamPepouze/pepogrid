@@ -94,9 +94,9 @@ const statisticsView = ref<InstanceType<typeof StatisticsView> | null>(null)
 /** Asks, then clears every result. `trigger` is the Reset button: focus returns there on cancel. */
 async function resetStatistics(trigger: HTMLButtonElement | null) {
   const confirmed = await ask({
-    title: 'Reset statistics?',
-    message: 'Every solved and abandoned game will be forgotten. This can’t be undone.',
-    confirmLabel: 'Reset',
+    title: t.value.statistics.resetTitle,
+    message: t.value.statistics.resetMessage,
+    confirmLabel: t.value.statistics.resetConfirm,
     cancelLabel: t.value.common.cancel,
   })
   if (!confirmed) {

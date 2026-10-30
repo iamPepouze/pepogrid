@@ -10,15 +10,21 @@ defineProps<{ figures: Figure[] }>()
 </script>
 
 <template>
-  <dl class="figures">
-    <div v-for="f in figures" :key="f.label">
-      <dt>{{ f.label }}</dt>
-      <dd class="stat-value">{{ f.value }}</dd>
-    </div>
-  </dl>
+  <div class="box">
+    <dl class="figures">
+      <div v-for="f in figures" :key="f.label">
+        <dt>{{ f.label }}</dt>
+        <dd class="stat-value">{{ f.value }}</dd>
+      </div>
+    </dl>
+  </div>
 </template>
 
 <style scoped>
+.box {
+  container-type: inline-size;
+}
+
 .figures {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -26,10 +32,31 @@ defineProps<{ figures: Figure[] }>()
   margin: 0;
 }
 
-/* Four labels like "Abandoned" don't fit side by side on the narrowest phones. */
-@media (max-width: 359px) {
+/*
+ * Columns follow the room the figures have, not the screen: large text narrows them too. Four labels like
+ * "Abandoned" need 20em across, and French and German labels, such as "Durchschnittszeit", need 26em.
+ */
+@container (max-width: 20em) {
   .figures {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 12em) {
+  .figures {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container (max-width: 26em) {
+  :is(:lang(fr), :lang(de)) .figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 13em) {
+  :is(:lang(fr), :lang(de)) .figures {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

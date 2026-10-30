@@ -81,6 +81,8 @@ function onCancel(e: Event) {
 
 .content {
   padding: 18px 18px 14px;
+  /* A long word, such as a German one at large text, breaks rather than spilling out. */
+  overflow-wrap: anywhere;
 }
 
 h2 {
@@ -95,6 +97,8 @@ p {
 
 .actions {
   display: flex;
+  /* At large text the two buttons stack rather than overflow. */
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
 }
