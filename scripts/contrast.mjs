@@ -23,17 +23,6 @@ const GLOW = 'in the glow'
  * to 3:1 as a control.
  */
 const ALLOWED = {
-  '--user-digit on --same-digit at 4.5': '#64',
-  '--user-digit on --conflict at 4.5': '#64',
-  '--user-digit on --selected at 4.5': '#64',
-  '--wrong-digit on --peer at 4.5': '#64',
-  '--wrong-digit on --same-digit at 4.5': '#64',
-  '--wrong-digit on --conflict at 4.5': '#64',
-  '--wrong-digit on --selected at 4.5': '#64',
-  '--note on --selected at 4.5': '#64',
-  '--user-digit on --cell at 4.5 in the glow': '#95',
-  '--user-digit on --peer at 4.5 in the glow': '#95',
-  '--user-digit on --same-digit at 4.5 in the glow': '#95',
   '--user-digit on --conflict at 4.5 in the glow': '#95',
   '--user-digit on --selected at 4.5 in the glow': '#95',
   '--accent on --cell at 4.5': '#75',
