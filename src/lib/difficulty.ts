@@ -42,10 +42,6 @@ export const TIERS: Record<Difficulty, Tier> = {
   master: { label: 'Master', se: [6.6, 8.0], hodoku: 'extreme', showRating: true, rotate: true },
 }
 
-export const LABELS: Record<Difficulty, string> = Object.fromEntries(
-  DIFFICULTIES.map((d) => [d, TIERS[d].label]),
-) as Record<Difficulty, string>
-
 export const HODOKU_LABELS: Record<HodokuLevel, string> = {
   easy: 'Easy',
   medium: 'Medium',

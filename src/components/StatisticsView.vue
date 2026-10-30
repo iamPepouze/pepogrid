@@ -189,7 +189,7 @@ async function onTabKeydown(e: KeyboardEvent) {
 <style scoped>
 /* At large text, a long word such as a German one breaks rather than spilling out of its card. */
 .statistics {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .card {
@@ -221,8 +221,9 @@ async function onTabKeydown(e: KeyboardEvent) {
 
 .list > div {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 12px;
+  gap: 0 12px;
 }
 
 .list dd {

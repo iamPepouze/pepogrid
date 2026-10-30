@@ -214,7 +214,7 @@ describe('App', () => {
   describe('in French and German', () => {
     it('words the reset statistics dialog in French and German', async () => {
       for (const [language, button, title, confirm] of [
-        ['fr', 'Statistiques', 'Réinitialiser les statistiques ?', 'Réinitialiser'],
+        ['fr', 'Statistiques', 'Réinitialiser les statistiques ?', 'Réinitialiser'],
         ['de', 'Statistik', 'Statistik zurücksetzen?', 'Zurücksetzen'],
       ] as const) {
         useSettingsStore().language = language
@@ -223,8 +223,8 @@ describe('App', () => {
         await app.find(`.topbar button[aria-label="${button}"]`).trigger('click')
         await app.find('.statistics button.reset').trigger('click')
 
-        expect(app.find('dialog').text()).toContain(title)
-        expect(app.findAll('dialog button').map((b) => b.text())).toEqual([language === 'fr' ? 'Annuler' : 'Abbrechen', confirm])
+        expect(app.find('dialog').text().replaceAll('­', '')).toContain(title)
+        expect(app.findAll('dialog button').map((b) => b.text().replaceAll('­', ''))).toEqual([language === 'fr' ? 'Annuler' : 'Abbrechen', confirm])
         app.unmount()
       }
     })
@@ -236,11 +236,11 @@ describe('App', () => {
 
       expect(app.find('.tagline').text()).toBe('Ta grille, ta détente.')
       expect(app.find('.topbar button[aria-label="Statistiques"]').exists()).toBe(true)
-      expect(app.find('.status').text()).toMatch(/^Erreurs : 0/)
+      expect(app.find('.status').text()).toMatch(/^Erreurs : 0/)
       expect(app.find('.timer').attributes('aria-label')).toBe('Temps écoulé')
 
       await app.find('.topbar button[aria-label="Nouvelle partie"]').trigger('click')
-      expect(app.find('dialog').text()).toContain('Commencer une nouvelle partie Facile ?')
+      expect(app.find('dialog').text()).toContain('Commencer une nouvelle partie Facile ?')
       expect(app.find('dialog').text()).toContain('Ta partie Facile en cours sera perdue.')
       expect(app.findAll('dialog button').map((b) => b.text())).toEqual(['Annuler', 'Nouvelle partie'])
     })

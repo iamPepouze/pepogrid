@@ -144,7 +144,7 @@ _French_: Difficulté: Facile, Moyen, Difficile, Expert, Maître · _German_: Sc
 **SE rating**:
 The puzzle's rating on the classic Sudoku Explainer 1.2.1 scale, set by the hardest technique a solve needs.
 _Avoid_: SER, SE score
-_French_: Note SE · _German_: SE-Wertung
+_French_: Note SE · _German_: SE-Wertung. Statistics heads the SE and HoDoKu figures together *Évaluations* / *Wertungen*, since *Notes* is the pencil marks.
 
 **HoDoKu level**:
 HoDoKu's own grade for a puzzle: Easy, Medium, Hard, Unfair or Extreme. "Level" is reserved for this.

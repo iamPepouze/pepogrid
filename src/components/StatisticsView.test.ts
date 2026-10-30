@@ -47,7 +47,7 @@ describe('StatisticsView', () => {
     if (!body) return undefined
     const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT)
     const texts: string[] = []
-    while (walker.nextNode()) texts.push(walker.currentNode.textContent!.trim())
+    while (walker.nextNode()) texts.push(walker.currentNode.textContent!.replaceAll('\u00ad', '').trim())
     return texts.filter(Boolean).join(' ')
   }
 
@@ -150,7 +150,7 @@ describe('StatisticsView', () => {
 
       expect(view.find('.summary').text()).toMatch(/Taux de réussite\s*67[\u00a0\u202f]%/)
       expect(section(view, 'Parties résolues')).toContain('Erreurs en moyenne 1,3')
-      expect(section(view, 'Notes')).toBe('Note SE 3,6 3,0–4,2 Score HoDoKu 225 200–300')
+      expect(section(view, 'Évaluations')).toBe('Note SE 3,6 3,0–4,2 Score HoDoKu 225 200–300')
       expect(view.find('[role="tabpanel"]').text()).toMatch(/Abandonnées à 28[\u00a0\u202f]% en moyenne/)
     })
 

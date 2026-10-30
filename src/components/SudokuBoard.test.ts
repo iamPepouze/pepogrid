@@ -38,13 +38,13 @@ describe('SudokuBoard', () => {
     const empty = game.puzzle.findIndex((v) => v === 0)
 
     expect(board.find('[role=grid]').attributes('aria-label')).toBe('Grille de sudoku')
-    expect(cell(given).attributes('aria-label')).toBe(`Ligne ${rowOf(given) + 1}, colonne ${colOf(given) + 1} : ${game.puzzle[given]} (donné)`)
-    expect(cell(empty).attributes('aria-label')).toBe(`Ligne ${rowOf(empty) + 1}, colonne ${colOf(empty) + 1} : vide`)
+    expect(cell(given).attributes('aria-label')).toBe(`Ligne ${rowOf(given) + 1}, colonne ${colOf(given) + 1} : ${game.puzzle[given]} (donné)`)
+    expect(cell(empty).attributes('aria-label')).toBe(`Ligne ${rowOf(empty) + 1}, colonne ${colOf(empty) + 1} : vide`)
 
     game.select(empty)
     game.input(game.solution[empty] % 9 + 1)
     await board.vm.$nextTick()
-    expect(cell(empty).attributes('aria-label')).toMatch(/ : \d, incorrect$/)
+    expect(cell(empty).attributes('aria-label')).toMatch(/\u00a0: \d, incorrect$/)
 
     useSettingsStore().language = 'de'
     await board.vm.$nextTick()

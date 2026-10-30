@@ -82,7 +82,7 @@ function onCancel(e: Event) {
 .content {
   padding: 18px 18px 14px;
   /* A long word, such as a German one at large text, breaks rather than spilling out. */
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 h2 {
