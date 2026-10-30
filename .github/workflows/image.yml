@@ -6,6 +6,7 @@ on:
   # A PR that touches the image runs everything except the push, since nothing else builds the Dockerfile before main.
   pull_request:
     branches: [main]
+    # Everything the image is built from or the smoke check asserts on.
     paths:
       - Dockerfile
       - .dockerignore
@@ -13,16 +14,21 @@ on:
       - scripts/smoke-image.sh
       - .github/workflows/image.yml
       - vite.config.ts
+      - package.json
       - package-lock.json
+      - .npmrc
+      - index.html
+      - public/**
 
 permissions:
   contents: read
 
 # One publish at a time; let a running one finish rather than cancel it. GitHub keeps only the newest waiting run,
 # so a burst of pushes publishes the first and the last, and skips the commits between: the newest image is what counts.
+# A new push to a PR supersedes its running build, as in ci.yml.
 concurrency:
   group: image-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   IMAGE: ghcr.io/iampepouze/pepogrid
@@ -71,7 +77,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag="main-$(date +%s)-${GITHUB_SHA::7}"
+          # The commit's time, not the build's: a rerun of an older run can't outrank a newer commit's tag.
+          tag="main-$(git show -s --format=%ct "$GITHUB_SHA")-${GITHUB_SHA::7}"
           echo "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           docker tag "$IMAGE:candidate" "$IMAGE:$tag"
           docker push "$IMAGE:$tag"
