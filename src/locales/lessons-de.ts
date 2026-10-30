@@ -55,7 +55,7 @@ export const deLessons: LessonTexts = {
             'Zeile 7 braucht noch eine 1, eine 2, eine 3, eine 4, eine 8 und eine 9. Wohin können ihre 3, ihre 4 und ihre 9?',
             'Alle drei sind nur in den Spalten 5, 6 und 7 Kandidaten. Drei Ziffern, drei Zellen: Diese Zellen müssen sie enthalten, in beliebiger Reihenfolge. Das ist ein versteckter Dreier, auch wenn nur eine der Zellen alle drei hat.',
             'Da die 3, die 4 und die 9 diese Zellen belegen, passt dort nichts anderes: Ihre anderen Kandidaten fallen weg.',
-            'Die 8 in Zeile 7 hat nur noch einen Platz, Spalte 1, also kommt die 8 dorthin. Der versteckte Dreier führte direkt zu einem Single: Deshalb heißt es direkt.',
+            'Die 8 in Zeile 7 hat nur noch einen Platz, Spalte 1, also kommt die 8 dorthin. Der versteckte Dreier führte direkt zu einem Single: Deshalb heißt er direkt.',
           ],
         ],
       },
