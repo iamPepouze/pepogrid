@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from '../composables/useI18n'
 import { bit, colOf, rowOf } from '../lib/sudoku'
 import { useGameStore, type NewlyComplete } from '../stores/game'
 import { useSettingsStore } from '../stores/settings'
 
+const { t } = useI18n()
 const game = useGameStore()
 const settings = useSettingsStore()
 const { isGiven, isLocked, isWrong } = game
@@ -88,16 +90,17 @@ function cellClass(i: number) {
 }
 
 function cellLabel(i: number) {
-  const where = `Row ${rowOf(i) + 1}, column ${colOf(i) + 1}`
+  const m = t.value.board
+  const where = m.place(rowOf(i) + 1, colOf(i) + 1)
   const v = game.values[i]
-  if (v) return `${where}: ${v}${isGiven(i) ? ' (given)' : isLocked(i) ? ', complete' : ''}${isWrong(i) ? ', incorrect' : ''}`
-  return `${where}: empty`
+  if (v) return m.label(where, `${v}${isGiven(i) ? ` (${m.given})` : isLocked(i) ? `, ${m.complete}` : ''}${isWrong(i) ? `, ${m.incorrect}` : ''}`)
+  return m.label(where, m.empty)
 }
 </script>
 
 <template>
   <!-- tabindex="-1": focusable from script (a new game), but no extra Tab stop. -->
-  <div ref="board" class="board" role="grid" tabindex="-1" aria-label="Sudoku board" :style="{ '--glow-duration': `${GLOW_MS}ms` }">
+  <div ref="board" class="board" role="grid" tabindex="-1" :aria-label="t.board.title" :style="{ '--glow-duration': `${GLOW_MS}ms` }">
     <button
       v-for="i in cells"
       :key="i"

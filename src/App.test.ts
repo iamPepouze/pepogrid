@@ -5,6 +5,7 @@ import type { RegisterSWOptions } from 'virtual:pwa-register'
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import App from './App.vue'
 import { useGameStore } from './stores/game'
+import { useSettingsStore } from './stores/settings'
 import { fill, nonGivensOf, seedResult } from './stores/testing'
 
 /**
@@ -208,6 +209,58 @@ describe('App', () => {
     await dialogButton(app, 'OK').trigger('click')
     await flushPromises()
     expect(document.activeElement).toBe(button.element)
+  })
+
+  describe('in French and German', () => {
+    it('words the header, status bar and new game dialog in French', async () => {
+      useSettingsStore().language = 'fr'
+      const app = await mountApp()
+      makeProgress()
+
+      expect(app.find('.tagline').text()).toBe('Ta grille, ta détente.')
+      expect(app.find('.topbar button[aria-label="Statistiques"]').exists()).toBe(true)
+      expect(app.find('.status').text()).toMatch(/^Erreurs : 0/)
+      expect(app.find('.timer').attributes('aria-label')).toBe('Temps écoulé')
+
+      await app.find('.topbar button[aria-label="Nouvelle partie"]').trigger('click')
+      expect(app.find('dialog').text()).toContain('Commencer une nouvelle partie Facile ?')
+      expect(app.find('dialog').text()).toContain('Ta partie Facile en cours sera perdue.')
+      expect(app.findAll('dialog button').map((b) => b.text())).toEqual(['Annuler', 'Nouvelle partie'])
+    })
+
+    it('says in the solved banner how the game went, in the language and with its plural', async () => {
+      useSettingsStore().language = 'de'
+      const app = await mountApp()
+      const game = useGameStore()
+      fill(game, nonGivensOf(game, [...game.puzzle.keys()]))
+      await flushPromises()
+
+      expect(app.find('.win').text()).toMatch(/^Gelöst! Leicht in .* mit 0 Fehlern./)
+      expect(app.find('.win button').text()).toBe('Nochmal spielen')
+    })
+
+    it('writes the SE rating with the language’s decimal mark', async () => {
+      useSettingsStore().language = 'fr'
+      await useGameStore().newGame('expert')
+      const app = mount(App, { global: { plugins: [pinia] }, attachTo: document.body })
+      await flushPromises()
+      const se = useGameStore().rating!.se.toFixed(1)
+
+      expect(se).toContain('.')
+      expect(app.find('.rating').text()).toBe(`SE ${se.replace('.', ',')}`)
+    })
+
+    it('says in the dialog, in German, when a puzzle fails to load', async () => {
+      useSettingsStore().language = 'de'
+      const app = await mountApp()
+      vi.spyOn(useGameStore(), 'newGame').mockRejectedValueOnce(new Error('offline'))
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      await app.find('.topbar button[aria-label="Neues Spiel"]').trigger('click')
+      await flushPromises()
+
+      expect(app.find('dialog').text()).toContain('Neues Leicht-Rätsel konnte nicht geladen werden')
+    })
   })
 
   describe('Statistics', () => {

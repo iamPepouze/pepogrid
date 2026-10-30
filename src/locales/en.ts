@@ -4,6 +4,43 @@
  * tickets add their screens' keys here and to each language.
  */
 export const en = {
+  common: { cancel: 'Cancel', ok: 'OK' },
+  /** Difficulty names, as GLOSSARY.md gives them. */
+  difficulty: { easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert', master: 'Master' },
+  app: {
+    tagline: 'Your grid, your chill.',
+    update: 'Update',
+    install: 'Install',
+    statistics: 'Statistics',
+    newGame: 'New game',
+    mistakes: 'Mistakes:',
+    elapsedTime: 'Elapsed time',
+    ratingTitle: 'Sudoku Explainer rating',
+    solved: 'Solved!',
+    /** The sentence after "Solved!". */
+    solvedSummary: (difficulty: string, time: string, mistakes: number) => `${difficulty} in ${time} with ${mistakes} ${mistakes === 1 ? 'mistake' : 'mistakes'}.`,
+    hardest: 'hardest:',
+    playAgain: 'Play again',
+    newGameTitle: (difficulty: string) => `Start a new ${difficulty} game?`,
+    newGameMessage: (difficulty: string) => `Your current ${difficulty} game will be lost.`,
+    loadFailedTitle: (difficulty: string) => `Couldn't load a new ${difficulty} puzzle`,
+    loadFailedMessage: 'Check your connection and try again.',
+  },
+  /** The keyboard hints under the game: key names are each keyboard's own. */
+  hints: { shift: 'Shift', ctrl: 'Ctrl', del: 'Del', digit: 'digit', place: 'place', note: 'note', notesMode: 'notes mode', fillNotes: 'fill notes', erase: 'erase', undo: 'undo', arrows: 'arrows move' },
+  controls: { undo: 'Undo', erase: 'Erase', notes: 'Notes', fillNotes: 'Fill notes', technique: 'Technique' },
+  numberPad: 'Number pad',
+  difficultyMenu: 'Difficulty',
+  board: {
+    title: 'Sudoku board',
+    /** A cell's name: its place, then what it holds. */
+    place: (row: number, column: number) => `Row ${row}, column ${column}`,
+    label: (place: string, state: string) => `${place}: ${state}`,
+    given: 'given',
+    complete: 'complete',
+    incorrect: 'incorrect',
+    empty: 'empty',
+  },
   settings: {
     title: 'Settings',
     language: 'Language',

@@ -3,6 +3,7 @@ import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { useGameStore } from '../stores/game'
+import { useSettingsStore } from '../stores/settings'
 import { fill, nonGivensOf } from '../stores/testing'
 import GameControls from './GameControls.vue'
 
@@ -14,6 +15,16 @@ describe('GameControls', () => {
   beforeEach(() => {
     pinia = createPinia()
     setActivePinia(pinia)
+  })
+
+  it('labels its buttons in the chosen language', () => {
+    const labels = () => mount(GameControls, { global: { plugins: [pinia] } }).findAll('button').map((b) => b.text().replace(/\s*(ON|OFF)$/, ''))
+
+    expect(labels()).toEqual(['Undo', 'Erase', 'Notes', 'Fill notes', 'Technique'])
+    useSettingsStore().language = 'fr'
+    expect(labels()).toEqual(['Annuler', 'Effacer', 'Notes', 'Remplir les notes', 'Technique'])
+    useSettingsStore().language = 'de'
+    expect(labels()).toEqual(['Rück­gängig', 'Löschen', 'Notizen', 'Notizen füllen', 'Technik'])
   })
 
   it('fills notes from its button, then greys it out until the notes change', async () => {

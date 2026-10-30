@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { Check, ChevronDown } from '@lucide/vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { DIFFICULTIES, LABELS, type Difficulty } from '../lib/difficulty'
+import { useI18n } from '../composables/useI18n'
+import { DIFFICULTIES, type Difficulty } from '../lib/difficulty'
 
+const { t } = useI18n()
 defineProps<{ current: Difficulty; disabled?: boolean }>()
 /** `select` also carries the menu's trigger, for focus to return to if the pick is cancelled. */
 const emit = defineEmits<{ select: [difficulty: Difficulty, trigger: HTMLButtonElement | null] }>()
@@ -48,11 +50,11 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
       :disabled="disabled"
       @click="open = !open"
     >
-      <span>{{ LABELS[current] }}</span>
+      <span>{{ t.difficulty[current] }}</span>
       <ChevronDown class="chevron" aria-hidden="true" />
     </button>
 
-    <div v-if="open" class="popover" role="menu" aria-label="Difficulty">
+    <div v-if="open" class="popover" role="menu" :aria-label="t.difficultyMenu">
       <button
         v-for="d in DIFFICULTIES"
         :key="d"
@@ -63,7 +65,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
         :aria-checked="current === d"
         @click="choose(d)"
       >
-        <span>{{ LABELS[d] }}</span>
+        <span>{{ t.difficulty[d] }}</span>
         <Check v-if="current === d" class="check" aria-hidden="true" />
       </button>
     </div>

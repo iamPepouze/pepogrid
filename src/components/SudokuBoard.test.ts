@@ -4,6 +4,7 @@ import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { colOf, rowOf } from '../lib/sudoku'
 import { useGameStore } from '../stores/game'
+import { useSettingsStore } from '../stores/settings'
 import { crossingColumn, fill, quietRow } from '../stores/testing'
 import SudokuBoard from './SudokuBoard.vue'
 
@@ -26,6 +27,30 @@ describe('SudokuBoard', () => {
 
   /** The board, on this test's store. */
   const mountBoard = () => mount(SudokuBoard, { global: { plugins: [pinia] } })
+
+  it('names each cell to a screen reader in the chosen language', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    useSettingsStore().language = 'fr'
+    const board = mountBoard()
+    const cell = (i: number) => board.findAll('.cell')[i]
+    const given = game.puzzle.findIndex((v) => v !== 0)
+    const empty = game.puzzle.findIndex((v) => v === 0)
+
+    expect(board.find('[role=grid]').attributes('aria-label')).toBe('Grille de sudoku')
+    expect(cell(given).attributes('aria-label')).toBe(`Ligne ${rowOf(given) + 1}, colonne ${colOf(given) + 1} : ${game.puzzle[given]} (donné)`)
+    expect(cell(empty).attributes('aria-label')).toBe(`Ligne ${rowOf(empty) + 1}, colonne ${colOf(empty) + 1} : vide`)
+
+    game.select(empty)
+    game.input(game.solution[empty] % 9 + 1)
+    await board.vm.$nextTick()
+    expect(cell(empty).attributes('aria-label')).toMatch(/ : \d, incorrect$/)
+
+    useSettingsStore().language = 'de'
+    await board.vm.$nextTick()
+    expect(cell(given).attributes('aria-label')).toBe(`Zeile ${rowOf(given) + 1}, Spalte ${colOf(given) + 1}: ${game.puzzle[given]} (Vorgabe)`)
+    expect(cell(empty).attributes('aria-label')).toMatch(/: \d, falsch$/)
+  })
 
   it('shows and announces digits in a complete unit as complete', async () => {
     const game = useGameStore()

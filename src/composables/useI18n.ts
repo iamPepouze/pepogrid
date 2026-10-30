@@ -9,7 +9,9 @@ export function useI18n() {
   const language = computed(() => resolveLanguage(navigator.languages, settings.language))
   const t = computed(() => MESSAGES[language.value])
   const locale = computed(() => LOCALES[language.value])
-  return { language, t, locale }
+  /** A rating or an average to one decimal, with the language's decimal mark: 7.2, or 7,2 in French and German. */
+  const formatTenths = (n: number) => new Intl.NumberFormat(locale.value, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n)
+  return { language, t, locale, formatTenths }
 }
 
 /** Keeps `<html lang>` at the app's language. Call once, from App; index.html sets it before first paint. */

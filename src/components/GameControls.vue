@@ -1,55 +1,75 @@
 <script setup lang="ts">
 import { BookOpen, Eraser, Pencil, Undo2, WandSparkles } from '@lucide/vue'
+import { useI18n } from '../composables/useI18n'
 import { useGameStore } from '../stores/game'
 
+const { t } = useI18n()
 const game = useGameStore()
 /** `keyTechnique` passes the button, so focus can return to it: Safari doesn't focus a tapped button. */
 const emit = defineEmits<{ keyTechnique: [trigger: HTMLButtonElement] }>()
 </script>
 
 <template>
-  <div class="controls">
-    <button type="button" class="control" :disabled="!game.history.length || game.completed" @click="game.undo">
-      <Undo2 class="icon" aria-hidden="true" />
-      <span>Undo</span>
-    </button>
-    <button type="button" class="control" :disabled="game.completed" @click="game.erase">
-      <Eraser class="icon" aria-hidden="true" />
-      <span>Erase</span>
-    </button>
-    <button
-      type="button"
-      class="control"
-      :class="{ active: game.notesMode }"
-      :aria-pressed="game.notesMode"
-      :disabled="game.completed"
-      @click="game.toggleNotesMode"
-    >
-      <Pencil class="icon" aria-hidden="true" />
-      <span>Notes</span>
-      <span class="badge" aria-hidden="true">{{ game.notesMode ? 'ON' : 'OFF' }}</span>
-    </button>
-    <button type="button" class="control" :disabled="!game.canFillNotes" @click="game.fillNotes">
-      <WandSparkles class="icon" aria-hidden="true" />
-      <span>Fill notes</span>
-    </button>
-    <button
-      type="button"
-      class="control technique"
-      :disabled="game.loading || game.completed"
-      @click="emit('keyTechnique', $event.currentTarget as HTMLButtonElement)"
-    >
-      <BookOpen class="icon" aria-hidden="true" />
-      <span>Technique</span>
-    </button>
+  <div class="controls-box">
+    <div class="controls">
+      <button type="button" class="control" :disabled="!game.history.length || game.completed" @click="game.undo">
+        <Undo2 class="icon" aria-hidden="true" />
+        <span>{{ t.controls.undo }}</span>
+      </button>
+      <button type="button" class="control" :disabled="game.completed" @click="game.erase">
+        <Eraser class="icon" aria-hidden="true" />
+        <span>{{ t.controls.erase }}</span>
+      </button>
+      <button
+        type="button"
+        class="control"
+        :class="{ active: game.notesMode }"
+        :aria-pressed="game.notesMode"
+        :disabled="game.completed"
+        @click="game.toggleNotesMode"
+      >
+        <Pencil class="icon" aria-hidden="true" />
+        <span>{{ t.controls.notes }}</span>
+        <span class="badge" aria-hidden="true">{{ game.notesMode ? 'ON' : 'OFF' }}</span>
+      </button>
+      <button type="button" class="control" :disabled="!game.canFillNotes" @click="game.fillNotes">
+        <WandSparkles class="icon" aria-hidden="true" />
+        <span>{{ t.controls.fillNotes }}</span>
+      </button>
+      <button
+        type="button"
+        class="control technique"
+        :disabled="game.loading || game.completed"
+        @click="emit('keyTechnique', $event.currentTarget as HTMLButtonElement)"
+      >
+        <BookOpen class="icon" aria-hidden="true" />
+        <span>{{ t.controls.technique }}</span>
+      </button>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* The container for the query below, which asks how many ems wide the controls are. */
+.controls-box {
+  container-type: inline-size;
+}
+
 .controls {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
+}
+
+/*
+ * Larger text, or a longer label in another language, leaves five columns narrower than their
+ * longest word, and the row would push the page sideways. Below 16em (text zoomed past about 1.2x
+ * on a 320px screen) the buttons take as many columns as fit, each at least 4em wide, and wrap into rows.
+ */
+@container (max-width: 16em) {
+  .controls {
+    grid-template-columns: repeat(auto-fill, minmax(4em, 1fr));
+  }
 }
 
 /* Touch screens: icon above a small label, like a mobile toolbar. */

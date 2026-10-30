@@ -1,6 +1,40 @@
 import type { Messages } from './en'
 
 export const de: Messages = {
+  common: { cancel: 'Abbrechen', ok: 'OK' },
+  difficulty: { easy: 'Leicht', medium: 'Mittel', hard: 'Schwer', expert: 'Experte', master: 'Meister' },
+  app: {
+    tagline: 'Dein Gitter, deine Ruhe.',
+    update: 'Aktualisieren',
+    install: 'Installieren',
+    statistics: 'Statistik',
+    newGame: 'Neues Spiel',
+    mistakes: 'Fehler:',
+    elapsedTime: 'Verstrichene Zeit',
+    ratingTitle: 'Sudoku-Explainer-Wertung',
+    solved: 'Gelöst!',
+    solvedSummary: (difficulty, time, mistakes) => `${difficulty} in ${time} mit ${mistakes} ${mistakes === 1 ? 'Fehler' : 'Fehlern'}.`,
+    hardest: 'schwierigste Technik:',
+    playAgain: 'Nochmal spielen',
+    newGameTitle: (difficulty) => `Neues ${difficulty}-Spiel starten?`,
+    newGameMessage: (difficulty) => `Dein aktuelles ${difficulty}-Spiel geht verloren.`,
+    loadFailedTitle: (difficulty) => `Neues ${difficulty}-Rätsel konnte nicht geladen werden`,
+    loadFailedMessage: 'Prüfe deine Verbindung und versuche es erneut.',
+  },
+  hints: { shift: 'Umschalt', ctrl: 'Strg', del: 'Entf', digit: 'Ziffer', place: 'setzen', note: 'Notiz', notesMode: 'Notizmodus', fillNotes: 'Notizen füllen', erase: 'löschen', undo: 'rückgängig', arrows: 'Pfeile bewegen' },
+  // The soft hyphen lets this long word break at 320px, so the row of five controls fits.
+  controls: { undo: 'Rück­gängig', erase: 'Löschen', notes: 'Notizen', fillNotes: 'Notizen füllen', technique: 'Technik' },
+  numberPad: 'Zahlenfeld',
+  difficultyMenu: 'Schwierigkeit',
+  board: {
+    title: 'Sudoku-Gitter',
+    place: (row, column) => `Zeile ${row}, Spalte ${column}`,
+    label: (place, state) => `${place}: ${state}`,
+    given: 'Vorgabe',
+    complete: 'vollständig',
+    incorrect: 'falsch',
+    empty: 'leer',
+  },
   settings: {
     title: 'Einstellungen',
     language: 'Sprache',
