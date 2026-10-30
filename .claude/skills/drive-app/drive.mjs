@@ -14,6 +14,16 @@ const root = fileURLToPath(new globalThis.URL('../../../', import.meta.url))
 export const PORT = 5199
 export const URL = `http://localhost:${PORT}/pepogrid/`
 
+/**
+ * Whether the open `label` should run: true without a `--only` argument, else when `label` is in its
+ * comma-separated list (`--only de,320x2`). Lets a re-run after a fix cover just the opens it touches.
+ * @param {string} label
+ */
+export function only(label) {
+  const i = process.argv.indexOf('--only')
+  return i < 0 || (process.argv[i + 1] ?? '').split(',').includes(label)
+}
+
 /** Characters of a focused element's name that `focused()` keeps. */
 const FOCUS_TEXT_MAX = 40
 

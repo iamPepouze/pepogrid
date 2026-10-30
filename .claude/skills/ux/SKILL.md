@@ -46,7 +46,7 @@ The UX axis of `/code-review`. You get the diff command, the commit list and the
 1. Decide whether the diff changes what players see: rendered text (components, lessons, dialog messages, labels), styles, layout, keys, focus, timing, animation or haptics. If it changes none of these, report `no player-visible change` and stop.
 2. Open the sheets the implementer left: the `drive-app:` line of the branch file (drive-app's step 3 writes it) lists the states checked and the sheets' paths. Screenshot, as in **Screen** and following drive-app's steps, only each state the diff touches that the line doesn't list or that has no sheet left to open. A review only reports, so leave the branch file alone.
 3. Check the diff and the screenshots against every rule. The Spec axis checks the spec's UX decisions were built. Here, flag a UX decision only when it breaks a rule.
-4. Report in under 400 words, hard findings first. List any state you couldn't reach as unchecked.
+4. Report in under 400 words, hard findings first. List any state you couldn't reach as unchecked. A suggested CSS fix names every layout it must keep working in (unwrapped as well as wrapped, say), so the implementer checks each.
 
 Done when step 1 reported `no player-visible change`, or when every state the diff touches has been opened, in the implementer's sheets or your own screenshots, or listed as unchecked, and every rule has been checked against the diff and the screenshots.
 
