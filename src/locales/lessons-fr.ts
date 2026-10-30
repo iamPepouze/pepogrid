@@ -34,6 +34,63 @@ export const frLessons: LessonTexts = {
       },
     ],
   },
+  Fish: {
+    text: 'Un poisson travaille sur un seul chiffre. Quand les seules places du chiffre dans quelques colonnes se trouvent toutes dans autant de lignes, ces colonnes mettent leurs exemplaires du chiffre dans ces lignes, donc aucune autre case de ces lignes ne peut le contenir. C’est pareil en échangeant lignes et colonnes.',
+    sections: [
+      {
+        text: 'Choisis un chiffre et trouve deux colonnes où il n’a que deux places chacune, dans les deux mêmes lignes. L’exemplaire de chaque colonne est dans l’une de ces lignes, et les deux ne peuvent pas partager une ligne, donc ils prennent les deux lignes. Aucune autre case de ces lignes ne peut contenir le chiffre.',
+        examples: [
+          [
+            'La colonne 4 a encore besoin d’un 8, et seules deux de ses cases peuvent le contenir : dans les lignes 3 et 6.',
+            'La colonne 7 a aussi besoin d’un 8, et il ne peut aller que dans les lignes 3 ou 6.',
+            'Les deux 8 ne peuvent pas partager une ligne : l’un est dans la ligne 3 et l’autre dans la ligne 6. Dans les deux cas, les lignes 3 et 6 ont leur 8 dans les colonnes 4 et 7. C’est un X-Wing.',
+            'Donc aucune autre case des lignes 3 et 6 ne peut être un 8 : les 8 des colonnes 6, 8 et 9 disparaissent.',
+          ],
+        ],
+      },
+      {
+        text: 'Un Swordfish est un X-Wing avec trois colonnes et trois lignes. Les places du chiffre dans trois colonnes se trouvent toutes dans les trois mêmes lignes, donc les colonnes prennent une ligne chacune et aucune autre case de ces lignes ne peut le contenir. Une colonne peut n’avoir que deux des trois places.',
+        examples: [
+          [
+            'La colonne 6 a encore besoin d’un 9, et seules les lignes 5 et 8 peuvent le contenir.',
+            'Le 9 de la colonne 7 peut aller dans les lignes 1, 5 ou 8.',
+            'Et le 9 de la colonne 8 seulement dans les lignes 1 ou 8. Trois colonnes, et toutes leurs places pour un 9 sont dans les lignes 1, 5 et 8.',
+            'Les trois 9 ne peuvent pas partager une ligne, donc ils prennent une ligne chacun : les lignes 1, 5 et 8 ont leur 9 dans ces colonnes. C’est un Swordfish.',
+            'Donc aucune autre case des lignes 1, 5 et 8 ne peut être un 9 : les 9 des colonnes 4, 5 et 9 disparaissent.',
+          ],
+        ],
+      },
+    ],
+  },
+  Wings: {
+    text: 'Une wing est une case pivot et deux ailes : des voisines du pivot avec deux candidats chacune, qui partagent un chiffre. Quoi que contienne le pivot, ce chiffre finit dans l’une des cases du motif, donc une case voisine de toutes celles qui peuvent le contenir ne peut pas le contenir non plus.',
+    sections: [
+      {
+        text: 'Le pivot a deux candidats, X et Y. Une aile a X et Z, l’autre Y et Z. Si le pivot est X, la première aile garde Z ; s’il est Y, c’est la seconde. Dans les deux cas une aile contient Z, donc Z disparaît de toute case voisine des deux ailes.',
+        examples: [
+          [
+            'La ligne 1, colonne 2 ne peut contenir qu’un 1 ou un 7. C’est le pivot.',
+            'Si le pivot est 1, la ligne 1, colonne 4, dans la même ligne, ne peut pas être 1, donc il lui reste son 2.',
+            'Si le pivot est 7 au contraire, la ligne 3, colonne 3, dans le même bloc, ne peut pas être 7, donc il lui reste son 2.',
+            'Dans les deux cas, l’une des deux ailes est un 2. C’est un XY-Wing : un pivot et deux ailes.',
+            'La ligne 3, colonne 5 est voisine des deux ailes : elle partage la ligne 3 avec l’une et le bloc en haut au milieu avec l’autre. Quelle que soit l’aile qui est le 2, cette case ne peut pas l’être, donc son 2 disparaît.',
+          ],
+        ],
+      },
+      {
+        text: 'Un XYZ-Wing est un XY-Wing dont le pivot peut aussi contenir le chiffre partagé : le pivot a X, Y et Z, une aile X et Z, l’autre Y et Z. Quoi que contienne le pivot, Z finit dans le pivot ou une aile, donc Z disparaît de toute case voisine des trois.',
+        examples: [
+          [
+            'La ligne 8, colonne 6 peut contenir un 6, un 8 ou un 9. C’est le pivot.',
+            'Si le pivot est 6, la ligne 3, colonne 6, dans la même colonne, ne peut pas être 6, donc il lui reste son 8.',
+            'Si le pivot est 9, la ligne 8, colonne 5, dans la même ligne, ne peut pas être 9, donc il lui reste son 8.',
+            'Et si le pivot n’est ni l’un ni l’autre, c’est lui le 8. Dans tous les cas, l’une des trois cases est un 8. C’est un XYZ-Wing.',
+            'La ligne 7, colonne 6 est voisine des trois : elle partage la colonne 6 avec le pivot et une aile, et le bloc en bas au milieu avec le pivot et l’autre. Quelle que soit celle qui est le 8, cette case ne peut pas l’être, donc son 8 disparaît.',
+          ],
+        ],
+      },
+    ],
+  },
   BUG: {
     text: 'Un BUG, ou bivalue universal grave, est une grille où chaque case vide a exactement deux candidats et où chaque candidat a exactement deux places dans chacune de ses unités. Une telle grille n’a aucune solution ou plusieurs, jamais une seule. Donc, quand quelques candidats en trop séparent la grille d’un BUG, l’un d’eux est vrai.',
     sections: [
