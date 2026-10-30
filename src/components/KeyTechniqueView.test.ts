@@ -1,15 +1,24 @@
 // @vitest-environment happy-dom
 import { enableAutoUnmount, mount } from '@vue/test-utils'
-import { afterEach, describe, expect, it } from 'vitest'
+import { createPinia, setActivePinia, type Pinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { useSettingsStore } from '../stores/settings'
 import type { NextTechnique } from '../lib/rater'
 import KeyTechniqueView, { type KeyTechniqueTab } from './KeyTechniqueView.vue'
 
 enableAutoUnmount(afterEach)
 
 describe('KeyTechniqueView', () => {
+  let pinia: Pinia
+
+  beforeEach(() => {
+    pinia = createPinia()
+    setActivePinia(pinia)
+  })
+
   /** The view on its Hardest tab, for `hardest`, unless `fields` say otherwise. */
   const mountView = (hardest: string, fields: { tab?: KeyTechniqueTab; nextStep?: NextTechnique } = {}) =>
-    mount(KeyTechniqueView, { props: { tab: 'hardest', nextStep: { kind: 'technique', technique: 'Hidden Single' }, hardest, ...fields }, attachTo: document.body })
+    mount(KeyTechniqueView, { props: { tab: 'hardest', nextStep: { kind: 'technique', technique: 'Hidden Single' }, hardest, ...fields }, global: { plugins: [pinia] }, attachTo: document.body })
   const tabs = (view: ReturnType<typeof mountView>) => view.findAll<HTMLButtonElement>('[role="tab"]')
   const button = (view: ReturnType<typeof mountView>, label: string) => view.findAll<HTMLButtonElement>('button').find((b) => b.text() === label)!
   /** The lesson grid's cell at a 1-based row and column. */
@@ -129,6 +138,113 @@ describe('KeyTechniqueView', () => {
     expect(others[0].attributes('open')).toBeUndefined()
     expect(others[0].text()).toContain('Look for two digits that have the same two cells')
     expect(others[0].find('.lesson-grid').exists()).toBe(true)
+  })
+
+  describe('in French and German', () => {
+    const LANGUAGES = [
+      {
+        language: 'fr' as const,
+        title: 'Technique clé',
+        tabs: ['Prochaine étape', 'La plus dure'],
+        back: 'Retour',
+        lead: 'La technique la plus dure de cette grille est',
+        name: 'Singleton caché',
+        text: 'Un singleton est un chiffre qui n’a plus qu’une seule place où aller.',
+        caption: 'Le bloc en haut au milieu a encore besoin d’un 3.',
+        counter: 'Étape 1 sur 4',
+        next: 'Suivant',
+        note: 'Cette leçon n’est disponible qu’en anglais pour l’instant.',
+        coming: 'Une leçon sur cette technique arrive bientôt.',
+        mistake: 'Ta grille contient une erreur',
+        cell: 'Ligne 9, colonne 9 : candidats 1 3 8 9, estompé',
+      },
+      {
+        language: 'de' as const,
+        title: 'Schlüsseltechnik',
+        tabs: ['Nächster Schritt', 'Schwierigste'],
+        back: 'Zurück',
+        lead: 'Die schwierigste Technik dieses Rätsels ist',
+        name: 'Versteckter Single',
+        text: 'Ein Single ist eine Ziffer, für die nur noch ein Platz übrig ist.',
+        caption: 'Der Block oben in der Mitte braucht noch eine 3.',
+        counter: 'Schritt 1 von 4',
+        next: 'Nächster',
+        note: 'Diese Lektion gibt es vorerst nur auf Englisch.',
+        coming: 'Eine Lektion zu dieser Technik folgt.',
+        mistake: 'Dein Gitter enthält einen Fehler',
+        cell: 'Zeile 9, Spalte 9: Kandidaten 1 3 8 9, abgeblendet',
+      },
+    ]
+
+    it.each(LANGUAGES)('shows the view, a translated lesson and its steps in $language, with no note', (f) => {
+      useSettingsStore().language = f.language
+      const view = mountView('Hidden Single')
+      const plain = (s: string) => s.replaceAll('­', '')
+
+      expect(plain(view.find('h2').text())).toBe(f.title)
+      expect(tabs(view).map((t) => t.text())).toEqual(f.tabs)
+      expect(view.find('.back-button').text()).toBe(f.back)
+      expect(view.find('.lead').text()).toBe(f.lead)
+      expect(view.find('.technique').text()).toBe(f.name)
+      expect(view.find('h3').text()).toBe(f.name)
+      expect(view.text()).toContain(f.text)
+      expect(view.find('.caption').text()).toContain(f.caption)
+      expect(view.find('.counter').text()).toBe(f.counter)
+      expect(button(view, f.next)).toBeTruthy()
+      expect(cell(view, 9, 9).attributes('aria-label')).toBe(f.cell)
+      expect(view.text()).not.toContain(f.note)
+      expect(view.find('[lang]').exists()).toBe(false)
+    })
+
+    it.each(LANGUAGES)('announces the translated caption of each step in $language', async (f) => {
+      useSettingsStore().language = f.language
+      const view = mountView('Hidden Single')
+      expect(view.find('.caption').attributes('aria-live')).toBe('polite')
+      await button(view, f.next).trigger('click')
+      expect(view.find('.caption').text()).not.toContain(f.caption)
+      expect(view.find('.caption').text()).not.toMatch(/\bThe top-middle box\b|Row 1 already/)
+      expect(view.find('.counter').text()).not.toBe(f.counter)
+    })
+
+    it.each(LANGUAGES)('says the grid has a mistake in $language', (f) => {
+      useSettingsStore().language = f.language
+      const view = mountView('XY-Wing', { tab: 'next', nextStep: { kind: 'mistake' } })
+      expect(view.find('.headline').text()).toBe(f.mistake)
+    })
+
+    it.each(LANGUAGES)('shows an untranslated lesson in English under the note in $language', (f) => {
+      useSettingsStore().language = f.language
+      const view = mountView('Direct Hidden Triplet')
+
+      expect(view.find('.note').text()).toBe(f.note)
+      expect(view.find('h3').text()).toBe('Direct Hidden Triplet')
+      expect(view.find('.technique').text()).toBe(f.language === 'fr' ? 'Triplet caché direct' : 'Direktes verstecktes Tripel')
+      expect(view.find('.caption').text()).toContain('Row 7 still needs a 1')
+      expect(view.findAll('.note')[1].attributes('lang')).toBe('en')
+      expect(view.find('.caption').attributes('lang')).toBe('en')
+      expect(view.find('.counter').text()).toMatch(f.language === 'fr' ? /^Étape 1 sur/ : /^Schritt 1 von/)
+    })
+
+    it.each(LANGUAGES)('says a lesson is coming for a technique in no bank, in $language', (f) => {
+      useSettingsStore().language = f.language
+      const view = mountView('Dynamic Forcing Chain')
+      expect(view.text()).toContain(f.coming)
+      expect(view.text()).not.toContain(f.note)
+    })
+
+    it('names the basic techniques as French and German players do, and leaves patterns in English', () => {
+      useSettingsStore().language = 'fr'
+      expect(mountView('Naked Pair').find('.technique').text()).toBe('Paire nue')
+      expect(mountView('X-Wing').find('.technique').text()).toBe('X-Wing')
+      useSettingsStore().language = 'de'
+      expect(mountView('Naked Pair').find('.technique').text()).toBe('Nacktes Paar')
+      expect(mountView('Hidden Single').find('.technique').text()).toBe('Versteckter Single')
+    })
+
+    it('shows no note in English, translated or not', () => {
+      expect(mountView('Direct Hidden Triplet').text()).not.toContain('only available in English')
+      expect(mountView('Hidden Single').find('[lang]').exists()).toBe(false)
+    })
   })
 
   it('says a lesson is coming for a technique in no bank', () => {

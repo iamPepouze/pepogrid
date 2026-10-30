@@ -2,6 +2,9 @@ import type { Language } from '../lib/language'
 import { de } from './de'
 import { en, type Messages } from './en'
 import { fr } from './fr'
+import { deLessons } from './lessons-de'
+import { frLessons } from './lessons-fr'
+import type { LessonLanguage } from '../lib/lessons'
 
 export type { Messages }
 
@@ -13,3 +16,10 @@ export const LANGUAGE_NAMES: Record<Language, string> = { en: 'English', fr: 'Fr
 
 /** BCP 47 tags for `Intl` and `<html lang>`. */
 export const LOCALES: Record<Language, string> = { en: 'en', fr: 'fr', de: 'de' }
+
+/** Each language's lessons and technique names; English is the lessons' own language, so it has none. */
+export const LESSON_LANGUAGES: Record<Language, LessonLanguage | undefined> = {
+  en: undefined,
+  fr: { texts: frLessons, names: fr.techniques },
+  de: { texts: deLessons, names: de.techniques },
+}

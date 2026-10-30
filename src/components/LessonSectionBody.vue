@@ -2,13 +2,14 @@
 import type { LessonSection } from '../lib/lessons'
 import LessonExample from './LessonExample.vue'
 
-defineProps<{ section: LessonSection }>()
+/** `english` marks a lesson not yet translated, so a screen reader reads its words in English. */
+defineProps<{ section: LessonSection; english?: boolean }>()
 </script>
 
 <template>
   <div class="lesson-section-body">
-    <p>{{ section.text }}</p>
-    <LessonExample v-for="example in section.examples" :key="example.position" :example="example" />
+    <p :lang="english ? 'en' : undefined">{{ section.text }}</p>
+    <LessonExample v-for="example in section.examples" :key="example.position" :example="example" :english="english" />
   </div>
 </template>
 

@@ -1621,11 +1621,65 @@ export const LESSONS: readonly Lesson[] = [
   },
 ]
 
-/** The lesson and section that teach `technique`, or null while it has none. */
-export function lessonFor(technique: string): { lesson: Lesson; section: LessonSection } | null {
-  const lesson = LESSONS.find((l) => l.family === techniqueFamily(technique))
-  const section = lesson?.sections.find((s) => s.techniques.includes(technique))
-  return lesson && section ? { lesson, section } : null
+/**
+ * A family's lesson in one language, as words only: the steps' cells, marks and eliminations stay in
+ * the English lesson, so a translation can't change what a step points at. Sections and examples
+ * follow the English lesson's order, and each example lists its steps' captions.
+ */
+export interface LessonText {
+  text: string
+  sections: { text: string; examples: string[][] }[]
+}
+
+/** The lessons a language has translated, by family. A family left out is shown in English. */
+export type LessonTexts = Partial<Record<string, LessonText>>
+
+/** A language's lessons: their words, and the technique names its section titles use. */
+export interface LessonLanguage {
+  texts: LessonTexts
+  names: Record<string, string>
+}
+
+/** `lesson` with the words of `text`, and its section titles as `names` gives them. */
+function translate(lesson: Lesson, text: LessonText, names: Record<string, string>): Lesson {
+  return {
+    ...lesson,
+    text: text.text,
+    sections: lesson.sections.map((section, s) => ({
+      ...section,
+      title: names[section.techniques[0]] ?? section.title,
+      text: text.sections[s].text,
+      examples: section.examples.map((example, e) => ({
+        ...example,
+        steps: example.steps.map((step, k) => ({ ...step, caption: text.sections[s].examples[e][k] })),
+      })),
+    })),
+  }
+}
+
+/** Each language's translated lessons, built once per family. */
+const TRANSLATED = new WeakMap<LessonLanguage, Map<string, Lesson>>()
+
+function lessonIn(lesson: Lesson, language: LessonLanguage | undefined): { lesson: Lesson; translated: boolean } {
+  const text = language?.texts[lesson.family]
+  if (!language || !text) return { lesson, translated: !language }
+  if (!TRANSLATED.has(language)) TRANSLATED.set(language, new Map())
+  const cache = TRANSLATED.get(language)!
+  if (!cache.has(lesson.family)) cache.set(lesson.family, translate(lesson, text, language.names))
+  return { lesson: cache.get(lesson.family)!, translated: true }
+}
+
+/**
+ * The lesson and section that teach `technique`, in `language` when it has that family's lesson and in
+ * English otherwise (`translated` false unless no language is given, which is English), or null while
+ * there is none.
+ */
+export function lessonFor(technique: string, language?: LessonLanguage): { lesson: Lesson; section: LessonSection; translated: boolean } | null {
+  const english = LESSONS.find((l) => l.family === techniqueFamily(technique))
+  const index = english?.sections.findIndex((s) => s.techniques.includes(technique)) ?? -1
+  if (!english || index < 0) return null
+  const { lesson, translated } = lessonIn(english, language)
+  return { lesson, section: lesson.sections[index], translated }
 }
 
 /** A lesson position as grids, by its key in src/data/lesson-positions.json: digits (0 for empty) and candidate masks. */

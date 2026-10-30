@@ -8,5 +8,5 @@ The app speaks English, French and German. Each language is one typed message ob
 
 ## Consequences
 
-- Lessons, written as structured objects in `lessons.ts`, get one copy per language in the same shape, so moving to a message-catalogue library later would mean rewriting every caption.
+- Lessons are written once as structured objects in `lessons.ts`, with their cells, marks and eliminations; each language adds only the words (text, section text, captions) in the same order, so a translation can't change which cells a step points at. A family a language lacks shows in English under a note. Moving to a message-catalogue library later would mean rewriting every caption.
 - Changing language reloads the app instead of swapping words live. Nothing is lost, since the game, its timer and its undo history are persisted, but an open view closes.

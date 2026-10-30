@@ -278,6 +278,20 @@ describe('App', () => {
       expect(app.find('.rating').text()).toBe(`SE ${se.replace('.', ',')}`)
     })
 
+    it('names the hardest technique in the solved banner as the language does, leaving HoDoKu’s level in English', async () => {
+      useSettingsStore().language = 'de'
+      const game = useGameStore()
+      await game.newGame('expert')
+      game.rating = { ...game.rating!, hardest: 'Naked Pair', hodokuLevel: 'unfair' } as typeof game.rating
+      const app = mount(App, { global: { plugins: [pinia] }, attachTo: document.body })
+      await flushPromises()
+      fill(game, nonGivensOf(game, [...game.puzzle.keys()]))
+      await flushPromises()
+
+      expect(app.find('.win-rating').text()).toContain('schwierigste Technik: Nacktes Paar')
+      expect(app.find('.win-rating').text()).toContain('(Unfair)')
+    })
+
     it('says in the dialog, in German, when a puzzle fails to load', async () => {
       useSettingsStore().language = 'de'
       const app = await mountApp()

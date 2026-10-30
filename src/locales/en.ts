@@ -98,6 +98,45 @@ export const en = {
     resetMessage: 'Every solved and abandoned game will be forgotten. This can’t be undone.',
     resetConfirm: 'Reset',
   },
+  keyTechnique: {
+    title: 'Key technique',
+    back: 'Back',
+    tabsLabel: 'Technique',
+    next: 'Next step',
+    hardest: 'Hardest',
+    mistake: 'Your grid has a mistake',
+    mistakeNote: 'Check your digits and notes: something there rules out the solution.',
+    beyond: 'Your next step needs a technique beyond XY-Wing',
+    leadNext: 'Your next step needs',
+    leadHardest: 'This puzzle’s hardest technique is',
+    comingSoon: 'A lesson on this technique is coming.',
+    /** Shown above a lesson that is not yet translated, which stays in English. */
+    englishOnly: 'This lesson is only available in English for now.',
+    /** Added to the message of a first-look confirmation. */
+    noted: 'It will be noted on this game’s result.',
+    seeNextTitle: 'See your next step?',
+    seeNextMessage: 'You’ll see which technique your next step needs.',
+    seeNextConfirm: 'Show',
+    revealTitle: 'Reveal the key technique?',
+    revealMessage: 'You’ll see which technique this puzzle hinges on.',
+    revealConfirm: 'Reveal',
+    lesson: {
+      gridLabel: 'Example grid',
+      candidates: (digits: string) => `candidates ${digits}`,
+      placed: 'placed',
+      rulesOut: (digits: string) => `rules out ${digits}`,
+      highlighted: 'highlighted',
+      faded: 'faded',
+      previous: 'Previous',
+      next: 'Next',
+      step: (n: number, total: number) => `Step ${n} of ${total}`,
+    },
+  },
+  /**
+   * Technique names as this language's players know them, by Sudoku Explainer's name. A name left
+   * out is shown as Sudoku Explainer has it: patterns players call by their English name.
+   */
+  techniques: {} as Record<string, string>,
   settings: {
     title: 'Settings',
     language: 'Language',

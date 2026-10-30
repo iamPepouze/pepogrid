@@ -26,7 +26,7 @@ if (!game.isValid()) loadGame('easy', { recordAbandoned: false })
 
 useTheme()
 useDocumentLanguage()
-const { t, formatTenths } = useI18n()
+const { t, formatTenths, techniqueName } = useI18n()
 const { canInstall, install } = useInstall()
 const { canUpdate, update } = useUpdate()
 
@@ -55,12 +55,12 @@ const nextStep = ref<NextTechnique | null>(null)
  * the player goes ahead. The dialog is gone by then, so the caller can move focus.
  */
 async function confirmFirstLook(first: boolean, title: string, message: string, confirmLabel: string) {
-  return !first || ask({ title, message: `${message} It will be noted on this game’s result.`, confirmLabel, cancelLabel: t.value.common.cancel })
+  return !first || ask({ title, message: `${message} ${t.value.keyTechnique.noted}`, confirmLabel, cancelLabel: t.value.common.cancel })
 }
 
 /** Opens the key technique on Next step, asking first the first time in a game. */
 async function openKeyTechnique(trigger: HTMLButtonElement) {
-  if (!(await confirmFirstLook(!game.nextStepsShown, 'See your next step?', 'You’ll see which technique your next step needs.', 'Show'))) {
+  if (!(await confirmFirstLook(!game.nextStepsShown, t.value.keyTechnique.seeNextTitle, t.value.keyTechnique.seeNextMessage, t.value.keyTechnique.seeNextConfirm))) {
     trigger.focus()
     return
   }
@@ -75,7 +75,7 @@ async function openKeyTechnique(trigger: HTMLButtonElement) {
 /** Shows a tab. Hardest asks first the first time in a game; focus returns to the tab once the dialog closes. */
 async function selectKeyTechniqueTab(tab: KeyTechniqueTab) {
   const first = tab === 'hardest' && !game.keyTechniqueRevealed
-  const confirmed = await confirmFirstLook(first, 'Reveal the key technique?', 'You’ll see which technique this puzzle hinges on.', 'Reveal')
+  const confirmed = await confirmFirstLook(first, t.value.keyTechnique.revealTitle, t.value.keyTechnique.revealMessage, t.value.keyTechnique.revealConfirm)
   if (first) keyTechniqueView.value?.focusTab(tab)
   if (!confirmed) return
   if (tab === 'hardest') game.revealKeyTechnique()
@@ -342,7 +342,7 @@ onBeforeUnmount(() => {
             <strong>{{ t.app.solved }}</strong> {{ t.app.solvedSummary(t.difficulty[game.difficulty], time, game.mistakes) }}
             <span v-if="shownRating" class="win-rating">
               SE {{ formatTenths(shownRating.se) }} · HoDoKu {{ shownRating.hodokuScore }}
-              ({{ HODOKU_LABELS[shownRating.hodokuLevel] }}) · {{ t.app.hardest }} {{ shownRating.hardest }}
+              ({{ HODOKU_LABELS[shownRating.hodokuLevel] }}) · {{ t.app.hardest }} {{ techniqueName(shownRating.hardest) }}
             </span>
           </p>
           <button type="button" :disabled="game.loading" @click="startGame(game.difficulty, $event.currentTarget)">{{ t.app.playAgain }}</button>

@@ -1,26 +1,29 @@
 <script setup lang="ts">
+import { useI18n } from '../composables/useI18n'
 import { bit, colOf, digitsOf, rowOf } from '../lib/grid'
 import type { LessonCell } from '../lib/lessons'
 
 defineProps<{ cells: LessonCell[] }>()
+const { t } = useI18n()
 
 /** What a screen reader hears for a cell: where it is, what it holds, and how the step treats it. */
 function labelOf(cell: LessonCell, i: number) {
-  const where = `Row ${rowOf(i) + 1}, column ${colOf(i) + 1}`
-  const holds = cell.digit ? String(cell.digit) : `candidates ${digitsOf(cell.candidates).join(' ')}`
+  const m = t.value.keyTechnique.lesson
+  const where = t.value.board.place(rowOf(i) + 1, colOf(i) + 1)
+  const holds = cell.digit ? String(cell.digit) : m.candidates(digitsOf(cell.candidates).join(' '))
   const struck = digitsOf(cell.struck)
   const notes = [
-    cell.placed && 'placed',
-    struck.length && `rules out ${struck.join(' ')}`,
-    cell.highlighted && 'highlighted',
-    cell.faded && 'faded',
+    cell.placed && m.placed,
+    struck.length && m.rulesOut(struck.join(' ')),
+    cell.highlighted && m.highlighted,
+    cell.faded && m.faded,
   ].filter(Boolean)
-  return [`${where}: ${holds}`, ...notes].join(', ')
+  return [t.value.board.label(where, holds), ...notes].join(', ')
 }
 </script>
 
 <template>
-  <div class="lesson-grid" role="group" aria-label="Example grid">
+  <div class="lesson-grid" role="group" :aria-label="t.keyTechnique.lesson.gridLabel">
     <div
       v-for="(cell, i) in cells"
       :key="i"
