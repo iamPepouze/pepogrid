@@ -6,9 +6,9 @@
   --line-thin: #bdbdbd;
   --line-thick: #000000;
   --given-digit: #000000;
-  --user-digit: #0d47a1;
-  --wrong-digit: #b71c1c;
-  --note: #555555;
+  --user-digit: #135cb2;
+  --wrong-digit: #b32626;
+  --note: #5d5d5d;
   --selected: #bbdefb;
   --peer: #e8f1fb;
   --same-digit: #d3e6f8;
@@ -19,7 +19,7 @@
   --text: #1a1a1a;
   --muted: #5f6368;
   --accent: #1565c0;
-  --accent-text: #1565c0;
+  --accent-text: #135cb2;
   --on-accent: #ffffff;
   --button-bg: #ffffff;
   --button-border: #d0d5dd;
@@ -45,9 +45,9 @@
     --line-thin: #404040;
     --line-thick: #c4c4c4;
     --given-digit: #ececec;
-    --user-digit: #90caf9;
+    --user-digit: #76bef8;
     --wrong-digit: #ff9a9a;
-    --note: #bdbdbd;
+    --note: #b8b8b8;
     --selected: #1f4a73;
     --peer: #26303b;
     --same-digit: #233c55;
@@ -56,7 +56,7 @@
     --text: #e6e6e6;
     --muted: #9aa0a6;
     --accent: #1976d2;
-    --accent-text: #64b5f6;
+    --accent-text: #76bef8;
     --on-accent: #ffffff;
     --button-bg: #1e1e1e;
     --button-border: #3a3a3a;
@@ -73,9 +73,9 @@
   --line-thin: #404040;
   --line-thick: #c4c4c4;
   --given-digit: #ececec;
-  --user-digit: #90caf9;
+  --user-digit: #76bef8;
   --wrong-digit: #ff9a9a;
-  --note: #bdbdbd;
+  --note: #b8b8b8;
   --selected: #1f4a73;
   --peer: #26303b;
   --same-digit: #233c55;
@@ -84,7 +84,7 @@
   --text: #e6e6e6;
   --muted: #9aa0a6;
   --accent: #1976d2;
-  --accent-text: #64b5f6;
+  --accent-text: #76bef8;
   --on-accent: #ffffff;
   --button-bg: #1e1e1e;
   --button-border: #3a3a3a;

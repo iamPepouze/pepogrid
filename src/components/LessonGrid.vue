@@ -93,7 +93,7 @@ function labelOf(cell: LessonCell, i: number) {
 }
 
 .candidates .marked {
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 700;
 }
 

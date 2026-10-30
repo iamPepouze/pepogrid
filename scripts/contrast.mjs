@@ -23,10 +23,11 @@ const GLOW = 'in the glow'
  * to 3:1 as a control.
  */
 const ALLOWED = {
+  '--user-digit on --cell at 4.5 in the glow': '#95',
+  '--user-digit on --peer at 4.5 in the glow': '#95',
+  '--user-digit on --same-digit at 4.5 in the glow': '#95',
   '--user-digit on --conflict at 4.5 in the glow': '#95',
   '--user-digit on --selected at 4.5 in the glow': '#95',
-  '--accent on --cell at 4.5': '#75',
-  '--accent on --selected at 4.5': '#75',
 }
 
 /**
@@ -50,8 +51,8 @@ const PAIRS = [
   ...['--cell', '--peer', '--selected'].map((bg) => ['--note', bg, TEXT, 'a note']),
   // A faded lesson cell draws in --muted. It is never highlighted (sudoku.test.ts), so --selected isn't its background.
   ['--muted', '--cell', TEXT, 'a faded lesson cell'],
-  ['--accent', '--cell', TEXT, "a lesson's marked candidate"],
-  ['--accent', '--selected', TEXT, "a lesson's marked candidate"],
+  ['--accent-text', '--cell', TEXT, "a lesson's marked candidate"],
+  ['--accent-text', '--selected', TEXT, "a lesson's marked candidate"],
   // Chrome text.
   ['--text', '--page', TEXT, 'body text'],
   ['--text', '--button-bg', TEXT, 'a button or card'],
