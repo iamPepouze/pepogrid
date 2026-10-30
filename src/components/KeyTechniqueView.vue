@@ -18,8 +18,8 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ back: []; select: [tab: KeyTechniqueTab] }>()
 
-const { language, lessonLanguage, t, techniqueName } = useI18n()
-const m = computed(() => t.value.keyTechnique)
+const { lessonLanguage, t: messages, techniqueName } = useI18n()
+const m = computed(() => messages.value.keyTechnique)
 
 const TABS = computed<{ id: KeyTechniqueTab; label: string }[]>(() => [
   { id: 'next', label: m.value.next },
@@ -58,6 +58,9 @@ const technique = computed(() => {
 
 /** The lesson and section teaching the technique, or null while it has none. */
 const found = computed(() => (technique.value ? lessonFor(technique.value, lessonLanguage.value) : null))
+
+/** `en` over a lesson shown in English inside another language, so a screen reader reads it in English. */
+const lessonLang = computed(() => (found.value?.fallback ? 'en' : undefined))
 
 /** The family's other sections, in the lesson's order, kept reachable below the one that opens. */
 const others = computed(() => found.value?.lesson.sections.filter((s) => s !== found.value?.section) ?? [])
@@ -104,19 +107,19 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
         <div class="card surface">
           <p class="lead">{{ tab === 'next' ? m.leadNext : m.leadHardest }}</p>
           <p class="technique">{{ techniqueName(technique!) }}</p>
-          <p v-if="found && !found.translated && language !== 'en'" class="note">{{ m.englishOnly }}</p>
-          <p v-if="found" class="note" :lang="found.translated ? undefined : 'en'">{{ found.lesson.text }}</p>
+          <p v-if="found?.fallback" class="note">{{ m.englishOnly }}</p>
+          <p v-if="found" class="note" :lang="lessonLang">{{ found.lesson.text }}</p>
           <p v-else class="note">{{ m.comingSoon }}</p>
         </div>
 
         <section v-if="found" class="card surface section" aria-labelledby="lesson-section-title">
-          <h3 id="lesson-section-title" :lang="found.translated ? undefined : 'en'">{{ found.section.title }}</h3>
-          <LessonSectionBody :section="found.section" :english="!found.translated" />
+          <h3 id="lesson-section-title">{{ found.section.title }}</h3>
+          <LessonSectionBody :section="found.section" :english="found.fallback" />
         </section>
 
         <details v-for="other in others" :key="other.title" class="card surface">
-          <summary :lang="found!.translated ? undefined : 'en'">{{ other.title }}</summary>
-          <LessonSectionBody :section="other" :english="!found!.translated" />
+          <summary>{{ other.title }}</summary>
+          <LessonSectionBody :section="other" :english="found!.fallback" />
         </details>
       </template>
     </div>
@@ -140,6 +143,11 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
 .note {
   margin: 0;
   color: var(--muted);
+}
+
+/* The English-only note and the lesson text under it are two paragraphs. */
+.note + .note {
+  margin-top: 8px;
 }
 
 .section {

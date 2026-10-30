@@ -149,14 +149,14 @@ describe('technique families', () => {
 const translatedLessons = (['fr', 'de'] as const).flatMap((language) =>
   LESSONS.flatMap((lesson) => {
     const found = lessonFor(lesson.sections[0].techniques[0], LESSON_LANGUAGES[language])
-    return found?.translated ? [found.lesson] : []
+    return found && !found.fallback ? [found.lesson] : []
   }),
 )
 
 describe('key technique lessons', () => {
   it('translates the Singles and Naked Single lessons into French and German, and only those', () => {
     for (const language of ['fr', 'de'] as const) {
-      const families = LESSONS.filter((l) => lessonFor(l.sections[0].techniques[0], LESSON_LANGUAGES[language])?.translated).map((l) => l.family)
+      const families = LESSONS.filter((l) => lessonFor(l.sections[0].techniques[0], LESSON_LANGUAGES[language])?.fallback === false).map((l) => l.family)
       expect(families, language).toEqual(['Singles', 'Naked Single'])
     }
   })
@@ -165,7 +165,7 @@ describe('key technique lessons', () => {
     for (const language of ['fr', 'de'] as const) {
       for (const english of LESSONS) {
         const found = lessonFor(english.sections[0].techniques[0], LESSON_LANGUAGES[language])!
-        if (!found.translated) continue
+        if (found.fallback) continue
         expect(found.lesson.sections.length, english.family).toBe(english.sections.length)
         found.lesson.sections.forEach((section, s) => {
           expect(section.techniques).toEqual(english.sections[s].techniques)

@@ -2,7 +2,7 @@
 import type { LessonSection } from '../lib/lessons'
 import LessonExample from './LessonExample.vue'
 
-/** `english` marks a lesson not yet translated, so a screen reader reads its words in English. */
+/** `english` marks a lesson shown in English inside another language, so a screen reader reads its words in English. */
 defineProps<{ section: LessonSection; english?: boolean }>()
 </script>
 

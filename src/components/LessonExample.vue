@@ -46,6 +46,10 @@ const cells = computed(() => gridAt(props.example, index.value))
   gap: 8px;
 }
 
+.stepper button:last-child {
+  margin-left: auto;
+}
+
 .stepper button {
   padding: 6px 14px;
 }

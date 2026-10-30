@@ -1640,46 +1640,46 @@ export interface LessonLanguage {
   names: Record<string, string>
 }
 
-/** `lesson` with the words of `text`, and its section titles as `names` gives them. */
-function translate(lesson: Lesson, text: LessonText, names: Record<string, string>): Lesson {
+/** `lesson` with its section titles as `names` gives them, and the words of `text` when there are some. */
+function localize(lesson: Lesson, text: LessonText | undefined, names: Record<string, string>): Lesson {
   return {
     ...lesson,
-    text: text.text,
+    text: text?.text ?? lesson.text,
     sections: lesson.sections.map((section, s) => ({
       ...section,
       title: names[section.techniques[0]] ?? section.title,
-      text: text.sections[s].text,
+      text: text?.sections[s].text ?? section.text,
       examples: section.examples.map((example, e) => ({
         ...example,
-        steps: example.steps.map((step, k) => ({ ...step, caption: text.sections[s].examples[e][k] })),
+        steps: example.steps.map((step, k) => ({ ...step, caption: text?.sections[s].examples[e][k] ?? step.caption })),
       })),
     })),
   }
 }
 
-/** Each language's translated lessons, built once per family. */
-const TRANSLATED = new WeakMap<LessonLanguage, Map<string, Lesson>>()
+/** Each language's lessons, built once per family. */
+const LOCALIZED = new WeakMap<LessonLanguage, Map<string, Lesson>>()
 
-function lessonIn(lesson: Lesson, language: LessonLanguage | undefined): { lesson: Lesson; translated: boolean } {
-  const text = language?.texts[lesson.family]
-  if (!language || !text) return { lesson, translated: !language }
-  if (!TRANSLATED.has(language)) TRANSLATED.set(language, new Map())
-  const cache = TRANSLATED.get(language)!
-  if (!cache.has(lesson.family)) cache.set(lesson.family, translate(lesson, text, language.names))
-  return { lesson: cache.get(lesson.family)!, translated: true }
+function lessonIn(lesson: Lesson, language: LessonLanguage | undefined): Lesson {
+  if (!language) return lesson
+  if (!LOCALIZED.has(language)) LOCALIZED.set(language, new Map())
+  const cache = LOCALIZED.get(language)!
+  if (!cache.has(lesson.family)) cache.set(lesson.family, localize(lesson, language.texts[lesson.family], language.names))
+  return cache.get(lesson.family)!
 }
 
 /**
- * The lesson and section that teach `technique`, in `language` when it has that family's lesson and in
- * English otherwise (`translated` false unless no language is given, which is English), or null while
- * there is none.
+ * The lesson and section that teach `technique`, or null while there is none. The lesson is in `language`
+ * when it has that family's lesson, and otherwise in English (`fallback` true: English words in a
+ * language that isn't English); with no language it is English and not a fallback. Section titles are
+ * technique names, so they follow the language's name map either way.
  */
-export function lessonFor(technique: string, language?: LessonLanguage): { lesson: Lesson; section: LessonSection; translated: boolean } | null {
+export function lessonFor(technique: string, language?: LessonLanguage): { lesson: Lesson; section: LessonSection; fallback: boolean } | null {
   const english = LESSONS.find((l) => l.family === techniqueFamily(technique))
   const index = english?.sections.findIndex((s) => s.techniques.includes(technique)) ?? -1
   if (!english || index < 0) return null
-  const { lesson, translated } = lessonIn(english, language)
-  return { lesson, section: lesson.sections[index], translated }
+  const lesson = lessonIn(english, language)
+  return { lesson, section: lesson.sections[index], fallback: !!language && !language.texts[english.family] }
 }
 
 /** A lesson position as grids, by its key in src/data/lesson-positions.json: digits (0 for empty) and candidate masks. */

@@ -96,7 +96,7 @@ export const de: Messages = {
     hardest: 'Schwierigste',
     mistake: 'Dein Gitter enthält einen Fehler',
     mistakeNote: 'Prüfe deine Ziffern und Notizen: Etwas darin schließt die Lösung aus.',
-    beyond: 'Dein nächster Schritt braucht eine Technik jenseits des XY-Wing',
+    beyond: 'Dein nächster Schritt braucht eine Technik jenseits des XY-Wings',
     leadNext: 'Dein nächster Schritt braucht',
     leadHardest: 'Die schwierigste Technik dieses Rätsels ist',
     comingSoon: 'Eine Lektion zu dieser Technik folgt.',
