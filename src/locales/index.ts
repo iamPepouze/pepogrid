@@ -5,6 +5,7 @@ import { fr } from './fr'
 
 export type { Messages }
 
+/** Each language's messages. */
 export const MESSAGES: Record<Language, Messages> = { en, fr, de }
 
 /** Each language's name in itself, so a player finds theirs whatever language the menu is in. */

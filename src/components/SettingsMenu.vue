@@ -2,15 +2,17 @@
 import { Monitor, Moon, Settings, Sun } from '@lucide/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from '../composables/useI18n'
-import { LANGUAGES, type LanguageSetting } from '../lib/language'
+import { LANGUAGES, resolveLanguage, type LanguageSetting } from '../lib/language'
 import { LANGUAGE_NAMES } from '../locales'
 import { THEME_MODES, useSettingsStore, type ThemeMode } from '../stores/settings'
 
 const settings = useSettingsStore()
-const { language, t } = useI18n()
+const { t } = useI18n()
 
 const LANGUAGE_SETTINGS: readonly LanguageSetting[] = ['system', ...LANGUAGES]
-const languageLabel = (setting: LanguageSetting) => (setting === 'system' ? t.value.settings.system(LANGUAGE_NAMES[language.value]) : LANGUAGE_NAMES[setting])
+/** The language System gives on this device, whichever language the app is in now. */
+const deviceLanguage = computed(() => resolveLanguage(navigator.languages, 'system'))
+const languageLabel = (setting: LanguageSetting) => (setting === 'system' ? t.value.settings.system(LANGUAGE_NAMES[deviceLanguage.value]) : LANGUAGE_NAMES[setting])
 const themeLabels = computed<Record<ThemeMode, string>>(() => ({
   system: t.value.settings.themeSystem,
   light: t.value.settings.themeLight,
@@ -26,6 +28,24 @@ async function pickLanguage(setting: LanguageSetting) {
   // The persisted copy is written on the store's next flush; a reload before it would drop the pick.
   await nextTick()
   window.location.reload()
+}
+
+/**
+ * A native radio group picks on every arrow key, and a pick here reloads the app, so a keyboard player
+ * couldn't step to their language. The arrows only move focus; `Enter` picks, as `Space` and a tap already do.
+ */
+function onLanguageKeydown(e: KeyboardEvent) {
+  const input = e.target as HTMLInputElement
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    input.click()
+    return
+  }
+  const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key]
+  if (!step) return
+  e.preventDefault()
+  const inputs = [...input.closest('fieldset')!.querySelectorAll('input')]
+  inputs[(inputs.indexOf(input) + step + inputs.length) % inputs.length].focus()
 }
 
 const open = ref(false)
@@ -68,7 +88,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
     </button>
 
     <div v-if="open" class="popover" role="dialog" :aria-label="t.settings.title">
-      <fieldset>
+      <fieldset @keydown="onLanguageKeydown">
         <legend>{{ t.settings.language }}</legend>
         <label v-for="s in LANGUAGE_SETTINGS" :key="s" class="option" :class="{ checked: settings.language === s }">
           <input type="radio" name="language" :value="s" :checked="settings.language === s" @change="pickLanguage(s)" />

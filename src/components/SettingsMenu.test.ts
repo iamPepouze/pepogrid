@@ -3,7 +3,6 @@ import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp } from 'vue'
 import { useSettingsStore } from '../stores/settings'
 import SettingsMenu from './SettingsMenu.vue'
 
@@ -12,14 +11,6 @@ enableAutoUnmount(afterEach)
 /** Stands in for localStorage, which a fresh app start reads its saved settings from. */
 const storage = new Map<string, string>()
 const storageLike = { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => void storage.set(key, value) }
-
-/** A fresh app start: a new Pinia that loads the saved settings from `storage`. Pinia only applies plugins once it is installed in an app. */
-function startApp() {
-  const fresh = createPinia().use(createPersistedState({ key: (id) => `pepogrid.${id}`, storage: storageLike }))
-  createApp({}).use(fresh)
-  setActivePinia(fresh)
-  return useSettingsStore()
-}
 
 /** Makes the device prefer these languages. */
 const deviceLanguages = (...languages: string[]) => vi.spyOn(navigator, 'languages', 'get').mockReturnValue(languages)
@@ -36,7 +27,7 @@ describe('SettingsMenu', () => {
   afterEach(() => vi.restoreAllMocks())
 
   const open = async () => {
-    const menu = mount(SettingsMenu, { global: { plugins: [pinia] } })
+    const menu = mount(SettingsMenu, { global: { plugins: [pinia] }, attachTo: document.body })
     await menu.find('button.trigger').trigger('click')
     return menu
   }
@@ -55,6 +46,46 @@ describe('SettingsMenu', () => {
       const menu = await open()
 
       expect(menu.find('fieldset').findAll('label')[0].text()).toBe('Système (Français)')
+    })
+
+    it('says which language System would give, not the one the app is in', async () => {
+      deviceLanguages('fr')
+      useSettingsStore().language = 'de'
+      const menu = await open()
+
+      expect(menu.find('fieldset').findAll('label')[0].text()).toBe('System (Français)')
+    })
+
+    it('moves focus with the arrow keys without picking or reloading', async () => {
+      const reload = vi.fn()
+      vi.stubGlobal('location', { ...window.location, reload })
+      const menu = await open()
+      const inputs = menu.findAll('fieldset')[0].findAll('input')
+      inputs[0].element.focus()
+
+      await inputs[0].trigger('keydown', { key: 'ArrowDown' })
+      expect(document.activeElement).toBe(inputs[1].element)
+      await inputs[1].trigger('keydown', { key: 'ArrowUp' })
+      await inputs[0].trigger('keydown', { key: 'ArrowUp' })
+      expect(document.activeElement).toBe(inputs[3].element)
+      await menu.vm.$nextTick()
+
+      expect(reload).not.toHaveBeenCalled()
+      expect(useSettingsStore().language).toBe('system')
+    })
+
+    it('picks the focused language on Enter', async () => {
+      const reload = vi.fn()
+      vi.stubGlobal('location', { ...window.location, reload })
+      const menu = await open()
+      const inputs = menu.findAll('fieldset')[0].findAll('input')
+      inputs[0].element.focus()
+
+      await inputs[0].trigger('keydown', { key: 'ArrowDown' })
+      await inputs[1].trigger('keydown', { key: 'Enter' })
+      await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce())
+
+      expect(useSettingsStore().language).toBe('en')
     })
 
     it('saves the pick and reloads the page', async () => {
@@ -88,20 +119,6 @@ describe('SettingsMenu', () => {
       expect(text).toContain('Gleiche Ziffern hervorheben')
       expect(text).toContain('Hell')
       expect(text).toContain('Lizenz')
-    })
-  })
-
-  describe('saved language', () => {
-    it('falls back to System when the saved value is not a language', () => {
-      storage.set('pepogrid.settings', JSON.stringify({ language: 'klingon' }))
-
-      expect(startApp().language).toBe('system')
-    })
-
-    it('keeps a saved language', () => {
-      storage.set('pepogrid.settings', JSON.stringify({ language: 'fr' }))
-
-      expect(startApp().language).toBe('fr')
     })
   })
 })
