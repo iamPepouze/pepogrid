@@ -43,7 +43,7 @@ describe('StatisticsView', () => {
 
   /** The text of the panel's section headed `heading`, one space between its pieces of text. */
   function section(view: ReturnType<typeof mountView>, heading: string) {
-    const body = view.findAll('[role="tabpanel"] h3').find((h) => h.text() === heading)?.element.nextElementSibling
+    const body = view.findAll('[role="tabpanel"] h3').find((h) => h.text().replaceAll('\u00ad', '') === heading)?.element.nextElementSibling
     if (!body) return undefined
     const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT)
     const texts: string[] = []
@@ -171,7 +171,7 @@ describe('StatisticsView', () => {
       seedMixed()
       const view = mountView('hard')
 
-      expect(view.find('.summary').text()).toMatch(/Lösungsquote\s*67[\u00a0\u202f]%/)
+      expect(view.find('.summary').text().replaceAll('\u00ad', '')).toMatch(/Lösungsquote\s*67[\u00a0\u202f]%/)
       expect(section(view, 'Technikfamilien')).toBe('Teilmengen 3/5 Schnittmengen 1/1 1 hat die Schlüsseltechnik aufgedeckt 1 hat den nächsten Schritt genutzt')
       expect(view.findAll('.recent li')[0].text()).toMatch(/^\d+\. Okt\.?,? .* · Gelöst · .* · 1 Fehler · SE 3,5$/)
       expect(view.findAll('button').map((b) => b.text())).toContain('Zurück')

@@ -15,6 +15,9 @@ export interface DialogContent {
 }
 
 defineProps<DialogContent>()
+
+/** The text without soft hyphens, for names a screen reader reads. */
+const plain = (text: string) => text.replaceAll('\u00ad', '')
 const emit = defineEmits<{ close: [confirmed: boolean] }>()
 
 const dialog = ref<HTMLDialogElement | null>(null)
@@ -41,15 +44,15 @@ function onCancel(e: Event) {
 
 <template>
   <!-- data-own-keys: the game's global shortcuts leave keys inside this dialog alone. -->
-  <dialog ref="dialog" class="dialog" aria-labelledby="dialog-title" data-own-keys @click="onClick" @cancel="onCancel">
+  <dialog ref="dialog" class="dialog" :aria-label="plain(title)" data-own-keys @click="onClick" @cancel="onCancel">
     <div class="content">
       <h2 id="dialog-title">{{ title }}</h2>
       <p>{{ message }}</p>
       <div class="actions">
-        <button v-if="cancelLabel" type="button" ref="cancelButton" class="button" @click="emit('close', false)">
+        <button v-if="cancelLabel" type="button" ref="cancelButton" class="button" :aria-label="plain(cancelLabel)" @click="emit('close', false)">
           {{ cancelLabel }}
         </button>
-        <button type="button" ref="confirmButton" class="button primary" @click="emit('close', true)">
+        <button type="button" ref="confirmButton" class="button primary" :aria-label="plain(confirmLabel)" @click="emit('close', true)">
           {{ confirmLabel }}
         </button>
       </div>

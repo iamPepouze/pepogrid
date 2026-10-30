@@ -24,7 +24,7 @@ export const fr: Messages = {
     loadFailedTitle: (difficulty) => `Impossible de charger une nouvelle grille ${difficulty}`,
     loadFailedMessage: 'Vérifie ta connexion et réessaie.',
   },
-  hints: { shift: 'Maj', ctrl: 'Ctrl', del: 'Suppr', digit: 'chiffre', place: 'placer', note: 'note', notesMode: 'mode notes', fillNotes: 'remplir les notes', erase: 'effacer', undo: 'annuler', arrows: 'flèches : déplacer' },
+  hints: { shift: 'Maj', ctrl: 'Ctrl', del: 'Suppr', digit: 'chiffre', place: 'placer', note: 'note', notesMode: 'mode notes', fillNotes: 'remplir les notes', erase: 'effacer', undo: 'annuler', arrows: 'flèches : déplacer' },
   controls: { on: 'OUI', off: 'NON', undo: 'Annuler', erase: 'Effacer', notes: 'Notes', fillNotes: 'Remplir les notes', technique: 'Technique' },
   numberPad: 'Pavé numérique',
   difficultyMenu: 'Difficulté',
