@@ -264,7 +264,7 @@ export const deLessons: LessonTexts = {
         ],
       },
       {
-        text: 'Wie bei einem Rechteck vom Typ 2 enthalten die Zellen der Schleife das Paar, einige davon denselben zusätzlichen Kandidaten. Eine davon muss diese zusätzliche Ziffer sein, sonst könnte das Paar rund um die Schleife abwechseln: Sie fällt also aus jeder Zelle weg, die Nachbarzelle von allen ist. Schleifen aus 8 und 10 Zellen funktionieren genauso.',
+        text: 'Wie bei einem Unique Rectangle vom Typ 2 enthalten die Zellen der Schleife das Paar, einige davon denselben zusätzlichen Kandidaten. Eine davon muss diese zusätzliche Ziffer sein, sonst könnte das Paar rund um die Schleife abwechseln: Sie fällt also aus jeder Zelle weg, die Nachbarzelle von allen ist. Schleifen aus 8 und 10 Zellen funktionieren genauso.',
         examples: [
           [
             'Diese sechs Zellen bilden eine geschlossene Schleife durch die Zeilen 3, 4 und 7, wobei jede berührte Zeile, Spalte und jeder Block zwei davon enthält. Alle sechs können eine 3 oder eine 6 aufnehmen.',
@@ -274,7 +274,7 @@ export const deLessons: LessonTexts = {
         ],
       },
       {
-        text: 'Wie bei einem Rechteck vom Typ 3 haben zwei Zellen der Schleife, die eine Einheit teilen, zusätzliche Kandidaten, und eine davon muss eine zusätzliche Ziffer enthalten. In ihrer gemeinsamen Einheit ist diese Zelle vergeben: Die Zusätzlichen können mit anderen Zellen eine nackte Teilmenge bilden, oder die Ziffern des Paars mit einem Platz weniger eine versteckte Teilmenge. Schleifen aus 8 und 10 Zellen funktionieren genauso.',
+        text: 'Wie bei einem Unique Rectangle vom Typ 3 haben zwei Zellen der Schleife, die eine Einheit teilen, zusätzliche Kandidaten, und eine davon muss eine zusätzliche Ziffer enthalten. In ihrer gemeinsamen Einheit ist diese Zelle vergeben: Die Zusätzlichen können mit anderen Zellen eine nackte Teilmenge bilden, oder die Ziffern des Paars mit einem Platz weniger eine versteckte Teilmenge. Schleifen aus 8 und 10 Zellen funktionieren genauso.',
         examples: [
           [
             'Diese sechs Zellen bilden eine geschlossene Schleife durch die Zeilen 1 bis 3, wobei jede berührte Zeile, Spalte und jeder Block zwei davon enthält. Alle sechs können eine 2 oder eine 7 aufnehmen, vier davon nichts anderes.',
@@ -285,7 +285,7 @@ export const deLessons: LessonTexts = {
         ],
       },
       {
-        text: 'Wie bei einem Rechteck vom Typ 4 enthalten zwei Zellen der Schleife, die eine Einheit teilen, mehr als das Paar. Hat eine Ziffer des Paars in dieser Einheit keinen anderen Platz, enthält eine der beiden sie, also kann keine die andere Ziffer des Paars enthalten. Schleifen aus 8 und 10 Zellen funktionieren genauso.',
+        text: 'Wie bei einem Unique Rectangle vom Typ 4 enthalten zwei Zellen der Schleife, die eine Einheit teilen, mehr als das Paar. Hat eine Ziffer des Paars in dieser Einheit keinen anderen Platz, enthält eine der beiden sie, also kann keine die andere Ziffer des Paars enthalten. Schleifen aus 8 und 10 Zellen funktionieren genauso.',
         examples: [
           [
             'Diese sechs Zellen bilden eine geschlossene Schleife durch die Zeilen 7 bis 9, wobei jede berührte Zeile, Spalte und jeder Block zwei davon enthält. Alle sechs können eine 7 oder eine 9 aufnehmen, vier davon nichts anderes.',
@@ -305,7 +305,7 @@ export const deLessons: LessonTexts = {
           [
             'Hier hat jede leere Zelle genau zwei Kandidaten, außer Zeile 1, Spalte 2, die drei hat: eine 1, eine 8 und eine 9.',
             'Sieh dir ihre 9 an. Die drei Einheiten der Zelle, Zeile 1, Spalte 2 und der Block oben links, haben jeweils drei Plätze für eine 9, einen zu viel.',
-            'Ohne diese 9 hätte jeder Kandidat in jeder seiner Einheiten genau zwei Plätze: Das Gitter wäre ein BUG, ohne Lösung oder mit mehreren. Das Rätsel hat genau eine, also bleibt die 9: Zeile 1, Spalte 2 ist die 9, und ihre 1 und ihre 8 entfallen. Das ist BUG type 1.',
+            'Ohne diese 9 hätte jeder Kandidat in jeder seiner Einheiten genau zwei Plätze: Das Gitter wäre ein BUG, ohne Lösung oder mit mehreren. Das Rätsel hat genau eine, also bleibt die 9: Zeile 1, Spalte 2 ist die 9, und ihre 1 und ihre 8 entfallen. Das ist ein BUG vom Typ 1.',
           ],
         ],
       },
@@ -315,7 +315,7 @@ export const deLessons: LessonTexts = {
           [
             'Hier hat jede leere Zelle genau zwei Kandidaten, außer zwei in Zeile 4: Spalte 4 mit einer 2, einer 3 und einer 8 sowie Spalte 6 mit einer 1, einer 3 und einer 5.',
             'Beide haben eine 3 zu viel: Zeile 4 hat vier Plätze für eine 3. Ohne diese beiden 3en hätte jeder Kandidat in jeder seiner Einheiten genau zwei Plätze: Das Gitter wäre ein BUG, ohne Lösung oder mit mehreren.',
-            'Also ist eine der beiden eine 3. Welche es auch ist, eine Nachbarzelle von beiden kann es nicht sein: Die 3en in Zeile 4, Spalte 3 und 9, in Zeile 5, Spalte 6 und in Zeile 6, Spalte 4 entfallen. Das ist BUG type 2.',
+            'Also ist eine der beiden eine 3. Welche es auch ist, eine Nachbarzelle von beiden kann es nicht sein: Die 3en in Zeile 4, Spalte 3 und 9, in Zeile 5, Spalte 6 und in Zeile 6, Spalte 4 entfallen. Das ist ein BUG vom Typ 2.',
           ],
         ],
       },
@@ -327,7 +327,7 @@ export const deLessons: LessonTexts = {
             'Spalte 3 hat drei Plätze für eine 3, einen zu viel, und Spalte 6 drei für eine 9. Ohne diese 3 und diese 9 hätte jeder Kandidat in jeder seiner Einheiten genau zwei Plätze: Das Gitter wäre ein BUG, ohne Lösung oder mit mehreren.',
             'Also ist Zeile 4, Spalte 3 die 3, oder Zeile 4, Spalte 6 ist die 9. Zusammen wirken sie wie eine Zelle der Zeile 4, die eine 3 oder eine 9 enthält.',
             'Zeile 4, Spalte 1 enthält eine 3 oder eine 4 und Spalte 9 eine 4 oder eine 9. Mit dieser einen Zelle sind das drei Plätze für drei Ziffern, die 3, die 4 und die 9: ein nacktes Tripel in Zeile 4.',
-            'Also kann keine Zelle der Zeile 4 außerhalb des Tripels sie enthalten: Die 3 in Spalte 2 entfällt. Das ist BUG type 3.',
+            'Also kann keine Zelle der Zeile 4 außerhalb des Tripels sie enthalten: Die 3 in Spalte 2 entfällt. Das ist ein BUG vom Typ 3.',
           ],
         ],
       },
@@ -338,7 +338,7 @@ export const deLessons: LessonTexts = {
             'Hier hat jede leere Zelle genau zwei Kandidaten, außer zwei in Spalte 1: Zeile 7 mit einer 1, einer 4 und einer 5 sowie Zeile 8 mit einer 1, einer 5 und einer 7.',
             'Zeile 7 hat drei Plätze für eine 5, einen zu viel, und Spalte 1 drei für eine 7. Ohne die 5 in Zeile 7, Spalte 1 und die 7 in Zeile 8, Spalte 1 hätte jeder Kandidat in jeder seiner Einheiten genau zwei Plätze: Das Gitter wäre ein BUG. Also ist eine davon wahr.',
             'Die 1 des Blocks unten links kann nur in diese beiden Zellen. Welche auch immer ihre überzählige Ziffer enthält, die andere ist die 1.',
-            'Also ist Zeile 7, Spalte 1 eine 1 oder eine 5, und Zeile 8, Spalte 1 eine 1 oder eine 7: Die 4 in der einen und die 5 in der anderen entfallen. Das ist BUG type 4.',
+            'Also ist Zeile 7, Spalte 1 eine 1 oder eine 5, und Zeile 8, Spalte 1 eine 1 oder eine 7: Die 4 in der einen und die 5 in der anderen entfallen. Das ist ein BUG vom Typ 4.',
           ],
         ],
       },
@@ -386,7 +386,7 @@ export const deLessons: LessonTexts = {
             'Die 3 in Spalte 1 hat nur zwei Plätze, die Zeilen 2 und 6, also steht sie in Zeile 6.',
             'Dann kann Zeile 6, Spalte 6, in derselben Zeile, keine 3 sein.',
             'Die 3 in Spalte 6 hat nur zwei Plätze, die Zeilen 1 und 6, also steht sie in Zeile 1: zurück am Anfang der Schleife, und sie geht auf.',
-            'Angenommen stattdessen, Zeile 1, Spalte 6 ist keine 3: Jedes Glied kehrt sich um, und die anderen drei Zellen nehmen die 3en. In jedem Fall nehmen die 3en jede zweite Zelle der Schleife. Das ist ein bidirektionaler X-Cycle.',
+            'Angenommen stattdessen, Zeile 1, Spalte 6 ist keine 3: Jedes Glied kehrt sich um, und die anderen drei Zellen nehmen die 3en. In jedem Fall nehmen die 3en jede zweite Zelle der Schleife. Das ist ein Bidirectional X-Cycle.',
             'Der Block oben in der Mitte, der Block oben links und Zeile 6 enthalten je zwei Zellen der Schleife, die nicht beide 3 sein können, und eine davon ist in jedem Fall die 3. Der Rest dieser Einheiten kann also keine 3 sein: Ihre anderen 3en entfallen.',
           ],
         ],
@@ -412,7 +412,7 @@ export const deLessons: LessonTexts = {
             'Dann kann Zeile 7, Spalte 9, in derselben Zeile, keine 5 sein, also ist sie die 4.',
             'Dann kann Zeile 5, Spalte 9, in derselben Spalte, keine 4 sein, also ist sie die 6.',
             'Dann kann Zeile 5, Spalte 2, in derselben Zeile, keine 6 sein, also ist sie die 3: zurück am Anfang der Schleife, und sie geht auf.',
-            'Angenommen stattdessen, Zeile 5, Spalte 2 ist die 6: Jedes Glied kehrt sich um, und jede Zelle nimmt ihre andere Ziffer an. In jedem Fall geht die Schleife auf. Das ist ein bidirektionaler Y-Cycle.',
+            'Angenommen stattdessen, Zeile 5, Spalte 2 ist die 6: Jedes Glied kehrt sich um, und jede Zelle nimmt ihre andere Ziffer an. In jedem Fall geht die Schleife auf. Das ist ein Bidirectional Y-Cycle.',
             'In jedem Fall hat Spalte 2 ihre 3 in der Schleife, Zeile 7 ihre 5, Spalte 9 ihre 4 und Zeile 5 ihre 6. Keine andere Zelle dieser Einheiten kann sie haben: Die 3en in den Zeilen 3 und 6 von Spalte 2, die 5 in Zeile 7, Spalte 3, die 4 in Zeile 8, Spalte 9 und die 6 in Zeile 5, Spalte 3 entfallen.',
           ],
         ],
@@ -429,7 +429,7 @@ export const deLessons: LessonTexts = {
             'Die 3 in Spalte 4 hat nur zwei Plätze, die Zeilen 3 und 9, also steht sie in Zeile 3.',
             'Dann kann Zeile 3, Spalte 8, in derselben Zeile, keine 3 sein.',
             'Die 3 im Block oben rechts hat nur zwei Plätze, Spalte 8, Zeilen 2 und 3, also steht sie in Zeile 2: zurück am Anfang der Schleife, und sie geht auf.',
-            'Angenommen stattdessen, Zeile 2, Spalte 8 ist keine 3: Jedes Glied kehrt sich um. Sie ist die 4, Zeile 9, Spalte 9 die 4, und Zeile 9, Spalte 4 und Zeile 3, Spalte 8 die 3en. In jedem Fall geht die Schleife auf. Das ist ein bidirektionaler Cycle: Anders als ein X-Cycle folgt er mehreren Ziffern.',
+            'Angenommen stattdessen, Zeile 2, Spalte 8 ist keine 3: Jedes Glied kehrt sich um. Sie ist die 4, Zeile 9, Spalte 9 die 4, und Zeile 9, Spalte 4 und Zeile 3, Spalte 8 die 3en. In jedem Fall geht die Schleife auf. Das ist ein Bidirectional Cycle: Anders als ein X-Cycle folgt er mehreren Ziffern.',
             'In jedem Fall hat Zeile 3 ihre 3 in der Schleife, in Spalte 4 oder Spalte 8. Keine andere Zelle von Zeile 3 kann also 3 sein: Die 3en in den Spalten 2 und 6 entfallen.',
           ],
         ],
@@ -468,14 +468,14 @@ export const deLessons: LessonTexts = {
         ],
       },
       {
-        text: 'Wie eine X-Chain folgt eine Nishio-Kette einer einzigen Ziffer, aber aus einer Annahme folgt sie mehreren Ketten. Widersprechen sich zwei davon, weil die eine die Ziffer in eine Zelle setzt und die andere sie dort ausschließt, oder weil beide sie in dieselbe Einheit setzen, war die Annahme falsch.',
+        text: 'Wie eine X-Chain folgt eine Nishio Forcing Chain einer einzigen Ziffer, aber aus einer Annahme folgt sie mehreren Ketten. Widersprechen sich zwei davon, weil die eine die Ziffer in eine Zelle setzt und die andere sie dort ausschließt, oder weil beide sie in dieselbe Einheit setzen, war die Annahme falsch.',
         examples: [
           [
             'Nimm an, Zeile 2, Spalte 5 ist eine 8. Dann kann Zeile 9, Spalte 5, in derselben Spalte, keine 8 sein.',
             'Die 8 in Zeile 9 hat nur zwei Plätze, die Spalten 1 und 5, also steht sie in Spalte 1.',
             'Geh zurück zur Annahme. Zeile 3, Spalten 4 und 5, im selben Block wie Zeile 2, Spalte 5, können auch keine 8 sein.',
             'Die 8 in Zeile 3 hatte drei Plätze, die Spalten 1, 4 und 5. Zwei sind ausgeschlossen, also steht sie in Spalte 1.',
-            'Aber die Zeilen 3 und 9 in Spalte 1 können nicht beide eine 8 sein: Spalte 1 hätte zwei. Die Annahme ist falsch, also entfällt die 8 in Zeile 2, Spalte 5. Das ist eine Nishio-Kette.',
+            'Aber die Zeilen 3 und 9 in Spalte 1 können nicht beide eine 8 sein: Spalte 1 hätte zwei. Die Annahme ist falsch, also entfällt die 8 in Zeile 2, Spalte 5. Das ist eine Nishio Forcing Chain.',
           ],
         ],
       },
