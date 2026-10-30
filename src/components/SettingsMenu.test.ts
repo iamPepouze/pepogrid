@@ -102,6 +102,20 @@ describe('SettingsMenu', () => {
       expect(stops()).toEqual([true, true, true, true])
     })
 
+    it('keeps the picked language a Tab stop after a tap outside closes the menu from another one', async () => {
+      useSettingsStore().language = 'fr'
+      const menu = await open()
+      const radios = () => menu.findAll('fieldset')[0].findAll('input')
+      await radios()[1].trigger('focus')
+
+      // A browser may fire no focusout when the focused radio is removed with the menu.
+      document.dispatchEvent(new Event('pointerdown'))
+      await menu.vm.$nextTick()
+      await menu.find('button.trigger').trigger('click')
+
+      expect(radios().map((i) => i.attributes('tabindex') !== '-1')).toEqual([true, true, true, true])
+    })
+
     it('picks the focused language on Enter', async () => {
       const reload = vi.fn()
       vi.stubGlobal('location', { ...window.location, reload })

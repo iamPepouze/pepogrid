@@ -11,8 +11,8 @@ const { t } = useI18n()
 
 const LANGUAGE_SETTINGS: readonly LanguageSetting[] = ['system', ...LANGUAGES]
 /** The language System gives on this device, whichever language the app is in now. */
-const DEVICE_LANGUAGE = resolveLanguage(navigator.languages, 'system')
-const languageLabel = (setting: LanguageSetting) => (setting === 'system' ? t.value.settings.system(LANGUAGE_NAMES[DEVICE_LANGUAGE]) : LANGUAGE_NAMES[setting])
+const deviceLanguage = resolveLanguage(navigator.languages, 'system')
+const languageLabel = (setting: LanguageSetting) => (setting === 'system' ? t.value.settings.system(LANGUAGE_NAMES[deviceLanguage]) : LANGUAGE_NAMES[setting])
 const themeLabels = computed<Record<ThemeMode, string>>(() => ({
   system: t.value.settings.themeSystem,
   light: t.value.settings.themeLight,
@@ -64,6 +64,8 @@ const trigger = ref<HTMLButtonElement | null>(null)
 
 function close(returnFocus = false) {
   open.value = false
+  // Removing the focused radio with the menu may fire no focusout.
+  focusedLanguage.value = null
   if (returnFocus) trigger.value?.focus()
 }
 
