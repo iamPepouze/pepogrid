@@ -12,7 +12,7 @@ fail() {
   failures=$((failures + 1))
 }
 
-# Fetches a path and sets status, type and cache (lowercased header values) and body (text only: NULs dropped).
+# Fetches a path and sets status, type and cache (lowercased header values), csp (as sent) and body (text only: NULs dropped).
 fetch() {
   local headers payload
   headers=$(mktemp)
@@ -22,6 +22,8 @@ fetch() {
   status=$(head -n 1 "$headers" | cut -d ' ' -f 2)
   type=$(grep -i '^content-type:' "$headers" | cut -d ':' -f 2- | tr -d '\r' | tr '[:upper:]' '[:lower:]' | xargs || true)
   cache=$(grep -i '^cache-control:' "$headers" | cut -d ':' -f 2- | tr -d '\r' | tr '[:upper:]' '[:lower:]' | xargs || true)
+  # Kept as sent: its hashes are case-sensitive base64.
+  csp=$(grep -i '^content-security-policy:' "$headers" | cut -d ':' -f 2- | tr -d '\r' || true)
   rm -f "$headers" "$payload"
 }
 
@@ -52,6 +54,20 @@ for icon in $icons; do
 done
 
 expect /no-such-path 404 '' ''
+
+# The CSP (nginx.conf) is on every response, including locations with their own add_header and errors, and allows
+# each inline script the page has: a script edited without its hash would be blocked in the browser.
+for path in / /sw.js /manifest.webmanifest /no-such-path; do
+  fetch "$path"
+  if [ -z "$csp" ]; then fail "$path: no content-security-policy"; else echo "ok   $path content-security-policy"; fi
+done
+fetch /
+page_csp=$csp
+hashes=$(perl -MDigest::SHA=sha256_base64 -0777 -ne "print \"'sha256-\", sha256_base64(\$1), \"='\n\" while /<script>(.*?)<\/script>/sg" <<<"$body")
+[ -n "$hashes" ] || fail "/: no inline script found, so its hash in the CSP was not checked"
+for hash in $hashes; do
+  if grep -qF -- "$hash" <<<"$page_csp"; then echo "ok   / inline script $hash"; else fail "/: inline script $hash is not in the content-security-policy (nginx.conf)"; fi
+done
 
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed" >&2
