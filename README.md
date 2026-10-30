@@ -112,6 +112,10 @@ Agents see UI changes in a real browser through the [drive-app](.claude/skills/d
 
 The app icon source is [public/favicon.svg](public/favicon.svg). Android's cropped (maskable) icon has its own source, [icons/maskable.svg](icons/maskable.svg), with a smaller grid that stays inside Android's safe zone. The PNG icons in `public/` are rendered from these two files.
 
+## Container image
+
+Every push to `main` also publishes an arm64 image to `ghcr.io/iampepouze/pepogrid`, tagged `main-<unix-timestamp>-<short-sha>`, for the Server to run. The [Dockerfile](Dockerfile) builds the app with `PEPOGRID_BASE=/` (the Pages build keeps `/pepogrid/`, see [ADR 0006](docs/adr/0006-github-pages-project-site.md)) and serves it with an unprivileged nginx ([nginx.conf](nginx.conf)) as user 101 on port 8080, so the app is at the root `/`. [.github/workflows/image.yml](.github/workflows/image.yml) builds it natively on an arm64 runner, runs [scripts/smoke-image.sh](scripts/smoke-image.sh) against the container (`bash scripts/smoke-image.sh http://localhost:8080` for one you started yourself) and checks it isn't root, and pushes only if all of that passes. The package must be public for the Cluster to pull it without credentials.
+
 ## License
 
 Copyright (c) 2026 Pepouze ([github.com/iamPepouze](https://github.com/iamPepouze)).

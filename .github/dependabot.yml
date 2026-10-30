@@ -54,6 +54,20 @@ updates:
         patterns: ["*"]
         update-types: [minor, patch]
 
+  - package-ecosystem: docker
+    directory: /
+    commit-message:
+      prefix: chore
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      image-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]
+
   - package-ecosystem: pip
     directory: /.github/lint
     commit-message:
