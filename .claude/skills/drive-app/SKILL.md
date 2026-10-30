@@ -17,8 +17,6 @@ description: "Drive PepoGrid in a real browser. Use to see a UI change working, 
 2. **Drive** it from a script in the scratchpad that imports `drive.mjs` by the repo root's absolute path as a `file:///` URL. On Windows, Node rejects a bare `C:/` import path. Its `openGame()` documents what it returns. Play through the UI (click a cell, then a pad button), using `save()` to know what to place:
 
    ```js
-   import { openGame } from 'file:///<repo root>/.claude/skills/drive-app/drive.mjs'
-   // many-files: the script saves screenshots, and the scripted-writes hook denies a script that writes unless it says so
    import { openGame, only } from 'file:///<repo root>/.claude/skills/drive-app/drive.mjs'
    const out = process.argv[2] // the scratchpad
    for (const [label, viewport] of [['320x1', { width: 320, height: 800 }], ['400x1', { width: 400, height: 800 }]]) {
@@ -34,7 +32,7 @@ description: "Drive PepoGrid in a real browser. Use to see a UI change working, 
    }
    ```
 
-   `node script.mjs <scratchpad> --only 400x1` runs just that open (`--only de,320x2` takes a comma-separated list; without it every open runs).
+   `node script.mjs <scratchpad> --only 400x1` runs just that open (`--only de,320x2` takes a comma-separated list; without it every open runs). `page.screenshot()` is no write the hook sees, but a script that calls `writeFileSync` itself is denied unless it carries a `// many-files` comment.
 
    `playwright-core` resolves through `drive.mjs`, so the script runs from anywhere. Without `touch: true`, the page sees a mouse at every width, so a phone-sized viewport alone still renders the desktop styles. For a layout change, open the game three times: at 320 and 400 px wide with `touch: true` (the narrowest phone and a typical one), and at 1200 × 800 without. Then open 320 and 400 again with `textScale: 2`, UX_STANDARDS.md U19's 200% text. Seed the widest content the view can hold: the longest one-word name, two-digit counts, every optional note shown. A colour change also runs once with `colorScheme: 'dark'`. A rule for the installed iOS app never applies in Chromium: [ios-installed-app.md](../../../docs/ios-installed-app.md) says what can still be checked here. A view that shows saved data takes it through `storage`, so the first load already has it; build stored results with `drive.mjs`'s `result(fields)`. A state a fresh puzzle rarely shows (a given next technique, "beyond XY-Wing", a lesson with collapsed sections) comes from `app.position(name)`, which loads a lesson position as the game in progress, and `app.offerInstall()` shows the *Install* pill (call it again after any reload).
 

@@ -74,6 +74,10 @@ describe('the scripted-writes hook', () => {
     expect(run('sed -n \'s/a/b/p\' src/App.vue')).toBe('allow')
   })
 
+  it('allows sed without -i piped into grep -i', () => {
+    expect(run('sed -n \'s/a/b/p\' src/App.vue | grep -i foo')).toBe('allow')
+  })
+
   it('allows a plain npm test', () => {
     expect(run('npm test')).toBe('allow')
   })

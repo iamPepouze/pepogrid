@@ -40,7 +40,7 @@ function nodeWrite() {
 
 /** Whether the command edits in place with sed or perl, on a path that isn't the scratchpad. */
 function inPlaceEdit() {
-  const inPlace = new RegExp(`${commandWord('sed|perl')}\\s+(?:\\S+\\s+)*?(-[a-zA-Z]*i\\S*|--in-place\\S*)(?=\\s|$)`, 'm')
+  const inPlace = new RegExp(`${commandWord('sed|perl')}\\s+(?:[^\\s;&|]+\\s+)*?(-[a-zA-Z]*i\\S*|--in-place\\S*)(?=\\s|$)`, 'm')
   if (!inPlace.test(command) || command.includes(MARKER)) return false
   const text = command.replaceAll('\\', '/').toLowerCase()
   return !(text.includes('/scratchpad/') || text.includes(tmpdir().replaceAll('\\', '/').toLowerCase()))
