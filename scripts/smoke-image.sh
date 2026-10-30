@@ -56,18 +56,20 @@ done
 expect /no-such-path 404 '' ''
 
 # The CSP (nginx.conf) is on every response, including locations with their own add_header and errors, and allows
-# each inline script the page has: a script edited without its hash would be blocked in the browser.
-for path in / /sw.js /manifest.webmanifest /no-such-path; do
+# each inline script the page has: a script edited without its hash would be blocked in the browser. / comes last,
+# so its csp and body are the ones checked below.
+for path in /sw.js /manifest.webmanifest /no-such-path /; do
   fetch "$path"
   if [ -z "$csp" ]; then fail "$path: no content-security-policy"; else echo "ok   $path content-security-policy"; fi
 done
-fetch /
-page_csp=$csp
-hashes=$(perl -MDigest::SHA=sha256_base64 -0777 -ne "print \"'sha256-\", sha256_base64(\$1), \"='\n\" while /<script>(.*?)<\/script>/sg" <<<"$body")
+# Every <script> without a src, whatever its other attributes.
+hashes=$(perl -MDigest::SHA=sha256_base64 -0777 -ne "print \"'sha256-\", sha256_base64(\$1), \"='\n\" while /<script(?![^>]*\bsrc=)[^>]*>(.*?)<\/script>/sg" <<<"$body")
 [ -n "$hashes" ] || fail "/: no inline script found, so its hash in the CSP was not checked"
 for hash in $hashes; do
-  if grep -qF -- "$hash" <<<"$page_csp"; then echo "ok   / inline script $hash"; else fail "/: inline script $hash is not in the content-security-policy (nginx.conf)"; fi
+  if grep -qF -- "$hash" <<<"$csp"; then echo "ok   / inline script $hash"; else fail "/: inline script $hash is not in the content-security-policy (nginx.conf)"; fi
 done
+# The CSP allows no inline handler or style attribute (no 'unsafe-inline' or 'unsafe-hashes'), so the page has none.
+if grep -Eq '<[^>]*[[:space:]](on[a-z]+|style)=' <<<"$body"; then fail "/: an inline on*= handler or style= attribute, which the content-security-policy blocks"; else echo "ok   / no inline handler or style attribute"; fi
 
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed" >&2
