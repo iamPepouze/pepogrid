@@ -178,6 +178,7 @@ button.surface:disabled {
 /* The view's Back button beside its title. */
 .view-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
 }
@@ -229,6 +230,7 @@ button.surface:disabled {
 /* A view's row of tabs: Statistics' difficulties, the key technique's Next step and Hardest. */
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
 }
 

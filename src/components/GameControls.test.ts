@@ -3,6 +3,7 @@ import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { useGameStore } from '../stores/game'
+import { useSettingsStore } from '../stores/settings'
 import { fill, nonGivensOf } from '../stores/testing'
 import GameControls from './GameControls.vue'
 
@@ -14,6 +15,41 @@ describe('GameControls', () => {
   beforeEach(() => {
     pinia = createPinia()
     setActivePinia(pinia)
+  })
+
+  it('labels its buttons in the chosen language', () => {
+    const labels = () => mount(GameControls, { global: { plugins: [pinia] } }).findAll('button').map((b) => b.text().replace(/\s*(ON|OFF|OUI|NON|AN|AUS)$/, ''))
+
+    expect(labels()).toEqual(['Undo', 'Erase', 'Notes', 'Fill notes', 'Technique'])
+    useSettingsStore().language = 'fr'
+    expect(labels()).toEqual(['Annuler', 'Effacer', 'Notes', 'Remplir les notes', 'Technique'])
+    useSettingsStore().language = 'de'
+    expect(labels()).toEqual(['Rück­gängig', 'Löschen', 'Notizen', 'Notizen füllen', 'Technik'])
+  })
+
+  it('shows the Notes badge in the chosen language', async () => {
+    const badge = () => controls.find('.badge').text()
+    const game = useGameStore()
+    const controls = mount(GameControls, { global: { plugins: [pinia] } })
+
+    expect(badge()).toBe('OFF')
+    useSettingsStore().language = 'fr'
+    await controls.vm.$nextTick()
+    expect(badge()).toBe('NON')
+    game.toggleNotesMode()
+    await controls.vm.$nextTick()
+    expect(badge()).toBe('OUI')
+    useSettingsStore().language = 'de'
+    await controls.vm.$nextTick()
+    expect(badge()).toBe('AN')
+  })
+
+  it('names Undo without the soft hyphen that lets its German label break', () => {
+    useSettingsStore().language = 'de'
+    const undo = mount(GameControls, { global: { plugins: [pinia] } }).find('button')
+
+    expect(undo.text()).toContain(String.fromCharCode(0xad))
+    expect(undo.attributes('aria-label')).toBe('Rückgängig')
   })
 
   it('fills notes from its button, then greys it out until the notes change', async () => {

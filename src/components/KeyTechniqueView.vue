@@ -2,6 +2,7 @@
 import { ArrowLeft } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { tabKeyTarget } from '../composables/tabKeys'
+import { useI18n } from '../composables/useI18n'
 import { lessonFor } from '../lib/lessons'
 import type { NextTechnique } from '../lib/rater'
 import LessonSectionBody from './LessonSectionBody.vue'
@@ -17,10 +18,13 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ back: []; select: [tab: KeyTechniqueTab] }>()
 
-const TABS: { id: KeyTechniqueTab; label: string }[] = [
-  { id: 'next', label: 'Next step' },
-  { id: 'hardest', label: 'Hardest' },
-]
+const { lessonLanguage, t: messages, techniqueName } = useI18n()
+const m = computed(() => messages.value.keyTechnique)
+
+const TABS = computed<{ id: KeyTechniqueTab; label: string }[]>(() => [
+  { id: 'next', label: m.value.next },
+  { id: 'hardest', label: m.value.hardest },
+])
 
 const backButton = ref<HTMLButtonElement | null>(null)
 const tabs = ref<HTMLButtonElement[]>([])
@@ -29,7 +33,7 @@ defineExpose({
   /** Focuses Back: the Technique button that opened the view is hidden behind it. */
   focusBack: () => backButton.value?.focus(),
   /** Focuses a tab, for when a confirmation that the tab asked for closes. */
-  focusTab: (tab: KeyTechniqueTab) => tabs.value[TABS.findIndex((t) => t.id === tab)]?.focus(),
+  focusTab: (tab: KeyTechniqueTab) => tabs.value[TABS.value.findIndex((t) => t.id === tab)]?.focus(),
 })
 
 /**
@@ -37,7 +41,7 @@ defineExpose({
  * choose one: choosing Hardest can ask for confirmation, so that waits for Enter, Space or a click.
  */
 function onTabKeydown(e: KeyboardEvent) {
-  const next = tabKeyTarget(e.key, tabs.value.findIndex((t) => t === document.activeElement), TABS.length)
+  const next = tabKeyTarget(e.key, tabs.value.findIndex((t) => t === document.activeElement), TABS.value.length)
   if (next === undefined) return
   e.preventDefault()
   tabs.value[next]?.focus()
@@ -53,7 +57,10 @@ const technique = computed(() => {
 })
 
 /** The lesson and section teaching the technique, or null while it has none. */
-const found = computed(() => (technique.value ? lessonFor(technique.value) : null))
+const found = computed(() => (technique.value ? lessonFor(technique.value, lessonLanguage.value) : null))
+
+/** `en` over a lesson shown in English inside another language, so a screen reader reads it in English. */
+const lessonLang = computed(() => (found.value?.fallback ? 'en' : undefined))
 
 /** The family's other sections, in the lesson's order, kept reachable below the one that opens. */
 const others = computed(() => found.value?.lesson.sections.filter((s) => s !== found.value?.section) ?? [])
@@ -64,12 +71,12 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
     <div class="view-heading">
       <button ref="backButton" type="button" class="back-button surface" @click="emit('back')">
         <ArrowLeft aria-hidden="true" />
-        <span>Back</span>
+        <span>{{ m.back }}</span>
       </button>
-      <h2 id="key-technique-title">Key technique</h2>
+      <h2 id="key-technique-title">{{ m.title }}</h2>
     </div>
 
-    <div class="tabs" role="tablist" aria-label="Technique" @keydown="onTabKeydown">
+    <div class="tabs" role="tablist" :aria-label="m.tabsLabel" @keydown="onTabKeydown">
       <button
         v-for="t in TABS"
         :id="`key-technique-tab-${t.id}`"
@@ -88,30 +95,31 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
 
     <div id="key-technique-panel" class="panel" role="tabpanel" :aria-labelledby="`key-technique-tab-${tab}`">
       <div v-if="answer === 'mistake'" class="card surface">
-        <p class="headline">Your grid has a mistake</p>
-        <p class="note">Check your digits and notes: something there rules out the solution.</p>
+        <p class="headline">{{ m.mistake }}</p>
+        <p class="note">{{ m.mistakeNote }}</p>
       </div>
 
       <div v-else-if="answer === 'beyond'" class="card surface">
-        <p class="headline">Your next step needs a technique beyond XY-Wing</p>
+        <p class="headline">{{ m.beyond }}</p>
       </div>
 
       <template v-else>
         <div class="card surface">
-          <p class="lead">{{ tab === 'next' ? 'Your next step needs' : 'This puzzle’s hardest technique is' }}</p>
-          <p class="technique">{{ technique }}</p>
-          <p v-if="found" class="note">{{ found.lesson.text }}</p>
-          <p v-else class="note">A lesson on this technique is coming.</p>
+          <p class="lead">{{ tab === 'next' ? m.leadNext : m.leadHardest }}</p>
+          <p class="technique">{{ techniqueName(technique!) }}</p>
+          <p v-if="found?.fallback" class="note">{{ m.englishOnly }}</p>
+          <p v-if="found" class="note" :lang="lessonLang">{{ found.lesson.text }}</p>
+          <p v-else class="note">{{ m.comingSoon }}</p>
         </div>
 
         <section v-if="found" class="card surface section" aria-labelledby="lesson-section-title">
           <h3 id="lesson-section-title">{{ found.section.title }}</h3>
-          <LessonSectionBody :section="found.section" />
+          <LessonSectionBody :section="found.section" :english="found.fallback" />
         </section>
 
         <details v-for="other in others" :key="other.title" class="card surface">
           <summary>{{ other.title }}</summary>
-          <LessonSectionBody :section="other" />
+          <LessonSectionBody :section="other" :english="found!.fallback" />
         </details>
       </template>
     </div>
@@ -128,12 +136,18 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
 
 .card {
   padding: 16px;
+  overflow-wrap: break-word;
 }
 
 .lead,
 .note {
   margin: 0;
   color: var(--muted);
+}
+
+/* The English-only note and the lesson text under it are two paragraphs. */
+.note + .note {
+  margin-top: 8px;
 }
 
 .section {

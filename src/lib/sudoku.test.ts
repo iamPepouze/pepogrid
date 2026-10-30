@@ -3,6 +3,8 @@ import sample from './__fixtures__/rated-sample.json'
 import { loadBank, pickFromBank } from './bank'
 import { DIFFICULTIES, TIERS, familyOf, techniqueFamily, tierOf, type Difficulty, type HodokuLevel } from './difficulty'
 import { PEERS, UNITS, bit, candidatesAt, digitsOf, popcount } from './grid'
+import { resolveLanguage } from './language'
+import { LESSON_LANGUAGES } from '../locales'
 import { LESSONS, gridAt, lessonFor, positionOf, summaryTechnique } from './lessons'
 import { nextTechnique, rateHodoku, rateSE } from './rater'
 import { capReached, countsOf, formatDuration, statisticsOf, type StatResult } from './statistics'
@@ -143,7 +145,46 @@ describe('technique families', () => {
   })
 })
 
+/** Every lesson a language has translated, in each language. */
+const translatedLessons = (['fr', 'de'] as const).flatMap((language) =>
+  LESSONS.flatMap((lesson) => {
+    const found = lessonFor(lesson.sections[0].techniques[0], LESSON_LANGUAGES[language])
+    return found && !found.fallback ? [found.lesson] : []
+  }),
+)
+
 describe('key technique lessons', () => {
+  it('translates the Singles and Naked Single lessons into French and German, and only those', () => {
+    for (const language of ['fr', 'de'] as const) {
+      const families = LESSONS.filter((l) => lessonFor(l.sections[0].techniques[0], LESSON_LANGUAGES[language])?.fallback === false).map((l) => l.family)
+      expect(families, language).toEqual(['Singles', 'Naked Single'])
+    }
+  })
+
+  it('gives a translation the English lesson’s sections, examples and steps, so it points at the same cells', () => {
+    for (const language of ['fr', 'de'] as const) {
+      for (const english of LESSONS) {
+        const found = lessonFor(english.sections[0].techniques[0], LESSON_LANGUAGES[language])!
+        if (found.fallback) continue
+        expect(found.lesson.sections.length, english.family).toBe(english.sections.length)
+        found.lesson.sections.forEach((section, s) => {
+          expect(section.techniques).toEqual(english.sections[s].techniques)
+          expect(section.title.length).toBeGreaterThan(0)
+          section.examples.forEach((example, e) => {
+            const original = english.sections[s].examples[e]
+            expect(example.position).toBe(original.position)
+            expect(example.steps.length).toBe(original.steps.length)
+            example.steps.forEach((step, k) => {
+              expect(step.caption.length, `${language} ${english.family} step ${k + 1}`).toBeGreaterThan(0)
+              expect(step.caption).not.toBe(original.steps[k].caption)
+              expect({ ...step, caption: '' }).toEqual({ ...original.steps[k], caption: '' })
+            })
+          })
+        })
+      }
+    }
+  })
+
   it.each(['easy', 'medium', 'hard', 'expert', 'master'] as const)('gives every technique in the %s bank a lesson section with an example', async (difficulty) => {
     for (const [, , , hardest] of await loadBank(difficulty)) {
       const found = lessonFor(hardest)
@@ -157,7 +198,7 @@ describe('key technique lessons', () => {
   })
 
   it('keeps every example step consistent with its puzzle’s solution', () => {
-    for (const lesson of LESSONS) {
+    for (const lesson of [...LESSONS, ...translatedLessons]) {
       for (const section of lesson.sections) {
         for (const example of section.examples) {
           const position = positionOf(example.position)
@@ -498,5 +539,32 @@ describe('statistics', () => {
     expect(formatDuration(3599)).toBe('59:59')
     expect(formatDuration(3600)).toBe('1:00:00')
     expect(formatDuration(37_230)).toBe('10:20:30')
+  })
+})
+
+describe('language', () => {
+  it('uses the first supported device language', () => {
+    expect(resolveLanguage(['fr'], 'system')).toBe('fr')
+    expect(resolveLanguage(['de', 'fr'], 'system')).toBe('de')
+  })
+
+  it('matches a regional variant on its base language, whatever its case', () => {
+    expect(resolveLanguage(['fr-CA'], 'system')).toBe('fr')
+    expect(resolveLanguage(['de-CH'], 'system')).toBe('de')
+    expect(resolveLanguage(['EN-gb'], 'system')).toBe('en')
+  })
+
+  it('skips an unsupported language for a supported one after it', () => {
+    expect(resolveLanguage(['nl', 'de'], 'system')).toBe('de')
+  })
+
+  it('falls back to English when no device language is supported', () => {
+    expect(resolveLanguage(['es', 'it-IT'], 'system')).toBe('en')
+    expect(resolveLanguage([], 'system')).toBe('en')
+  })
+
+  it('lets an explicit setting override the device', () => {
+    expect(resolveLanguage(['fr'], 'de')).toBe('de')
+    expect(resolveLanguage(['de'], 'en')).toBe('en')
   })
 })

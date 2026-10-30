@@ -12,9 +12,21 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
     <title>PepoGrid</title>
     <script>
-      // Apply the saved theme before first paint to avoid a flash.
-      // Keep in sync with src/stores/settings.ts and src/composables/useTheme.ts.
+      // Apply the saved theme and the page's language before first paint, so there is no flash and a
+      // screen reader starts in the right language.
+      // Keep in sync with src/stores/settings.ts, src/composables/useTheme.ts, and src/lib/language.ts.
       ;(function () {
+        try {
+          var saved = JSON.parse(localStorage.getItem('pepogrid.settings')) || {}
+          var languages = ['en', 'fr', 'de']
+          var lang = languages.indexOf(saved.language) >= 0 ? saved.language : null
+          var preferred = navigator.languages || []
+          for (var i = 0; !lang && i < preferred.length; i++) {
+            var base = preferred[i].split('-')[0].toLowerCase()
+            if (languages.indexOf(base) >= 0) lang = base
+          }
+          document.documentElement.lang = lang || 'en'
+        } catch (e) {}
         try {
           var mode = (JSON.parse(localStorage.getItem('pepogrid.settings')) || {}).theme
           if (mode === 'light' || mode === 'dark') document.documentElement.dataset.theme = mode

@@ -1621,11 +1621,65 @@ export const LESSONS: readonly Lesson[] = [
   },
 ]
 
-/** The lesson and section that teach `technique`, or null while it has none. */
-export function lessonFor(technique: string): { lesson: Lesson; section: LessonSection } | null {
-  const lesson = LESSONS.find((l) => l.family === techniqueFamily(technique))
-  const section = lesson?.sections.find((s) => s.techniques.includes(technique))
-  return lesson && section ? { lesson, section } : null
+/**
+ * A family's lesson in one language, as words only: the steps' cells, marks and eliminations stay in
+ * the English lesson, so a translation can't change what a step points at. Sections and examples
+ * follow the English lesson's order, and each example lists its steps' captions.
+ */
+export interface LessonText {
+  text: string
+  sections: { text: string; examples: string[][] }[]
+}
+
+/** The lessons a language has translated, by family. A family left out is shown in English. */
+export type LessonTexts = Partial<Record<string, LessonText>>
+
+/** A language's lessons: their words, and the technique names its section titles use. */
+export interface LessonLanguage {
+  texts: LessonTexts
+  names: Record<string, string>
+}
+
+/** `lesson` with its section titles as `names` gives them, and the words of `text` when there are some. */
+function localize(lesson: Lesson, text: LessonText | undefined, names: Record<string, string>): Lesson {
+  return {
+    ...lesson,
+    text: text?.text ?? lesson.text,
+    sections: lesson.sections.map((section, s) => ({
+      ...section,
+      title: names[section.techniques[0]] ?? section.title,
+      text: text?.sections[s].text ?? section.text,
+      examples: section.examples.map((example, e) => ({
+        ...example,
+        steps: example.steps.map((step, k) => ({ ...step, caption: text?.sections[s].examples[e][k] ?? step.caption })),
+      })),
+    })),
+  }
+}
+
+/** Each language's lessons, built once per family. */
+const LOCALIZED = new WeakMap<LessonLanguage, Map<string, Lesson>>()
+
+function lessonIn(lesson: Lesson, language: LessonLanguage | undefined): Lesson {
+  if (!language) return lesson
+  if (!LOCALIZED.has(language)) LOCALIZED.set(language, new Map())
+  const cache = LOCALIZED.get(language)!
+  if (!cache.has(lesson.family)) cache.set(lesson.family, localize(lesson, language.texts[lesson.family], language.names))
+  return cache.get(lesson.family)!
+}
+
+/**
+ * The lesson and section that teach `technique`, or null while there is none. The lesson is in `language`
+ * when it has that family's lesson, and otherwise in English (`fallback` true: English words in a
+ * language that isn't English); with no language it is English and not a fallback. Section titles are
+ * technique names, so they follow the language's name map either way.
+ */
+export function lessonFor(technique: string, language?: LessonLanguage): { lesson: Lesson; section: LessonSection; fallback: boolean } | null {
+  const english = LESSONS.find((l) => l.family === techniqueFamily(technique))
+  const index = english?.sections.findIndex((s) => s.techniques.includes(technique)) ?? -1
+  if (!english || index < 0) return null
+  const lesson = lessonIn(english, language)
+  return { lesson, section: lesson.sections[index], fallback: !!language && !language.texts[english.family] }
 }
 
 /** A lesson position as grids, by its key in src/data/lesson-positions.json: digits (0 for empty) and candidate masks. */

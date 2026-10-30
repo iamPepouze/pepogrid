@@ -10,9 +10,10 @@ import SettingsMenu from './components/SettingsMenu.vue'
 import StatisticsView from './components/StatisticsView.vue'
 import SudokuBoard from './components/SudokuBoard.vue'
 import { useInstall } from './composables/useInstall'
+import { useDocumentLanguage, useI18n } from './composables/useI18n'
 import { useTheme } from './composables/useTheme'
 import { useUpdate } from './composables/useUpdate'
-import { HODOKU_LABELS, LABELS, TIERS, type Difficulty } from './lib/difficulty'
+import { HODOKU_LABELS, TIERS, type Difficulty } from './lib/difficulty'
 import type { NextTechnique } from './lib/rater'
 import { formatDuration } from './lib/statistics'
 import { useGameStore } from './stores/game'
@@ -24,6 +25,8 @@ const results = useResultsStore()
 if (!game.isValid()) loadGame('easy', { recordAbandoned: false })
 
 useTheme()
+useDocumentLanguage()
+const { t, formatTenths, techniqueName } = useI18n()
 const { canInstall, install } = useInstall()
 const { canUpdate, update } = useUpdate()
 
@@ -52,12 +55,12 @@ const nextStep = ref<NextTechnique | null>(null)
  * the player goes ahead. The dialog is gone by then, so the caller can move focus.
  */
 async function confirmFirstLook(first: boolean, title: string, message: string, confirmLabel: string) {
-  return !first || ask({ title, message: `${message} It will be noted on this game’s result.`, confirmLabel, cancelLabel: 'Cancel' })
+  return !first || ask({ title, message: `${message} ${t.value.keyTechnique.noted}`, confirmLabel, cancelLabel: t.value.common.cancel })
 }
 
 /** Opens the key technique on Next step, asking first the first time in a game. */
 async function openKeyTechnique(trigger: HTMLButtonElement) {
-  if (!(await confirmFirstLook(!game.nextStepsShown, 'See your next step?', 'You’ll see which technique your next step needs.', 'Show'))) {
+  if (!(await confirmFirstLook(!game.nextStepsShown, t.value.keyTechnique.seeNextTitle, t.value.keyTechnique.seeNextMessage, t.value.keyTechnique.seeNextConfirm))) {
     trigger.focus()
     return
   }
@@ -72,7 +75,7 @@ async function openKeyTechnique(trigger: HTMLButtonElement) {
 /** Shows a tab. Hardest asks first the first time in a game; focus returns to the tab once the dialog closes. */
 async function selectKeyTechniqueTab(tab: KeyTechniqueTab) {
   const first = tab === 'hardest' && !game.keyTechniqueRevealed
-  const confirmed = await confirmFirstLook(first, 'Reveal the key technique?', 'You’ll see which technique this puzzle hinges on.', 'Reveal')
+  const confirmed = await confirmFirstLook(first, t.value.keyTechnique.revealTitle, t.value.keyTechnique.revealMessage, t.value.keyTechnique.revealConfirm)
   if (first) keyTechniqueView.value?.focusTab(tab)
   if (!confirmed) return
   if (tab === 'hardest') game.revealKeyTechnique()
@@ -91,10 +94,10 @@ const statisticsView = ref<InstanceType<typeof StatisticsView> | null>(null)
 /** Asks, then clears every result. `trigger` is the Reset button: focus returns there on cancel. */
 async function resetStatistics(trigger: HTMLButtonElement | null) {
   const confirmed = await ask({
-    title: 'Reset statistics?',
-    message: 'Every solved and abandoned game will be forgotten. This can’t be undone.',
-    confirmLabel: 'Reset',
-    cancelLabel: 'Cancel',
+    title: t.value.statistics.resetTitle,
+    message: t.value.statistics.resetMessage,
+    confirmLabel: t.value.statistics.resetConfirm,
+    cancelLabel: t.value.common.cancel,
   })
   if (!confirmed) {
     trigger?.focus()
@@ -131,7 +134,7 @@ async function loadGame(difficulty: Difficulty, options?: { recordAbandoned?: bo
     return true
   } catch (error) {
     console.error(error)
-    await ask({ title: `Couldn't load a new ${LABELS[difficulty]} puzzle`, message: 'Check your connection and try again.', confirmLabel: 'OK' })
+    await ask({ title: t.value.app.loadFailedTitle(t.value.difficulty[difficulty]), message: t.value.app.loadFailedMessage, confirmLabel: t.value.common.ok })
     return false
   }
 }
@@ -148,10 +151,10 @@ async function startGame(difficulty: Difficulty, from: EventTarget | null) {
   const unfinished = game.hasProgress && !game.completed
   if (unfinished) {
     const confirmed = await ask({
-      title: `Start a new ${LABELS[difficulty]} game?`,
-      message: `Your current ${LABELS[game.difficulty]} game will be lost.`,
-      confirmLabel: 'New game',
-      cancelLabel: 'Cancel',
+      title: t.value.app.newGameTitle(t.value.difficulty[difficulty]),
+      message: t.value.app.newGameMessage(t.value.difficulty[game.difficulty]),
+      confirmLabel: t.value.app.newGame,
+      cancelLabel: t.value.common.cancel,
     })
     if (!confirmed) {
       opener?.focus()
@@ -274,17 +277,17 @@ onBeforeUnmount(() => {
     <header ref="headerEl" class="topbar">
       <div class="brand">
         <h1>PepoGrid</h1>
-        <p class="tagline">Your grid, your chill.</p>
+        <p class="tagline">{{ t.app.tagline }}</p>
       </div>
-      <button v-if="canUpdate" type="button" class="pill" @click="update">Update</button>
-      <button v-if="canInstall" type="button" class="pill" @click="install">Install</button>
+      <button v-if="canUpdate" type="button" class="pill" @click="update">{{ t.app.update }}</button>
+      <button v-if="canInstall" type="button" class="pill" @click="install">{{ t.app.install }}</button>
       <SettingsMenu />
       <button
         ref="statisticsButton"
         type="button"
         class="icon-button"
-        aria-label="Statistics"
-        title="Statistics"
+        :aria-label="t.app.statistics"
+        :title="t.app.statistics"
         :aria-pressed="view === 'statistics'"
         :disabled="game.loading"
         @click="toggleStatistics"
@@ -295,8 +298,8 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="new-game icon-button"
-          aria-label="New game"
-          title="New game"
+          :aria-label="t.app.newGame"
+          :title="t.app.newGame"
           :disabled="game.loading"
           @click="startGame(game.difficulty, $event.currentTarget)"
         >
@@ -330,20 +333,19 @@ onBeforeUnmount(() => {
     <main v-show="!view" ref="gameEl" class="game">
       <div class="status-area">
         <div class="status">
-          <span>Mistakes: <strong>{{ game.mistakes }}</strong></span>
-          <span v-if="shownRating" class="rating" title="Sudoku Explainer rating">SE {{ shownRating.se.toFixed(1) }}</span>
-          <span class="timer" aria-label="Elapsed time">{{ time }}</span>
+          <span>{{ t.app.mistakes }} <strong>{{ game.mistakes }}</strong></span>
+          <span v-if="shownRating" class="rating" :title="t.app.ratingTitle">SE {{ formatTenths(shownRating.se) }}</span>
+          <span class="timer" :aria-label="t.app.elapsedTime">{{ time }}</span>
         </div>
         <div v-if="game.completed" class="win" role="status">
           <p>
-            <strong>Solved!</strong> {{ LABELS[game.difficulty] }} in {{ time }} with {{ game.mistakes }}
-            {{ game.mistakes === 1 ? 'mistake' : 'mistakes' }}.
+            <strong>{{ t.app.solved }}</strong> {{ t.app.solvedSummary(t.difficulty[game.difficulty], time, game.mistakes) }}
             <span v-if="shownRating" class="win-rating">
-              SE {{ shownRating.se.toFixed(1) }} · HoDoKu {{ shownRating.hodokuScore }}
-              ({{ HODOKU_LABELS[shownRating.hodokuLevel] }}) · hardest: {{ shownRating.hardest }}
+              SE {{ formatTenths(shownRating.se) }} · HoDoKu {{ shownRating.hodokuScore }}
+              ({{ HODOKU_LABELS[shownRating.hodokuLevel] }}) · {{ t.app.hardest }} {{ techniqueName(shownRating.hardest) }}
             </span>
           </p>
-          <button type="button" :disabled="game.loading" @click="startGame(game.difficulty, $event.currentTarget)">Play again</button>
+          <button type="button" :disabled="game.loading" @click="startGame(game.difficulty, $event.currentTarget)">{{ t.app.playAgain }}</button>
         </div>
       </div>
 
@@ -355,8 +357,8 @@ onBeforeUnmount(() => {
       <NumberPad class="pad-area" />
 
       <p class="hints">
-        <kbd>1</kbd>–<kbd>9</kbd> place · <kbd>Shift</kbd>+digit note · <kbd>N</kbd> notes mode ·
-        <kbd>F</kbd> fill notes · <kbd>Del</kbd> erase · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo · arrows move
+        <kbd>1</kbd>–<kbd>9</kbd> {{ t.hints.place }} · <kbd>{{ t.hints.shift }}</kbd>+{{ t.hints.digit }} {{ t.hints.note }} · <kbd>N</kbd> {{ t.hints.notesMode }} ·
+        <kbd>F</kbd> {{ t.hints.fillNotes }} · <kbd>{{ t.hints.del }}</kbd> {{ t.hints.erase }} · <kbd>{{ t.hints.ctrl }}</kbd>+<kbd>Z</kbd> {{ t.hints.undo }} · {{ t.hints.arrows }}
       </p>
     </main>
   </div>

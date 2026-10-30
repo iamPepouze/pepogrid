@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ArrowLeft } from '@lucide/vue'
 import { computed, nextTick, ref } from 'vue'
+import { useI18n } from '../composables/useI18n'
 import { tabKeyTarget } from '../composables/tabKeys'
-import { DIFFICULTIES, LABELS, type Difficulty } from '../lib/difficulty'
+import { DIFFICULTIES, type Difficulty } from '../lib/difficulty'
 import { MAX_RESULTS, capReached, countsOf, formatDuration, statisticsOf, type Counts, type Spread, type StatResult } from '../lib/statistics'
 import { useResultsStore } from '../stores/results'
 import StatFigures, { type Figure } from './StatFigures.vue'
@@ -11,6 +12,8 @@ const props = defineProps<{ current: Difficulty }>()
 const emit = defineEmits<{ back: []; reset: [trigger: HTMLButtonElement | null] }>()
 
 const results = useResultsStore()
+const { t, formatTenths: tenths, formatPercent, formatDateTime } = useI18n()
+const m = computed(() => t.value.statistics)
 
 const backButton = ref<HTMLButtonElement | null>(null)
 const resetButton = ref<HTMLButtonElement | null>(null)
@@ -28,28 +31,30 @@ const stats = computed(() => statisticsOf(results.results, selected.value))
 
 /** Shows a figure, or a dash when it's missing, so a missing figure isn't read as zero. */
 const shown = <T>(value: T | null, format: (v: T) => string) => (value === null ? '—' : format(value))
-const percent = (share: number) => `${Math.round(share)}%`
-const tenths = (n: number) => n.toFixed(1)
+/** A percentage of 0-100, as the language writes it. */
+const percent = (share: number) => formatPercent(share / 100)
+/** A family's name in the app's language; the stored results keep the English one. */
+const familyName = (family: string) => (m.value.families as Record<string, string>)[family] ?? family
 
 const countFigures = (counts: Counts): Figure[] => [
-  { label: 'Played', value: String(counts.played) },
-  { label: 'Solved', value: String(counts.solved) },
-  { label: 'Abandoned', value: String(counts.abandoned) },
-  { label: 'Solve rate', value: shown(counts.solveRate, (rate) => percent(rate * 100)) },
+  { label: m.value.played, value: String(counts.played) },
+  { label: m.value.solved, value: String(counts.solved) },
+  { label: m.value.abandoned, value: String(counts.abandoned) },
+  { label: m.value.solveRate, value: shown(counts.solveRate, formatPercent) },
 ]
 
 const solvedFigures = computed((): Figure[] => [
-  { label: 'Best time', value: shown(stats.value.bestTime, formatDuration) },
-  { label: 'Average time', value: shown(stats.value.averageTime, formatDuration) },
-  { label: 'Average mistakes', value: shown(stats.value.averageMistakes, tenths) },
-  { label: 'Flawless', value: shown(stats.value.flawless, String) },
-  { label: 'Key technique revealed', value: shown(stats.value.revealed, String) },
-  { label: 'Next step used', value: shown(stats.value.nextStepUsed, String) },
+  { label: m.value.bestTime, value: shown(stats.value.bestTime, formatDuration) },
+  { label: m.value.averageTime, value: shown(stats.value.averageTime, formatDuration) },
+  { label: m.value.averageMistakes, value: shown(stats.value.averageMistakes, tenths) },
+  { label: m.value.flawless, value: shown(stats.value.flawless, String) },
+  { label: m.value.keyRevealed, value: shown(stats.value.revealed, String) },
+  { label: m.value.nextStepUsed, value: shown(stats.value.nextStepUsed, String) },
 ])
 
 const streakFigures = computed((): Figure[] => [
-  { label: 'Current', value: String(stats.value.currentStreak) },
-  { label: 'Best', value: String(stats.value.bestStreak) },
+  { label: m.value.current, value: String(stats.value.currentStreak) },
+  { label: m.value.best, value: String(stats.value.bestStreak) },
 ])
 
 const rating = (label: string, spread: Spread | null, format: (n: number) => string) => ({
@@ -59,24 +64,23 @@ const rating = (label: string, spread: Spread | null, format: (n: number) => str
 })
 
 /** Each rating's label, shown average and min–max range. */
-const ratings = computed(() => [rating('SE', stats.value.se, tenths), rating('HoDoKu', stats.value.hodoku, (n) => String(Math.round(n)))])
+const ratings = computed(() => [rating(m.value.se, stats.value.se, tenths), rating(m.value.hodoku, stats.value.hodoku, (n) => String(Math.round(n)))])
 
 const thisYear = new Date().getFullYear()
 
 /** Day, month and time of the game's end, with the year when it isn't this one. */
 function endOf(result: StatResult) {
   const end = new Date(result.endedAt)
-  const year = end.getFullYear() === thisYear ? undefined : 'numeric'
-  return end.toLocaleString(undefined, { day: 'numeric', month: 'short', year, hour: '2-digit', minute: '2-digit' })
+  return formatDateTime(end, end.getFullYear() !== thisYear)
 }
 
 /** A recent result's fields, in display order. */
 const recentFields = (r: StatResult) => [
   endOf(r),
-  r.outcome === 'completed' ? 'Solved' : `Abandoned at ${percent(r.progress)}`,
+  r.outcome === 'completed' ? m.value.recentSolved : m.value.recentAbandoned(percent(r.progress)),
   formatDuration(r.elapsed),
-  `${r.mistakes} ${r.mistakes === 1 ? 'mistake' : 'mistakes'}`,
-  `SE ${tenths(r.se)}`,
+  m.value.mistakes(r.mistakes),
+  m.value.recentSe(tenths(r.se)),
 ]
 
 /** Arrow keys, Home and End move between tabs, as in the WAI-ARIA tabs pattern. */
@@ -95,18 +99,18 @@ async function onTabKeydown(e: KeyboardEvent) {
     <div class="view-heading">
       <button ref="backButton" type="button" class="back-button surface" @click="emit('back')">
         <ArrowLeft aria-hidden="true" />
-        <span>Back</span>
+        <span>{{ m.back }}</span>
       </button>
-      <h2 id="statistics-title">Statistics</h2>
+      <h2 id="statistics-title">{{ m.title }}</h2>
     </div>
 
     <section class="summary card surface" aria-labelledby="summary-title">
-      <h3 id="summary-title">All difficulties</h3>
+      <h3 id="summary-title">{{ m.allDifficulties }}</h3>
       <StatFigures :figures="countFigures(countsOf(results.results))" />
-      <p v-if="capReached(results.results)" class="note">Based on your latest {{ MAX_RESULTS }} games.</p>
+      <p v-if="capReached(results.results)" class="note">{{ m.cap(MAX_RESULTS) }}</p>
     </section>
 
-    <div class="tabs" role="tablist" aria-label="Difficulty" @keydown="onTabKeydown">
+    <div class="tabs" role="tablist" :aria-label="t.difficultyMenu" @keydown="onTabKeydown">
       <button
         v-for="d in DIFFICULTIES"
         :id="`statistics-tab-${d}`"
@@ -119,22 +123,22 @@ async function onTabKeydown(e: KeyboardEvent) {
         :tabindex="d === selected ? 0 : -1"
         @click="selected = d"
       >
-        {{ LABELS[d] }}
+        {{ t.difficulty[d] }}
       </button>
     </div>
 
     <div id="statistics-panel" class="card surface" role="tabpanel" :aria-labelledby="`statistics-tab-${selected}`">
-      <p v-if="!stats.played" class="empty">No {{ LABELS[selected] }} games yet.</p>
+      <p v-if="!stats.played" class="empty">{{ m.empty(t.difficulty[selected]) }}</p>
       <template v-else>
         <StatFigures :figures="countFigures(stats)" />
 
-        <h3>Solved games</h3>
+        <h3>{{ m.solvedGames }}</h3>
         <StatFigures :figures="solvedFigures" />
 
-        <h3>Streaks</h3>
+        <h3>{{ m.streaks }}</h3>
         <StatFigures :figures="streakFigures" />
 
-        <h3>Ratings</h3>
+        <h3>{{ m.ratings }}</h3>
         <dl class="list">
           <div v-for="r in ratings" :key="r.label">
             <dt>{{ r.label }}</dt>
@@ -144,23 +148,23 @@ async function onTabKeydown(e: KeyboardEvent) {
             </dd>
           </div>
         </dl>
-        <p v-if="stats.averageProgress !== null" class="note">Abandoned at {{ percent(stats.averageProgress) }} on average</p>
+        <p v-if="stats.averageProgress !== null" class="note">{{ m.abandonedAverage(percent(stats.averageProgress)) }}</p>
 
         <template v-if="stats.families.length">
-          <h3>Technique families</h3>
+          <h3>{{ m.techniqueFamilies }}</h3>
           <dl class="list families">
             <div v-for="f in stats.families" :key="f.family">
-              <dt>{{ f.family }}</dt>
+              <dt>{{ familyName(f.family) }}</dt>
               <dd>
                 <span class="stat-value">{{ f.solved }}/{{ f.played }}</span>
-                <span v-if="f.revealed" class="muted-note">{{ f.revealed }} revealed the key technique</span>
-                <span v-if="f.nextStepUsed" class="muted-note">{{ f.nextStepUsed }} used the next step</span>
+                <span v-if="f.revealed" class="muted-note">{{ m.revealedKey(f.revealed) }}</span>
+                <span v-if="f.nextStepUsed" class="muted-note">{{ m.usedNextStep(f.nextStepUsed) }}</span>
               </dd>
             </div>
           </dl>
         </template>
 
-        <h3>Recent games</h3>
+        <h3>{{ m.recentGames }}</h3>
         <ol class="recent">
           <li v-for="(r, i) in stats.recent" :key="i">
             <!-- The leading space keeps the text readable as one line; flex drops it on screen. -->
@@ -177,12 +181,17 @@ async function onTabKeydown(e: KeyboardEvent) {
       :disabled="!results.results.length"
       @click="emit('reset', resetButton)"
     >
-      Reset statistics
+      {{ m.reset }}
     </button>
   </section>
 </template>
 
 <style scoped>
+/* At large text, a long word such as a German one breaks rather than spilling out of its card. */
+.statistics {
+  overflow-wrap: break-word;
+}
+
 .card {
   padding: 12px;
 }
@@ -212,8 +221,9 @@ async function onTabKeydown(e: KeyboardEvent) {
 
 .list > div {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 12px;
+  gap: 0 12px;
 }
 
 .list dd {

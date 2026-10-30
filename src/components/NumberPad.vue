@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { onBeforeUnmount } from 'vue'
+import { useI18n } from '../composables/useI18n'
 import { useGameStore, vibrate } from '../stores/game'
 
 const LONG_PRESS_MS = 450
 
+const { t } = useI18n()
 const game = useGameStore()
 
 let timer: number | undefined
@@ -39,7 +41,7 @@ onBeforeUnmount(cancelPress)
 </script>
 
 <template>
-  <div class="pad" :class="{ notes: game.notesMode }" role="group" aria-label="Number pad">
+  <div class="pad" :class="{ notes: game.notesMode }" role="group" :aria-label="t.numberPad">
     <button
       v-for="d in 9"
       :key="d"
@@ -62,7 +64,8 @@ onBeforeUnmount(cancelPress)
 .pad {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
-  gap: 6px;
+  /* 4px between digits, not 6px: at 200% text the digits are as wide as the board allows, and the extra 16px keeps the pad inside it. */
+  gap: 6px 4px;
 }
 
 .digit {

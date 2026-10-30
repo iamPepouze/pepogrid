@@ -1,13 +1,62 @@
 <script setup lang="ts">
 import { Monitor, Moon, Settings, Sun } from '@lucide/vue'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from '../composables/useI18n'
+import { LANGUAGES, resolveLanguage, type LanguageSetting } from '../lib/language'
+import { LANGUAGE_NAMES } from '../locales'
 import { THEME_MODES, useSettingsStore, type ThemeMode } from '../stores/settings'
 
 const settings = useSettingsStore()
+const { t } = useI18n()
 
-const LABELS: Record<ThemeMode, string> = { system: 'System', light: 'Light', dark: 'Dark' }
+const LANGUAGE_SETTINGS: readonly LanguageSetting[] = ['system', ...LANGUAGES]
+/** The language System gives on this device, whichever language the app is in now. */
+const deviceLanguage = resolveLanguage(navigator.languages, 'system')
+const languageLabel = (setting: LanguageSetting) => (setting === 'system' ? t.value.settings.system(LANGUAGE_NAMES[deviceLanguage]) : LANGUAGE_NAMES[setting])
+const themeLabels = computed<Record<ThemeMode, string>>(() => ({
+  system: t.value.settings.themeSystem,
+  light: t.value.settings.themeLight,
+  dark: t.value.settings.themeDark,
+}))
 const ICONS = { system: Monitor, light: Sun, dark: Moon }
 const LICENSE_URL = 'https://github.com/iamPepouze/pepogrid/blob/main/LICENSE'
+
+/** Saves the pick, then reloads, so every word of the app comes up in the new language. */
+async function pickLanguage(setting: LanguageSetting) {
+  if (setting === settings.language) return
+  settings.language = setting
+  // The persisted copy is written on the store's next flush; a reload before it would drop the pick.
+  await nextTick()
+  window.location.reload()
+}
+
+/**
+ * A native radio group picks on every arrow key, and a pick here reloads the app, so a keyboard player
+ * couldn't step to their language. The arrows only move focus; `Enter` picks, as `Space` and a tap already do.
+ */
+function onLanguageKeydown(e: KeyboardEvent) {
+  // Alt + ← / → is the browser's back and forward.
+  if (e.altKey || e.ctrlKey || e.metaKey) return
+  const input = e.target as HTMLInputElement
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    input.click()
+    return
+  }
+  const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key]
+  if (!step) return
+  e.preventDefault()
+  const inputs = [...input.closest('fieldset')!.querySelectorAll('input')]
+  inputs[(inputs.indexOf(input) + step + inputs.length) % inputs.length].focus()
+}
+
+/**
+ * The language whose radio has focus, or null while focus is outside the group. A browser makes the picked
+ * radio the group's one Tab stop, so with focus on another it would stop there again before leaving;
+ * the picked radio drops out of the Tab order meanwhile.
+ */
+const focusedLanguage = ref<LanguageSetting | null>(null)
+const tabbable = (setting: LanguageSetting) => focusedLanguage.value === null || focusedLanguage.value === settings.language || setting !== settings.language
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
@@ -15,6 +64,8 @@ const trigger = ref<HTMLButtonElement | null>(null)
 
 function close(returnFocus = false) {
   open.value = false
+  // Removing the focused radio with the menu may fire no focusout.
+  focusedLanguage.value = null
   if (returnFocus) trigger.value?.focus()
 }
 
@@ -40,7 +91,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
       ref="trigger"
       type="button"
       class="trigger icon-button"
-      aria-label="Settings"
+      :aria-label="t.settings.title"
       aria-haspopup="true"
       :aria-expanded="open"
       @click="open = !open"
@@ -48,25 +99,32 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
       <Settings aria-hidden="true" />
     </button>
 
-    <div v-if="open" class="popover" role="dialog" aria-label="Settings">
-      <fieldset>
-        <legend>Theme</legend>
-        <label v-for="m in THEME_MODES" :key="m" class="option" :class="{ checked: settings.theme === m }">
-          <input v-model="settings.theme" type="radio" name="theme" :value="m" />
-          <component :is="ICONS[m]" class="icon" aria-hidden="true" />
-          <span>{{ LABELS[m] }}</span>
+    <div v-if="open" class="popover" role="dialog" :aria-label="t.settings.title">
+      <fieldset @keydown="onLanguageKeydown" @focusout="focusedLanguage = null">
+        <legend>{{ t.settings.language }}</legend>
+        <label v-for="s in LANGUAGE_SETTINGS" :key="s" class="option" :class="{ checked: settings.language === s }">
+          <input type="radio" name="language" :value="s" :checked="settings.language === s" :tabindex="tabbable(s) ? undefined : -1" @focus="focusedLanguage = s" @change="pickLanguage(s)" />
+          <span>{{ languageLabel(s) }}</span>
         </label>
       </fieldset>
       <fieldset>
-        <legend>Board</legend>
+        <legend>{{ t.settings.theme }}</legend>
+        <label v-for="m in THEME_MODES" :key="m" class="option" :class="{ checked: settings.theme === m }">
+          <input v-model="settings.theme" type="radio" name="theme" :value="m" />
+          <component :is="ICONS[m]" class="icon" aria-hidden="true" />
+          <span>{{ themeLabels[m] }}</span>
+        </label>
+      </fieldset>
+      <fieldset>
+        <legend>{{ t.settings.board }}</legend>
         <label class="switch-row">
-          <span>Highlight matching numbers</span>
+          <span>{{ t.settings.highlightMatching }}</span>
           <input v-model="settings.highlightMatching" type="checkbox" role="switch" class="switch" />
         </label>
       </fieldset>
       <p class="credit">
         © 2026 Pepouze ·
-        <a :href="LICENSE_URL" target="_blank" rel="noopener">License</a>
+        <a :href="LICENSE_URL" target="_blank" rel="noopener">{{ t.settings.license }}</a>
       </p>
     </div>
   </div>

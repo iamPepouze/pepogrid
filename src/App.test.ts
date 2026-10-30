@@ -5,6 +5,7 @@ import type { RegisterSWOptions } from 'virtual:pwa-register'
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import App from './App.vue'
 import { useGameStore } from './stores/game'
+import { useSettingsStore } from './stores/settings'
 import { fill, nonGivensOf, seedResult } from './stores/testing'
 
 /**
@@ -208,6 +209,100 @@ describe('App', () => {
     await dialogButton(app, 'OK').trigger('click')
     await flushPromises()
     expect(document.activeElement).toBe(button.element)
+  })
+
+  describe('in French and German', () => {
+    it('words the reset statistics dialog in French and German', async () => {
+      for (const [language, button, title, confirm] of [
+        ['fr', 'Statistiques', 'Réinitialiser les statistiques ?', 'Réinitialiser'],
+        ['de', 'Statistik', 'Statistik zurücksetzen?', 'Zurücksetzen'],
+      ] as const) {
+        useSettingsStore().language = language
+        seedResult('hard', 'completed')
+        const app = await mountApp()
+        await app.find(`.topbar button[aria-label="${button}"]`).trigger('click')
+        await app.find('.statistics button.reset').trigger('click')
+
+        expect(app.find('dialog').text().replaceAll('­', '')).toContain(title)
+        expect(app.findAll('dialog button').map((b) => b.text().replaceAll('­', ''))).toEqual([language === 'fr' ? 'Annuler' : 'Abbrechen', confirm])
+        app.unmount()
+      }
+    })
+
+    it('words the header, status bar and new game dialog in French', async () => {
+      useSettingsStore().language = 'fr'
+      const app = await mountApp()
+      makeProgress()
+
+      expect(app.find('.tagline').text()).toBe('Ta grille, ta détente.')
+      expect(app.find('.topbar button[aria-label="Statistiques"]').exists()).toBe(true)
+      expect(app.find('.status').text()).toMatch(/^Erreurs : 0/)
+      expect(app.find('.timer').attributes('aria-label')).toBe('Temps écoulé')
+
+      await app.find('.topbar button[aria-label="Nouvelle partie"]').trigger('click')
+      expect(app.find('dialog').text()).toContain('Commencer une nouvelle partie Facile ?')
+      expect(app.find('dialog').text()).toContain('Ta partie Facile en cours sera perdue.')
+      expect(app.findAll('dialog button').map((b) => b.text())).toEqual(['Annuler', 'Nouvelle partie'])
+    })
+
+    it('says in the solved banner how the game went, in the language and with its plural', async () => {
+      useSettingsStore().language = 'de'
+      const app = await mountApp()
+      const game = useGameStore()
+      fill(game, nonGivensOf(game, [...game.puzzle.keys()]))
+      await flushPromises()
+
+      expect(app.find('.win').text()).toMatch(/^Gelöst! Leicht in .* mit 0 Fehlern./)
+      expect(app.find('.win button').text()).toBe('Nochmal spielen')
+    })
+
+    it('words the German new game dialog without gluing the difficulty onto a noun', async () => {
+      useSettingsStore().language = 'de'
+      const app = await mountApp()
+      makeProgress()
+
+      await app.find('.topbar button[aria-label="Neues Spiel"]').trigger('click')
+
+      expect(app.find('dialog').text()).toContain('Neues Spiel (Leicht) starten?')
+      expect(app.find('dialog').text()).toContain('Dein aktuelles Spiel (Leicht) geht verloren.')
+    })
+
+    it('writes the SE rating with the language’s decimal mark', async () => {
+      useSettingsStore().language = 'fr'
+      await useGameStore().newGame('expert')
+      const app = mount(App, { global: { plugins: [pinia] }, attachTo: document.body })
+      await flushPromises()
+      const se = useGameStore().rating!.se.toFixed(1)
+
+      expect(se).toContain('.')
+      expect(app.find('.rating').text()).toBe(`SE ${se.replace('.', ',')}`)
+    })
+
+    it('names the hardest technique in the solved banner as the language does, leaving HoDoKu’s level in English', async () => {
+      useSettingsStore().language = 'de'
+      const game = useGameStore()
+      await game.newGame('expert')
+      game.rating = { ...game.rating!, hardest: 'Naked Pair', hodokuLevel: 'unfair' } as typeof game.rating
+      const app = mount(App, { global: { plugins: [pinia] }, attachTo: document.body })
+      await flushPromises()
+      fill(game, nonGivensOf(game, [...game.puzzle.keys()]))
+      await flushPromises()
+
+      expect(app.find('.win-rating').text()).toContain('schwierigste Technik: Nacktes Paar')
+      expect(app.find('.win-rating').text()).toContain('(Unfair)')
+    })
+
+    it('says in the dialog, in German, when a puzzle fails to load', async () => {
+      useSettingsStore().language = 'de'
+      const app = await mountApp()
+      vi.spyOn(useGameStore(), 'newGame').mockRejectedValueOnce(new Error('offline'))
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      await app.find('.topbar button[aria-label="Neues Spiel"]').trigger('click')
+      await flushPromises()
+
+      expect(app.find('dialog').text()).toContain('Neues Rätsel (Leicht) konnte nicht geladen werden')
+    })
   })
 
   describe('Statistics', () => {
