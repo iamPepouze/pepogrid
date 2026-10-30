@@ -11,8 +11,8 @@ const { t } = useI18n()
 
 const LANGUAGE_SETTINGS: readonly LanguageSetting[] = ['system', ...LANGUAGES]
 /** The language System gives on this device, whichever language the app is in now. */
-const deviceLanguage = computed(() => resolveLanguage(navigator.languages, 'system'))
-const languageLabel = (setting: LanguageSetting) => (setting === 'system' ? t.value.settings.system(LANGUAGE_NAMES[deviceLanguage.value]) : LANGUAGE_NAMES[setting])
+const DEVICE_LANGUAGE = resolveLanguage(navigator.languages, 'system')
+const languageLabel = (setting: LanguageSetting) => (setting === 'system' ? t.value.settings.system(LANGUAGE_NAMES[DEVICE_LANGUAGE]) : LANGUAGE_NAMES[setting])
 const themeLabels = computed<Record<ThemeMode, string>>(() => ({
   system: t.value.settings.themeSystem,
   light: t.value.settings.themeLight,
@@ -35,6 +35,8 @@ async function pickLanguage(setting: LanguageSetting) {
  * couldn't step to their language. The arrows only move focus; `Enter` picks, as `Space` and a tap already do.
  */
 function onLanguageKeydown(e: KeyboardEvent) {
+  // Alt + ← / → is the browser's back and forward.
+  if (e.altKey || e.ctrlKey || e.metaKey) return
   const input = e.target as HTMLInputElement
   if (e.key === 'Enter') {
     e.preventDefault()
@@ -47,6 +49,14 @@ function onLanguageKeydown(e: KeyboardEvent) {
   const inputs = [...input.closest('fieldset')!.querySelectorAll('input')]
   inputs[(inputs.indexOf(input) + step + inputs.length) % inputs.length].focus()
 }
+
+/**
+ * The language whose radio has focus, or null while focus is outside the group. A browser makes the picked
+ * radio the group's one Tab stop, so with focus on another it would stop there again before leaving;
+ * the picked radio drops out of the Tab order meanwhile.
+ */
+const focusedLanguage = ref<LanguageSetting | null>(null)
+const tabbable = (setting: LanguageSetting) => focusedLanguage.value === null || focusedLanguage.value === settings.language || setting !== settings.language
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
@@ -88,10 +98,10 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
     </button>
 
     <div v-if="open" class="popover" role="dialog" :aria-label="t.settings.title">
-      <fieldset @keydown="onLanguageKeydown">
+      <fieldset @keydown="onLanguageKeydown" @focusout="focusedLanguage = null">
         <legend>{{ t.settings.language }}</legend>
         <label v-for="s in LANGUAGE_SETTINGS" :key="s" class="option" :class="{ checked: settings.language === s }">
-          <input type="radio" name="language" :value="s" :checked="settings.language === s" @change="pickLanguage(s)" />
+          <input type="radio" name="language" :value="s" :checked="settings.language === s" :tabindex="tabbable(s) ? undefined : -1" @focus="focusedLanguage = s" @change="pickLanguage(s)" />
           <span>{{ languageLabel(s) }}</span>
         </label>
       </fieldset>

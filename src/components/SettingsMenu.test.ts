@@ -63,7 +63,10 @@ describe('SettingsMenu', () => {
       const inputs = menu.findAll('fieldset')[0].findAll('input')
       inputs[0].element.focus()
 
-      await inputs[0].trigger('keydown', { key: 'ArrowDown' })
+      const arrow = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true })
+      inputs[0].element.dispatchEvent(arrow)
+      // The browser's own move to the next radio, which would pick it, is the default action.
+      expect(arrow.defaultPrevented).toBe(true)
       expect(document.activeElement).toBe(inputs[1].element)
       await inputs[1].trigger('keydown', { key: 'ArrowUp' })
       await inputs[0].trigger('keydown', { key: 'ArrowUp' })
@@ -72,6 +75,31 @@ describe('SettingsMenu', () => {
 
       expect(reload).not.toHaveBeenCalled()
       expect(useSettingsStore().language).toBe('system')
+    })
+
+    it('leaves Alt + arrow to the browser, which goes back and forward with it', async () => {
+      const menu = await open()
+      const inputs = menu.findAll('fieldset')[0].findAll('input')
+      inputs[0].element.focus()
+
+      const back = new KeyboardEvent('keydown', { key: 'ArrowLeft', altKey: true, bubbles: true, cancelable: true })
+      inputs[0].element.dispatchEvent(back)
+
+      expect(back.defaultPrevented).toBe(false)
+      expect(document.activeElement).toBe(inputs[0].element)
+    })
+
+    it('makes one Tab stop of the group, wherever focus is in it', async () => {
+      useSettingsStore().language = 'fr'
+      const menu = await open()
+      const stops = () => menu.findAll('fieldset')[0].findAll('input').map((i) => i.attributes('tabindex') !== '-1')
+      const inputs = menu.findAll('fieldset')[0].findAll('input')
+
+      // Focus in the group on a language that isn't picked: the picked one stops being a stop, so Tab leaves the group.
+      await inputs[1].trigger('focus')
+      expect(stops()).toEqual([true, true, false, true])
+      await inputs[2].trigger('focus')
+      expect(stops()).toEqual([true, true, true, true])
     })
 
     it('picks the focused language on Enter', async () => {
