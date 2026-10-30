@@ -1,0 +1,7 @@
+.git
+.github
+.claude
+.scratch
+node_modules
+dist
+tools

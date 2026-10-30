@@ -1,10 +1,11 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// Served as a GitHub Pages project site (docs/adr/0006-github-pages-project-site.md).
-const base = '/pepogrid/'
+// Two hosts, two bases (docs/adr/0006-github-pages-project-site.md): GitHub Pages serves a project site at
+// /pepogrid/, and the container image (Dockerfile) sets PEPOGRID_BASE=/ to serve the app at the root.
+const base = loadEnv('production', '.', 'PEPOGRID_').PEPOGRID_BASE || '/pepogrid/'
 
 export default defineConfig({
   base,
