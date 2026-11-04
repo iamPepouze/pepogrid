@@ -1,5 +1,7 @@
 # The image the Cluster runs: the built app behind an unprivileged nginx (see README.md, "Container image").
 # Docker's Dependabot ecosystem bumps both tags below.
+# A push to main publishes it as main-<ts>-<sha>; the Server's bump poller rolls it out in about 5 minutes
+# (traquenard-server docs/operators/pipelines.md, Image bumps).
 
 FROM node:24-alpine3.24 AS build
 WORKDIR /app
