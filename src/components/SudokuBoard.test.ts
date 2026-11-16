@@ -105,6 +105,18 @@ describe('SudokuBoard', () => {
     expect(document.activeElement).toBe(board.find('[role=grid]').element)
   })
 
+  it('moves focus from the board onto the cell the selection moves to', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    game.selected = null
+    const board = mount(SudokuBoard, { global: { plugins: [pinia] }, attachTo: document.body })
+
+    ;(board.vm as unknown as { focus: () => void }).focus()
+    game.move(0, 1)
+    await board.vm.$nextTick()
+    expect(document.activeElement).toBe(board.findAll('.cell')[41].element)
+  })
+
   it('leaves focus where it is when the selection moves from elsewhere', async () => {
     const game = useGameStore()
     await game.newGame('easy')

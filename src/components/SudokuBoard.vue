@@ -23,14 +23,15 @@ function cellEl(i: number) {
   return board.value?.querySelectorAll<HTMLElement>('[role=gridcell]')[i]
 }
 
-// While focus is on a cell, it follows the selection (the arrow keys move the selection from App).
-// With focus elsewhere in the game, the selection moves alone. When the selection clears (a solved
-// puzzle), focus moves to the board itself, so it never rests on a cell that shows no ring.
+// While focus is on the board or one of its cells, it follows the selection onto the selected cell
+// (the arrow keys move the selection from App). With focus elsewhere in the game, the selection moves
+// alone. When the selection clears (a solved puzzle), focus moves to the board itself, so it never
+// rests on a cell that shows no ring.
 watch(
   () => game.selected,
   (i) => {
     const active = document.activeElement
-    if (!(active instanceof HTMLElement) || active === board.value || !board.value?.contains(active)) return
+    if (!(active instanceof HTMLElement) || !board.value?.contains(active)) return
     if (i === null) board.value.focus({ preventScroll: true })
     else cellEl(i)?.focus({ preventScroll: true })
   },
