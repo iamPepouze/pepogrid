@@ -138,8 +138,8 @@ button.surface:disabled {
 
 /*
  * A cell of a 9×9 grid (the board, a lesson's example): thin lines between cells, thick ones
- * between boxes, none on the outer edge, which the grid draws. A grid's 81 cells are its only children, in order,
- * or (the board) nine children of nine .grid-row elements each.
+ * between boxes, none on the outer edge, which the grid draws. A grid's 81 cells are either its only children, in
+ * order (a lesson), or nine to a .grid-row, the grid's only children (the board).
  */
 .grid-cell {
   display: flex;
