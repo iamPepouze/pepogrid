@@ -138,7 +138,8 @@ button.surface:disabled {
 
 /*
  * A cell of a 9×9 grid (the board, a lesson's example): thin lines between cells, thick ones
- * between boxes, none on the outer edge, which the grid draws. A grid's 81 cells are its only children, in order.
+ * between boxes, none on the outer edge, which the grid draws. A grid's 81 cells are its only children, in order,
+ * or (the board) nine children of nine .grid-row elements each.
  */
 .grid-cell {
   display: flex;
@@ -164,6 +165,14 @@ button.surface:disabled {
 }
 
 .grid-cell:nth-child(n + 73) {
+  border-bottom: 0;
+}
+
+.grid-row:is(:nth-child(3), :nth-child(6)) > .grid-cell {
+  border-bottom: 2px solid var(--line-thick);
+}
+
+.grid-row:nth-child(9) > .grid-cell {
   border-bottom: 0;
 }
 

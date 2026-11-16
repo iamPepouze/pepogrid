@@ -11,7 +11,7 @@ const settings = useSettingsStore()
 const { isGiven, isLocked, isWrong } = game
 
 /** The cell indexes of each of the nine rows. */
-const rows = Array.from({ length: 9 }, (_, r) => Array.from({ length: 9 }, (_, c) => r * 9 + c))
+const rowCells = Array.from({ length: 9 }, (_, r) => Array.from({ length: 9 }, (_, c) => r * 9 + c))
 
 const board = ref<HTMLElement | null>(null)
 
@@ -24,13 +24,15 @@ function cellEl(i: number) {
 }
 
 // While focus is on a cell, it follows the selection (the arrow keys move the selection from App).
-// With focus elsewhere in the game, the selection moves alone.
+// With focus elsewhere in the game, the selection moves alone. When the selection clears (a solved
+// puzzle), focus moves to the board itself, so it never rests on a cell that shows no ring.
 watch(
   () => game.selected,
   (i) => {
     const active = document.activeElement
-    if (i === null || !(active instanceof HTMLElement) || active.getAttribute('role') !== 'gridcell' || !board.value?.contains(active)) return
-    cellEl(i)?.focus({ preventScroll: true })
+    if (!(active instanceof HTMLElement) || active === board.value || !board.value?.contains(active)) return
+    if (i === null) board.value.focus({ preventScroll: true })
+    else cellEl(i)?.focus({ preventScroll: true })
   },
   { flush: 'post' },
 )
@@ -128,9 +130,9 @@ function cellLabel(i: number) {
 <template>
   <!-- tabindex="-1": focusable from script (a new game), but no extra Tab stop. -->
   <div ref="board" class="board" role="grid" tabindex="-1" :aria-label="t.board.title" :style="{ '--glow-duration': `${GLOW_MS}ms` }">
-    <div v-for="cellsOfRow in rows" :key="cellsOfRow[0]" class="row" role="row">
+    <div v-for="row in rowCells" :key="row[0]" class="row grid-row" role="row">
       <button
-        v-for="i in cellsOfRow"
+        v-for="i in row"
         :key="i"
         type="button"
         role="gridcell"
@@ -181,6 +183,7 @@ function cellLabel(i: number) {
 
 .board:focus-visible {
   outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Rows group the cells for screen readers without changing the 9x9 layout. */
