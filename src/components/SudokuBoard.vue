@@ -10,9 +10,36 @@ const game = useGameStore()
 const settings = useSettingsStore()
 const { isGiven, isLocked, isWrong } = game
 
-const cells = [...Array(81).keys()]
+/** The cell indexes of each of the nine rows. */
+const rows = Array.from({ length: 9 }, (_, r) => Array.from({ length: 9 }, (_, c) => r * 9 + c))
 
 const board = ref<HTMLElement | null>(null)
+
+/** The cell that is the board's one Tab stop: the selected one, or row 1, column 1 with none. */
+const tabStop = computed(() => game.selected ?? 0)
+
+/** Cell `i`'s element, if the board has rendered it. */
+function cellEl(i: number) {
+  return board.value?.querySelectorAll<HTMLElement>('[role=gridcell]')[i]
+}
+
+// While focus is on a cell, it follows the selection (the arrow keys move the selection from App).
+// With focus elsewhere in the game, the selection moves alone.
+watch(
+  () => game.selected,
+  (i) => {
+    const active = document.activeElement
+    if (i === null || !(active instanceof HTMLElement) || active.getAttribute('role') !== 'gridcell' || !board.value?.contains(active)) return
+    cellEl(i)?.focus({ preventScroll: true })
+  },
+  { flush: 'post' },
+)
+
+/** Selects and focuses the cell: Safari doesn't focus a tapped button. */
+function pick(i: number) {
+  game.select(i)
+  cellEl(i)?.focus({ preventScroll: true })
+}
 
 defineExpose({
   /** Moves focus onto the board as a whole, without scrolling: where a fresh game starts. */
@@ -101,21 +128,26 @@ function cellLabel(i: number) {
 <template>
   <!-- tabindex="-1": focusable from script (a new game), but no extra Tab stop. -->
   <div ref="board" class="board" role="grid" tabindex="-1" :aria-label="t.board.title" :style="{ '--glow-duration': `${GLOW_MS}ms` }">
-    <button
-      v-for="i in cells"
-      :key="i"
-      type="button"
-      class="cell grid-cell"
-      :class="cellClass(i)"
-      :style="glowDelay(i)"
-      :aria-label="cellLabel(i)"
-      @click="game.select(i)"
-    >
-      <span v-if="game.values[i]" class="value">{{ game.values[i] }}</span>
-      <span v-else-if="game.notes[i]" class="notes" aria-hidden="true">
-        <span v-for="d in 9" :key="d" class="note" :class="{ match: d === matchDigit }">{{ game.notes[i] & bit(d) ? d : '' }}</span>
-      </span>
-    </button>
+    <div v-for="cellsOfRow in rows" :key="cellsOfRow[0]" class="row" role="row">
+      <button
+        v-for="i in cellsOfRow"
+        :key="i"
+        type="button"
+        role="gridcell"
+        class="cell grid-cell"
+        :class="cellClass(i)"
+        :style="glowDelay(i)"
+        :tabindex="tabStop === i ? 0 : -1"
+        :aria-label="cellLabel(i)"
+        @click="pick(i)"
+        @focus="game.select(i)"
+      >
+        <span v-if="game.values[i]" class="value">{{ game.values[i] }}</span>
+        <span v-else-if="game.notes[i]" class="notes" aria-hidden="true">
+          <span v-for="d in 9" :key="d" class="note" :class="{ match: d === matchDigit }">{{ game.notes[i] & bit(d) ? d : '' }}</span>
+        </span>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -141,9 +173,19 @@ function cellLabel(i: number) {
   cursor: pointer;
 }
 
+/* A focused cell is the selected one, whose ring is its focus cue. The board itself (a new game focuses it) gets a frame outline for keyboard players only. */
 .board:focus,
 .cell:focus {
   outline: none;
+}
+
+.board:focus-visible {
+  outline: 2px solid var(--accent);
+}
+
+/* Rows group the cells for screen readers without changing the 9x9 layout. */
+.row {
+  display: contents;
 }
 
 .cell.peer {

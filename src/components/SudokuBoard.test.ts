@@ -52,6 +52,62 @@ describe('SudokuBoard', () => {
     expect(cell(empty).attributes('aria-label')).toMatch(/: \d, falsch$/)
   })
 
+  it('exposes nine rows of nine gridcells', async () => {
+    await useGameStore().newGame('easy')
+    const board = mountBoard()
+    const rows = board.findAll('[role=grid] > [role=row]')
+
+    expect(rows).toHaveLength(9)
+    for (const row of rows) expect(row.findAll('[role=gridcell]')).toHaveLength(9)
+    expect(board.findAll('[role=gridcell]')).toHaveLength(81)
+  })
+
+  it('has one Tab stop: the selected cell, or row 1, column 1 with none', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    game.selected = null
+    const board = mountBoard()
+    const stops = () => board.findAll('.cell').flatMap((c, i) => (c.attributes('tabindex') === '0' ? [i] : []))
+
+    expect(stops()).toEqual([0])
+    game.select(30)
+    await board.vm.$nextTick()
+    expect(stops()).toEqual([30])
+  })
+
+  it('moves focus with the selection while a cell has focus, and selects a cell that takes focus', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const board = mount(SudokuBoard, { global: { plugins: [pinia] }, attachTo: document.body })
+    const cell = (i: number) => board.findAll('.cell')[i]
+
+    await cell(40).trigger('focus')
+    expect(game.selected).toBe(40)
+
+    ;(cell(40).element as HTMLElement).focus()
+    game.move(0, 1)
+    await board.vm.$nextTick()
+    expect(document.activeElement).toBe(cell(41).element)
+
+    await cell(3).trigger('click')
+    expect(game.selected).toBe(3)
+    expect(document.activeElement).toBe(cell(3).element)
+  })
+
+  it('leaves focus where it is when the selection moves from elsewhere', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const outside = document.createElement('button')
+    document.body.append(outside)
+    const board = mount(SudokuBoard, { global: { plugins: [pinia] }, attachTo: document.body })
+
+    outside.focus()
+    game.move(1, 0)
+    await board.vm.$nextTick()
+    expect(document.activeElement).toBe(outside)
+    outside.remove()
+  })
+
   it('shows and announces digits in a complete unit as complete', async () => {
     const game = useGameStore()
     await game.newGame('easy')
