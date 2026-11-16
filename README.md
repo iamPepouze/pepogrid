@@ -47,9 +47,9 @@ A mobile-first Sudoku progressive web app (PWA) built with Vue 3, TypeScript and
 | `F` | Fill notes |
 | `Backspace` / `Delete` / `0` | Erase cell |
 | `Ctrl` + `Z` | Undo |
-| Arrow keys | Move selection |
+| Arrow keys | Move selection (and focus, while the board has it) |
 
-On Statistics and the key technique, the board keys do nothing. On Statistics, `←` / `→`, `Home` and `End` move between the difficulty tabs. On the key technique, they move between its tabs, and `Enter` or `Space` opens one. In the gear menu, the arrow keys move between the Language options without picking one, since a pick reloads the app; `Enter` or `Space` picks.
+The board is a single `Tab` stop: the selected cell, or row 1, column 1. On Statistics and the key technique, the board keys do nothing. On Statistics, `←` / `→`, `Home` and `End` move between the difficulty tabs. On the key technique, they move between its tabs, and `Enter` or `Space` opens one. In the gear menu, the arrow keys move between the Language options without picking one, since a pick reloads the app; `Enter` or `Space` picks.
 
 ## Storage
 
