@@ -114,6 +114,7 @@ describe('SudokuBoard', () => {
     ;(board.vm as unknown as { focus: () => void }).focus()
     game.move(0, 1)
     await board.vm.$nextTick()
+    // With no selection, move starts from the centre cell (40), so one step right lands on 41.
     expect(document.activeElement).toBe(board.findAll('.cell')[41].element)
   })
 

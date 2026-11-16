@@ -176,7 +176,7 @@ function cellLabel(i: number) {
   cursor: pointer;
 }
 
-/* A focused cell is the selected one, whose ring is its focus cue. The board itself (a new game focuses it) gets a frame outline for keyboard players only. */
+/* A focused cell is the selected one, whose ring is its focus cue. The board itself (focused by a new game, or by a solve that clears the selection) gets a frame outline for keyboard players only. */
 .board:focus,
 .cell:focus {
   outline: none;
