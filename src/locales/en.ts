@@ -156,6 +156,7 @@ export const en = {
     move: {
       title: 'PepoGrid has moved',
       copy: 'Copy transfer code',
+      copying: 'Copying…',
       copied: 'Copied. Now paste it on the new address (step 3).',
       copyFailed: 'Couldn’t copy the transfer code. Tap Copy again.',
       /** Step 2 reads: before, the link to the new address, after. */
@@ -184,7 +185,7 @@ export const en = {
       doneTitle: 'Brought over',
       /** What came over: `n` results that weren't here yet, the settings, and the difficulty of the game now on the grid if one came. */
       done: (n: number, difficulty: string | null) =>
-        `${n} new ${n === 1 ? 'result' : 'results'} and your settings came over${difficulty ? `, and your ${difficulty} game is on the grid` : ''}.`,
+        `Your settings came over, with ${n ? `${n} new ${n === 1 ? 'result' : 'results'}` : 'no new results'}.${difficulty ? ` Your ${difficulty} game is on the grid.` : ''}`,
       notCode: 'That isn’t a transfer code. Copy it again on the old address, then tap Paste.',
       newer: 'This transfer code is from a newer version of PepoGrid. Update the app, then tap Paste again.',
       unreadable: 'PepoGrid couldn’t read the clipboard. Copy the transfer code again on the old address, then tap Paste.',

@@ -83,7 +83,8 @@ describe('MoveScreen', () => {
     const screen = mountScreen()
 
     await screen.find('button.copy').trigger('click')
-    await vi.waitFor(() => expect(screen.find('[role="status"]').text()).not.toBe(''))
+    expect(screen.find('[role="status"]').text()).toBe('Copying…')
+    await vi.waitFor(() => expect(screen.find('[role="status"]').text()).not.toBe('Copying…'))
 
     expect(screen.find('[role="status"]').text()).toBe('Couldn’t copy the transfer code. Tap Copy again.')
   })

@@ -26,7 +26,28 @@ type Step =
   | ({ kind: 'done' } & BroughtOver)
   | { kind: 'error'; failure: PasteFailure }
 
+/**
+ * How long after a step changes a press of its confirm button is ignored. The button stays the same element across
+ * steps, so the second tap of a double tap would otherwise answer the next step unread (Bring over, then OK).
+ */
+const STEP_GUARD_MS = 400
+
 const step = ref<Step>({ kind: 'ready' })
+/** When `step` last changed, for STEP_GUARD_MS. */
+let steppedAt = -Infinity
+
+/** True once the dialog has asked to close, so a clipboard read still under way doesn't carry on. */
+let closed = false
+
+function close(languageChanged: boolean) {
+  closed = true
+  emit('close', languageChanged)
+}
+
+function goTo(next: Step) {
+  step.value = next
+  steppedAt = performance.now()
+}
 const dialog = ref<InstanceType<typeof AppDialog> | null>(null)
 
 const FAILURE_MESSAGES = { 'not-a-code': 'notCode', newer: 'newer', unreadable: 'unreadable' } as const
@@ -56,9 +77,11 @@ const content = computed(() => {
 
 /** Reads the clipboard, then puts focus where the next move is: Cancel on the summary, so a second Enter can't bring it over unread; Paste after an error. */
 async function read() {
-  step.value = { kind: 'reading' }
+  goTo({ kind: 'reading' })
   const result = await pasteTransferCode()
-  step.value = result.snapshot ? { kind: 'summary', snapshot: result.snapshot } : { kind: 'error', failure: result.failure }
+  // Cancelled while the clipboard was read: the dialog is gone.
+  if (closed) return
+  goTo(result.snapshot ? { kind: 'summary', snapshot: result.snapshot } : { kind: 'error', failure: result.failure })
   await nextTick()
   if (result.snapshot) dialog.value?.focusPrimary()
   else dialog.value?.focusConfirm()
@@ -66,11 +89,11 @@ async function read() {
 
 async function onClose(confirmed: boolean) {
   const s = step.value
-  if (s.kind === 'reading') return
-  if (s.kind === 'done') return emit('close', s.languageChanged)
-  if (!confirmed) return emit('close', false)
+  if (confirmed && (s.kind === 'reading' || performance.now() - steppedAt < STEP_GUARD_MS)) return
+  if (s.kind === 'done') return close(s.languageChanged)
+  if (!confirmed) return close(false)
   if (s.kind === 'summary') {
-    step.value = { kind: 'done', ...bringOver(s.snapshot) }
+    goTo({ kind: 'done', ...bringOver(s.snapshot) })
     // The Cancel button is gone, and focus with it.
     await nextTick()
     dialog.value?.focusPrimary()

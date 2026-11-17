@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
-import { enableAutoUnmount, mount } from '@vue/test-utils'
+import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createCodeFromStores } from '../composables/useTransfer'
+import { SCHEMA_VERSION } from '../lib/schema'
+import { createTransferCode, readTransferCode } from '../lib/transfer'
 import { useGameStore } from '../stores/game'
 import { useResultsStore } from '../stores/results'
 import { useSettingsStore } from '../stores/settings'
@@ -169,6 +171,13 @@ describe('SettingsMenu', () => {
   })
 
   describe('Paste transfer code', () => {
+    /** A clock that moves a second on at every reading, so no press lands inside the dialog's guard after a step change. */
+    let clock: ReturnType<typeof vi.spyOn>
+    beforeEach(() => {
+      let now = 0
+      clock = vi.spyOn(performance, 'now').mockImplementation(() => (now += 1000))
+    })
+
     /** Makes the clipboard hold `text`, or refuse to be read. */
     const clipboardHolds = (text: string | Error) =>
       Object.defineProperty(navigator, 'clipboard', { value: { readText: vi.fn(async () => (text instanceof Error ? Promise.reject(text) : text)) }, configurable: true })
@@ -201,18 +210,71 @@ describe('SettingsMenu', () => {
       await vi.waitFor(() => expect(menu.find('dialog').text()).not.toContain('Reading'))
     }
 
-    it('disables its buttons while the clipboard is being read', async () => {
+    /** Makes the clipboard read wait until the returned function answers it, as iOS's Paste callout does. */
+    function slowClipboard() {
       let answer: (text: string) => void = () => {}
       Object.defineProperty(navigator, 'clipboard', { value: { readText: () => new Promise<string>((resolve) => (answer = resolve)) }, configurable: true })
+      return (text: string) => answer(text)
+    }
+
+    it('waits on Paste while the clipboard is being read, and still offers Cancel', async () => {
+      const answer = slowClipboard()
       const menu = await open()
       await entry(menu).trigger('click')
 
       await dialogButton(menu, 'Paste').trigger('click')
 
       expect(menu.find('dialog').text()).toContain('Reading the transfer code…')
-      expect(menu.findAll('dialog button').every((b) => b.attributes('disabled') !== undefined)).toBe(true)
+      expect(dialogButton(menu, 'Paste').attributes('disabled')).toBeDefined()
+      expect(dialogButton(menu, 'Cancel').attributes('disabled')).toBeUndefined()
       answer('hello')
       await vi.waitFor(() => expect(menu.find('dialog').text()).toContain('That isn’t a transfer code.'))
+    })
+
+    it('closes on Cancel while the clipboard is being read, and does nothing with what arrives', async () => {
+      const answer = slowClipboard()
+      const menu = await open()
+      await entry(menu).trigger('click')
+      await dialogButton(menu, 'Paste').trigger('click')
+
+      await dialogButton(menu, 'Cancel').trigger('click')
+      answer(await hardGameCode())
+      await flushPromises()
+
+      expect(menu.find('dialog').exists()).toBe(false)
+      expect(useResultsStore().results).toHaveLength(0)
+      expect(document.activeElement).toBe(entry(menu).element)
+    })
+
+    it('ignores a press that lands just as the dialog moves on, so a double tap can’t bring it over unread', async () => {
+      clipboardHolds(await hardGameCode())
+      const menu = await open()
+      await paste(menu)
+      clock.mockReturnValue(5_000_000)
+
+      await dialogButton(menu, 'Bring over').trigger('click')
+      expect(menu.find('dialog').text()).toContain('Your settings came over')
+      await dialogButton(menu, 'OK').trigger('click')
+
+      expect(menu.find('dialog').exists()).toBe(true)
+    })
+
+    it('neither lists nor warns about a game the code carries that the app can’t resume', async () => {
+      // A hand-altered code: its game passes the code's own checks, not the game store's.
+      const { snapshot } = await readTransferCode(await hardGameCode(0), SCHEMA_VERSION)
+      clipboardHolds(await createTransferCode({ ...snapshot!, game: { ...snapshot!.game, mistakes: 1.5 } }))
+      const game = useGameStore()
+      await game.newGame('medium')
+      fill(game, nonGivensOf(game, [...game.puzzle.keys()]).slice(0, 1))
+      const menu = await open()
+      await paste(menu)
+
+      expect(menu.find('dialog').text()).toContain('No game in progress')
+      expect(menu.find('dialog').text()).not.toContain('Abandoned')
+      await dialogButton(menu, 'Bring over').trigger('click')
+
+      expect(game.difficulty).toBe('medium')
+      expect(useResultsStore().results).toHaveLength(0)
     })
 
     it('is an entry in the menu that opens a dialog with a Paste button and Cancel', async () => {
@@ -252,7 +314,7 @@ describe('SettingsMenu', () => {
       expect(useSettingsStore().theme).toBe('dark')
       expect(useGameStore().difficulty).toBe('hard')
       expect(useGameStore().isValid()).toBe(true)
-      expect(menu.find('dialog').text()).toContain('2 new results and your settings came over, and your Hard game is on the grid.')
+      expect(menu.find('dialog').text()).toContain('Your settings came over, with 2 new results. Your Hard game is on the grid.')
       expect(menu.findAll('dialog button').map((b) => b.text())).toEqual(['OK'])
     })
 
@@ -268,7 +330,7 @@ describe('SettingsMenu', () => {
         await menu.vm.$nextTick()
       }
 
-      expect(said[1]).toBe('0 new results and your settings came over, and your Hard game is on the grid.')
+      expect(said[1]).toBe('Your settings came over, with no new results. Your Hard game is on the grid.')
       // The second time, the game the first brought over has a placed digit, so it is recorded as Abandoned, once.
       const outcomes = useResultsStore().results.map((r) => r.outcome)
       expect(outcomes.filter((o) => o === 'completed')).toHaveLength(2)
@@ -345,7 +407,7 @@ describe('SettingsMenu', () => {
       await dialogButton(menu, 'Bring over').trigger('click')
 
       expect(reload).not.toHaveBeenCalled()
-      expect(menu.find('dialog').text()).toContain('1 neues Ergebnis und deine Einstellungen übernommen')
+      expect(menu.find('dialog').text()).toContain('Deine Einstellungen wurden übernommen, mit 1 neuen Ergebnis.')
       await dialogButton(menu, 'OK').trigger('click')
       await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce())
     })

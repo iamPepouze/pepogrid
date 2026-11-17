@@ -151,6 +151,7 @@ export const fr: Messages = {
     move: {
       title: 'PepoGrid a déménagé',
       copy: 'Copier le code de transfert',
+      copying: 'Copie…',
       copied: 'Copié. Colle-le maintenant sur la nouvelle adresse (étape 3).',
       copyFailed: 'Impossible de copier le code de transfert. Touche Copier à nouveau.',
       openBefore: 'Ouvre',
@@ -172,7 +173,7 @@ export const fr: Messages = {
       bringOver: 'Reprendre',
       doneTitle: 'Repris',
       done: (n, difficulty) =>
-        `${n} ${n > 1 ? 'nouveaux résultats' : 'nouveau résultat'} et tes réglages ont été repris${difficulty ? `, et ta partie ${difficulty} est sur la grille` : ''}.`,
+        `Tes réglages ont été repris, avec ${n ? `${n} ${n > 1 ? 'nouveaux résultats' : 'nouveau résultat'}` : 'aucun nouveau résultat'}.${difficulty ? ` Ta partie ${difficulty} est sur la grille.` : ''}`,
       notCode: 'Ce n’est pas un code de transfert. Copie-le à nouveau sur l’ancienne adresse, puis touche Coller.',
       newer: 'Ce code de transfert vient d’une version plus récente de PepoGrid. Mets l’appli à jour, puis touche Coller à nouveau.',
       unreadable: 'PepoGrid n’a pas pu lire le presse-papiers. Copie à nouveau le code de transfert sur l’ancienne adresse, puis touche Coller.',

@@ -59,17 +59,21 @@ export async function pasteTransferCode(): Promise<{ snapshot: TransferSnapshot<
   return readTransferCode<GameResult>(text, SCHEMA_VERSION)
 }
 
-/** The difficulty of the game a snapshot carries, or null; the transfer code has checked it is one. */
-const difficultyOf = (snapshot: TransferSnapshot<GameResult>) => (snapshot.game as { difficulty: Difficulty } | null)?.difficulty ?? null
+/** The game a snapshot carries, or null when it carries none or one the game store can't resume. */
+function gameOf(snapshot: TransferSnapshot<GameResult>) {
+  const game = snapshot.game as Record<string, unknown> | null
+  return game && useGameStore().canAdopt(game) ? game : null
+}
 
 /** What bringing a snapshot over would do, for the dialog to list before anything changes. */
 export function summaryOf(snapshot: TransferSnapshot<GameResult>) {
   const game = useGameStore()
+  const incoming = gameOf(snapshot)
   return {
     results: snapshot.results.length,
-    gameDifficulty: difficultyOf(snapshot),
-    /** The difficulty of the game on the board when the incoming game replaces it and it is recorded as abandoned, otherwise null. */
-    abandonedDifficulty: snapshot.game !== null && game.wouldAbandon ? game.difficulty : null,
+    gameDifficulty: incoming ? (incoming.difficulty as Difficulty) : null,
+    /** The difficulty of the game on the grid when the incoming game replaces it and it is recorded as abandoned, otherwise null. */
+    abandonedDifficulty: incoming && game.wouldAbandon ? game.difficulty : null,
     /** The preferences the player ends up with. */
     settings: useSettingsStore().adopted(snapshot.settings as Record<string, unknown>),
   }
@@ -77,29 +81,31 @@ export function summaryOf(snapshot: TransferSnapshot<GameResult>) {
 
 /** What came over, for the dialog to say afterwards. */
 export interface BroughtOver {
-  /** Results that weren't already here. */
+  /** Results that weren't already here and are kept within MAX_RESULTS. */
   newResults: number
-  /** The difficulty of the game now on the board, null when the code brought none or one the app can't resume. */
+  /** The difficulty of the game now on the grid, null when the code brought none or one the app can't resume. */
   gameDifficulty: Difficulty | null
   languageChanged: boolean
 }
 
 /**
- * Brings a snapshot over: takes over its game, which records the game on the board as abandoned when it has a placed
- * digit, then merges the results (keeping that record) and takes over the settings.
+ * Brings a snapshot over: takes over its game when the game store can resume it, which records the game on the grid
+ * as abandoned when it has a placed digit, then merges the results (keeping that record) and takes over the settings.
  */
 export function bringOver(snapshot: TransferSnapshot<GameResult>): BroughtOver {
   const game = useGameStore()
   const settings = useSettingsStore()
   const results = useResultsStore()
   const language = settings.language
-  const adopted = snapshot.game !== null && game.adopt(snapshot.game as Record<string, unknown>)
+  const incoming = gameOf(snapshot)
+  if (incoming) game.adopt(incoming)
   const known = new Set(results.results.map((r) => r.id))
   results.results = mergeTransfer({ settings: {}, game: null, results: results.results }, snapshot).results
   settings.adopt(snapshot.settings as Record<string, unknown>)
   return {
-    newResults: snapshot.results.filter((r) => !known.has(r.id)).length,
-    gameDifficulty: adopted ? difficultyOf(snapshot) : null,
+    // Counted after the merge, so incoming results that MAX_RESULTS drops aren't said to have come over.
+    newResults: results.results.filter((r) => !known.has(r.id)).length,
+    gameDifficulty: incoming ? (incoming.difficulty as Difficulty) : null,
     languageChanged: settings.language !== language,
   }
 }

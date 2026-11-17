@@ -28,7 +28,7 @@ const copyState = ref<'idle' | 'copying' | 'copied' | 'failed'>('idle')
 
 async function onCopy() {
   if (copyState.value === 'copying') return
-  // Emptied first, so a second identical outcome is a change a screen reader announces again.
+  // Says it is copying first, so a second identical outcome is a change a screen reader announces again.
   copyState.value = 'copying'
   copyState.value = (await copyTransferCode()) ? 'copied' : 'failed'
 }
@@ -42,7 +42,7 @@ async function onCopy() {
         <button ref="copyButton" type="button" class="copy" @click="onCopy">{{ t.transfer.move.copy }}</button>
         <!-- Rendered from the start, and never hidden, so the message is announced when it fills in. -->
         <span class="status" :class="{ failed: copyState === 'failed' }" role="status">{{
-          copyState === 'copied' ? t.transfer.move.copied : copyState === 'failed' ? t.transfer.move.copyFailed : ''
+          copyState === 'idle' ? '' : t.transfer.move[copyState === 'failed' ? 'copyFailed' : copyState]
         }}</span>
       </li>
       <li>

@@ -14,7 +14,7 @@ export interface DialogContent {
   cancelLabel?: string
   /** For a dialog whose message changes while it stays open: a screen reader announces each new one. */
   live?: boolean
-  /** While true, both buttons are disabled: the dialog is working on the last one pressed. */
+  /** While true, the confirm button is disabled: the dialog is working on the last press. Cancel stays, as a way out. */
   busy?: boolean
 }
 
@@ -62,7 +62,7 @@ function onCancel(e: Event) {
       <!-- Extra content for a dialog that has more to say than a message, such as what a transfer code holds. -->
       <slot />
       <div class="actions">
-        <button v-if="cancelLabel" type="button" ref="cancelButton" class="button" :aria-label="plain(cancelLabel)" :disabled="busy" @click="emit('close', false)">
+        <button v-if="cancelLabel" type="button" ref="cancelButton" class="button" :aria-label="plain(cancelLabel)" @click="emit('close', false)">
           {{ cancelLabel }}
         </button>
         <button type="button" ref="confirmButton" class="button primary" :aria-label="plain(confirmLabel)" :disabled="busy" @click="emit('close', true)">

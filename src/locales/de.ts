@@ -147,6 +147,7 @@ export const de: Messages = {
     move: {
       title: 'PepoGrid ist umgezogen',
       copy: 'Übertragungscode kopieren',
+      copying: 'Wird kopiert …',
       copied: 'Kopiert. Füge ihn jetzt auf der neuen Adresse ein (Schritt 3).',
       copyFailed: 'Der Übertragungscode konnte nicht kopiert werden. Tippe erneut auf Kopieren.',
       openBefore: 'Öffne',
@@ -168,7 +169,7 @@ export const de: Messages = {
       bringOver: 'Übernehmen',
       doneTitle: 'Übernommen',
       done: (n, difficulty) =>
-        `${n} ${n === 1 ? 'neues Ergebnis' : 'neue Ergebnisse'} und deine Einstellungen übernommen${difficulty ? `, und dein Spiel (${difficulty}) liegt auf dem Gitter` : ''}.`,
+        `Deine Einstellungen wurden übernommen, mit ${n ? `${n} ${n === 1 ? 'neuen Ergebnis' : 'neuen Ergebnissen'}` : 'keinen neuen Ergebnissen'}.${difficulty ? ` Dein Spiel (${difficulty}) liegt auf dem Gitter.` : ''}`,
       notCode: 'Das ist kein Übertragungscode. Kopiere ihn erneut auf der alten Adresse und tippe dann auf Einfügen.',
       newer: 'Dieser Übertragungscode stammt von einer neueren Version von PepoGrid. Aktualisiere die App und tippe dann erneut auf Einfügen.',
       unreadable: 'PepoGrid konnte die Zwischenablage nicht lesen. Kopiere den Übertragungscode erneut auf der alten Adresse und tippe dann auf Einfügen.',

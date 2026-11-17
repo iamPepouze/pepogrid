@@ -686,6 +686,7 @@ describe('moving a game between addresses', () => {
     fill(game, [firstNonGiven(game)])
     const before = JSON.stringify(game.inProgress())
 
+    expect(game.canAdopt({ ...game.inProgress(), mistakes: 'many' })).toBe(false)
     expect(game.adopt({ ...game.inProgress(), mistakes: 'many' })).toBe(false)
 
     expect(JSON.stringify(game.inProgress())).toBe(before)

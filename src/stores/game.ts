@@ -39,7 +39,24 @@ const isGrid = (value: unknown): value is number[] =>
 const isRating = (r: Rating | null): r is Rating =>
   !!r && typeof r.se === 'number' && typeof r.hodokuScore === 'number' && HODOKU_LEVELS.includes(r.hodokuLevel) && typeof r.hardest === 'string'
 
-const emptyBankUsage = (): Record<Difficulty, number[]> => ({ easy: [], medium: [], hard: [], expert: [], master: [] })
+/** True when a game's persisted state, from the store or from a transfer code, is complete and consistent. */
+function isValidState(s: Record<string, unknown>) {
+  const selected = s.selected
+  return (
+    DIFFICULTIES.includes(s.difficulty as Difficulty) &&
+    [s.puzzle, s.solution, s.values, s.notes].every(isGrid) &&
+    Number.isInteger(s.mistakes) &&
+    Number.isInteger(s.elapsed) &&
+    typeof s.completed === 'boolean' &&
+    typeof s.keyTechniqueRevealed === 'boolean' &&
+    Number.isInteger(s.nextStepsShown) &&
+    Array.isArray(s.history) &&
+    isRating(s.rating as Rating | null) &&
+    (selected === null || (Number.isInteger(selected) && (selected as number) >= 0 && (selected as number) < 81))
+  )
+}
+
+const emptyBankUsage =(): Record<Difficulty, number[]> => ({ easy: [], medium: [], hard: [], expert: [], master: [] })
 const emptyFamilyPlays = (): Record<Difficulty, Record<string, number>> => ({ easy: {}, medium: {}, hard: {}, expert: {}, master: {} })
 
 /**
@@ -330,16 +347,18 @@ export const useGameStore = defineStore(
       for (const [key, ref] of Object.entries(persisted)) if (key in state) (ref as { value: unknown }).value = state[key]
     }
 
+    /** True when `adopt` would take over `incoming`: with the current game's fields filling any it lacks, it is a game the app can resume. */
+    function canAdopt(incoming: Record<string, unknown>) {
+      const current = Object.fromEntries(Object.entries(persisted).map(([key, ref]) => [key, ref.value]))
+      return isValidState({ ...current, ...incoming })
+    }
+
     /**
-     * Takes over a game from `inProgress`. The current game is recorded as abandoned only once the incoming one
-     * proves to be a game the app can resume; otherwise nothing changes and it returns false.
+     * Takes over a game from `inProgress`, recording the current one as abandoned when it has a placed digit. When
+     * `canAdopt` says no, nothing changes, nothing is recorded, and it returns false.
      */
     function adopt(incoming: Record<string, unknown>) {
-      const before = Object.fromEntries(Object.entries(persisted).map(([key, ref]) => [key, ref.value]))
-      assign(incoming)
-      const valid = isValid()
-      assign(before)
-      if (!valid) return false
+      if (!canAdopt(incoming)) return false
       abandon()
       assign(incoming)
       newlyComplete.value = null
@@ -376,18 +395,11 @@ export const useGameStore = defineStore(
 
     /** True when hydrated state is complete and consistent. */
     function isValid() {
-      return (
-        DIFFICULTIES.includes(difficulty.value) &&
-        [puzzle.value, solution.value, values.value, notes.value].every(isGrid) &&
-        Number.isInteger(mistakes.value) &&
-        Number.isInteger(elapsed.value) &&
-        typeof completed.value === 'boolean' &&
-        typeof keyTechniqueRevealed.value === 'boolean' &&
-        Number.isInteger(nextStepsShown.value) &&
-        Array.isArray(history.value) &&
-        isRating(rating.value) &&
-        (selected.value === null || (Number.isInteger(selected.value) && selected.value >= 0 && selected.value < 81))
-      )
+      return isValidState({
+        difficulty: difficulty.value, puzzle: puzzle.value, solution: solution.value, values: values.value, notes: notes.value,
+        mistakes: mistakes.value, elapsed: elapsed.value, completed: completed.value, keyTechniqueRevealed: keyTechniqueRevealed.value,
+        nextStepsShown: nextStepsShown.value, history: history.value, rating: rating.value, selected: selected.value,
+      })
     }
 
     return {
@@ -433,6 +445,7 @@ export const useGameStore = defineStore(
       isValid,
       wouldAbandon,
       inProgress,
+      canAdopt,
       adopt,
       abandon,
       retire,
