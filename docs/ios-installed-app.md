@@ -68,8 +68,14 @@ Each claim carries a label:
 
 ## Clipboard (transfer code)
 
-- Observed, on the owner's iPhone after #137 deployed: in the installed app on the old address, *Copy transfer code* put a working transfer code on the clipboard. The write is a `ClipboardItem` given a promise of the text, started inside the tap while the code is still being compressed ([useTransfer.ts](../src/composables/useTransfer.ts)). In the installed app on the new address, *Paste transfer code* read it and brought the history over.
-- Not yet checked on a device: VoiceOver reading out the Paste summary and the Copy status, and whether a tap that dismisses iOS's Paste callout also closes the dialog.
+- Observed, on the owner's iPhone after #137 deployed: in the installed app on the old address, *Copy transfer code* put a working transfer code on the clipboard. In the installed app on the new address, *Paste transfer code* read it and brought the settings, game in progress and results over.
+- Inferred: so iOS accepts the clipboard write [useTransfer.ts](../src/composables/useTransfer.ts) makes, a `ClipboardItem` given a promise of the text, started inside the tap while the code is still being compressed.
+- Not yet checked on a device:
+  - the move screen's pepogrid.adrienmg.eu link opening the new address;
+  - iOS's Paste callout appearing on *Paste*;
+  - focus returning to the *Paste transfer code* entry when the dialog closes;
+  - VoiceOver reading out the Paste dialog's list of what arrives, and Copy's "Copied" and "Couldn't copy" messages;
+  - whether a tap that dismisses iOS's Paste callout also closes the dialog.
 
 ## What can be checked off-device
 
