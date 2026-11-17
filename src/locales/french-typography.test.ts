@@ -9,6 +9,13 @@ import { frLessons } from './lessons-fr'
  * whether a no-break space was typed as itself or as an escape.
  */
 
+/** U+00A0, the no-break space. */
+const NBSP = String.fromCharCode(0x00a0)
+/** U+202F, the narrow no-break space. */
+const NNBSP = String.fromCharCode(0x202f)
+/** A word's last character, then exactly one no-break space, at the end of the text. */
+const SPACED_BEFORE = new RegExp(`[^\\s${NBSP}${NNBSP}][${NBSP}${NNBSP}]$`)
+
 /** Every string under `value`, calling each function with sample arguments (both plural forms, and words). */
 function strings(value: unknown): string[] {
   if (typeof value === 'string') return [value]
@@ -25,8 +32,7 @@ function faults(text: string): string[] {
   const found: string[] = []
   for (const match of text.matchAll(/[:;?!]/g)) {
     const at = match.index
-    const before = text.slice(0, at)
-    if (!/[^\s  ][  ]$/.test(before)) found.push(`needs one no-break space before "${match[0]}" at ${at}`)
+    if (!SPACED_BEFORE.test(text.slice(0, at))) found.push(`needs one no-break space before "${match[0]}" at ${at}`)
     if (match[0] === ':' && !/^(?:$| )/.test(text.slice(at + 1))) found.push(`needs a space after ":" at ${at}`)
   }
   return found.map((fault) => `${fault}: ${JSON.stringify(text)}`)
@@ -34,9 +40,9 @@ function faults(text: string): string[] {
 
 describe('faults', () => {
   it('accepts a no-break space before, and a space after a colon', () => {
-    expect(faults('Erreurs : 3')).toEqual([])
-    expect(faults('Résolue !')).toEqual([])
-    expect(faults('Une partie :')).toEqual([])
+    expect(faults(`Erreurs${NBSP}: 3`)).toEqual([])
+    expect(faults(`Résolue${NNBSP}!`)).toEqual([])
+    expect(faults(`Une partie${NBSP}:`)).toEqual([])
   })
 
   it('rejects a plain space or none before', () => {
@@ -46,22 +52,22 @@ describe('faults', () => {
   })
 
   it('rejects two spaces before', () => {
-    expect(faults('Erreurs  : 3')).toHaveLength(1)
+    expect(faults(`Erreurs${NBSP}${NBSP}: 3`)).toHaveLength(1)
   })
 
   it('rejects no space after a colon', () => {
-    expect(faults('à la fois :si')).toHaveLength(1)
+    expect(faults(`à la fois${NBSP}:si`)).toHaveLength(1)
   })
 })
 
 describe('French strings', () => {
-  it('space their high punctuation', () => {
-    expect(strings(fr).flatMap(faults)).toEqual([])
-  })
-
   it('are found by the walk', () => {
     expect(strings(fr).length).toBeGreaterThan(100)
     expect(strings(frLessons).length).toBeGreaterThan(100)
+  })
+
+  it('space their high punctuation', () => {
+    expect(strings(fr).flatMap(faults)).toEqual([])
   })
 
   it('in the lessons space their high punctuation', () => {
