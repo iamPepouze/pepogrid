@@ -150,6 +150,45 @@ export const en = {
     highlightMatching: 'Highlight matching numbers',
     license: 'License',
   },
+  /** Moving from the old address to the new one with a transfer code (GLOSSARY.md). */
+  transfer: {
+    /** The old address's move screen. */
+    move: {
+      title: 'PepoGrid has moved',
+      copy: 'Copy transfer code',
+      copied: 'Copied. Now paste it on the new address (step 3).',
+      copyFailed: 'Couldn’t copy the transfer code. Tap Copy again.',
+      /** Step 2 reads: before, the link to the new address, after. */
+      openBefore: 'Open',
+      openAfter: 'If you play from your home screen, add it there and open it from the new icon.',
+      pasteStep: 'In Settings, tap Paste transfer code.',
+    },
+    /** The new address's Paste transfer code dialog. */
+    paste: {
+      entry: 'Paste transfer code',
+      title: 'Paste transfer code',
+      ready: 'Copy the transfer code on the old address first, then tap Paste.',
+      paste: 'Paste',
+      reading: 'Reading the transfer code…',
+      summaryTitle: 'Bring this over?',
+      summaryIntro: 'This is what the transfer code holds:',
+      /** `n` results. */
+      results: (n: number) => `${n} ${n === 1 ? 'result' : 'results'}`,
+      /** The game in progress, by its difficulty's name, or none. */
+      game: (difficulty: string | null) => (difficulty ? `Game in progress: ${difficulty}` : 'No game in progress'),
+      /** The settings it carries, by the names the Settings menu shows. */
+      settings: (language: string, theme: string) => `Settings: ${language}, ${theme} theme`,
+      /** The game on the board has a placed digit, so it is replaced as a result. */
+      abandonWarning: (difficulty: string) => `Your current ${difficulty} game will be recorded as Abandoned.`,
+      bringOver: 'Bring over',
+      doneTitle: 'Brought over',
+      /** What came over: `n` results, and the difficulty of the game now on the board if one came. */
+      done: (n: number, difficulty: string | null) => `${n} ${n === 1 ? 'result' : 'results'} came over${difficulty ? `, and your ${difficulty} game is on the board` : ''}.`,
+      notCode: 'That isn’t a transfer code. Copy it again on the old address, then tap Paste.',
+      newer: 'This transfer code is from a newer version of PepoGrid. Update the app, then tap Paste again.',
+      unreadable: 'PepoGrid couldn’t read the clipboard. Copy the transfer code again on the old address, then tap Paste.',
+    },
+  },
 }
 
 type Widen<T> = T extends string ? string : T extends (...args: infer A) => string ? (...args: A) => string : { [K in keyof T]: Widen<T[K]> }

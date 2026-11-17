@@ -16,7 +16,17 @@ export const useSettingsStore = defineStore(
     /** The app's language, or `system` to follow the device's preferred languages. */
     const language = ref<LanguageSetting>('system')
 
-    return { theme, highlightMatching, language }
+    /** The preferences as a plain copy, for a transfer code. */
+    const snapshot = () => ({ theme: theme.value, highlightMatching: highlightMatching.value, language: language.value })
+
+    /** Takes over preferences from `snapshot`: each valid one, and none that a hand-edited code got wrong. */
+    function adopt(incoming: Record<string, unknown>) {
+      if (THEME_MODES.includes(incoming.theme as ThemeMode)) theme.value = incoming.theme as ThemeMode
+      if (typeof incoming.highlightMatching === 'boolean') highlightMatching.value = incoming.highlightMatching
+      if (incoming.language === 'system' || LANGUAGES.includes(incoming.language as never)) language.value = incoming.language as LanguageSetting
+    }
+
+    return { theme, highlightMatching, language, snapshot, adopt }
   },
   {
     persist: {

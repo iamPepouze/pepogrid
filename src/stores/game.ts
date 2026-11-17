@@ -308,6 +308,58 @@ export const useGameStore = defineStore(
       if (!completed.value) elapsed.value++
     }
 
+    /** Every persisted ref by name: what a transfer code carries, and what `adopt` takes back. */
+    const persisted = {
+      difficulty, puzzle, solution, values, notes, mistakes, elapsed, startedAt, completed, history, selected,
+      notesMode, keyTechniqueRevealed, nextStepsShown, rating, bankUsed, familyPlayed,
+    }
+
+    /** The game as a plain copy of what is persisted, or null when there is no game in progress: none dealt yet, or solved. */
+    function inProgress(): Record<string, unknown> | null {
+      if (!isValid() || completed.value) return null
+      return Object.fromEntries(Object.entries(persisted).map(([key, ref]) => [key, JSON.parse(JSON.stringify(ref.value))]))
+    }
+
+    /** Takes over a game from `inProgress`, keeping the current one and returning false when it isn't a game the app can resume. */
+    function adopt(incoming: Record<string, unknown>) {
+      const before = Object.entries(persisted).map(([key, ref]) => [key, ref.value] as const)
+      for (const [key, ref] of Object.entries(persisted)) if (key in incoming) (ref as { value: unknown }).value = incoming[key]
+      if (!isValid()) {
+        for (const [key, value] of before) (persisted[key as keyof typeof persisted] as { value: unknown }).value = value
+        return false
+      }
+      newlyComplete.value = null
+      return true
+    }
+
+    /** Records the game as abandoned when it has a placed digit and isn't solved: the same record `newGame` makes. */
+    function abandon() {
+      if (isValid() && !completed.value && hasPlacedDigit.value) recordResult('abandoned')
+    }
+
+    /**
+     * Leaves the game as a fresh install has it, with nothing to resume, after recording it as abandoned when
+     * that applies. The dealing-order history is kept. For the old address, which deals no more games.
+     */
+    function retire() {
+      abandon()
+      puzzle.value = []
+      solution.value = []
+      values.value = []
+      notes.value = []
+      mistakes.value = 0
+      elapsed.value = 0
+      startedAt.value = ''
+      completed.value = false
+      history.value = []
+      selected.value = null
+      notesMode.value = false
+      keyTechniqueRevealed.value = false
+      nextStepsShown.value = 0
+      rating.value = null
+      newlyComplete.value = null
+    }
+
     /** True when hydrated state is complete and consistent. */
     function isValid() {
       return (
@@ -365,6 +417,11 @@ export const useGameStore = defineStore(
       showNextStep,
       tick,
       isValid,
+      hasPlacedDigit,
+      inProgress,
+      adopt,
+      abandon,
+      retire,
     }
   },
   { persist: { omit: ['loading', 'newlyComplete'] } },

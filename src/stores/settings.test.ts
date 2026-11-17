@@ -38,4 +38,12 @@ describe('settings store', () => {
 
     expect([settings.theme, settings.language, settings.highlightMatching]).toEqual(['system', 'system', true])
   })
+
+  it('takes over transferred preferences, skipping any that are not valid', () => {
+    const settings = startApp()
+
+    settings.adopt({ theme: 'dark', language: 'klingon', highlightMatching: false })
+
+    expect(settings.snapshot()).toEqual({ theme: 'dark', language: 'system', highlightMatching: false })
+  })
 })

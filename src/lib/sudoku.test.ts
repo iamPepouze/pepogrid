@@ -7,9 +7,10 @@ import { resolveLanguage } from './language'
 import { LESSON_LANGUAGES } from '../locales'
 import { LESSONS, gridAt, lessonFor, positionOf, summaryTechnique } from './lessons'
 import { nextTechnique, rateHodoku, rateSE } from './rater'
-import { capReached, countsOf, formatDuration, statisticsOf, type StatResult } from './statistics'
+import { MAX_RESULTS, capReached, countsOf, formatDuration, statisticsOf, type StatResult } from './statistics'
 import { countSolutions, randomSolution, solve } from './sudoku'
 import { applyTransform, randomTransform } from './transform'
+import { createTransferCode, mergeTransfer, readTransferCode, type TransferResult, type TransferSnapshot } from './transfer'
 
 const toGrid = (s: string) => [...s].map(Number)
 
@@ -566,5 +567,84 @@ describe('language', () => {
   it('lets an explicit setting override the device', () => {
     expect(resolveLanguage(['fr'], 'de')).toBe('de')
     expect(resolveLanguage(['de'], 'en')).toBe('en')
+  })
+})
+
+describe('transfer code', () => {
+  const SCHEMA = 2
+  /** A result with plausible fields; `n` orders its end time and names its id. */
+  const result = (n: number, fields: Partial<TransferResult> = {}) => ({
+    id: `r${n}`, endedAt: new Date(Date.UTC(2026, 0, 1) + n * 60_000).toISOString(), outcome: 'completed', difficulty: 'easy', ...fields,
+  })
+  const grid = (d: number) => new Array(81).fill(d)
+  const game = (difficulty: Difficulty = 'hard') => ({ difficulty, puzzle: grid(0), solution: grid(1), values: grid(0), notes: grid(0), rating: { se: 2, hodokuScore: 200, hodokuLevel: 'medium', hardest: 'Hidden Single' }, history: [{ values: grid(0), notes: grid(0) }], familyPlayed: { easy: {} } })
+  const snapshot = (fields: Partial<TransferSnapshot> = {}): TransferSnapshot => ({ schema: SCHEMA, settings: { theme: 'dark', language: 'fr' }, game: game(), results: [result(1)], ...fields })
+  const readBack = async (s: TransferSnapshot, appSchema = SCHEMA) => readTransferCode(await createTransferCode(s), appSchema)
+
+  it('carries a full history, a game in progress and the settings through create, read and merge unchanged', async () => {
+    const full = snapshot({ results: Array.from({ length: MAX_RESULTS }, (_, n) => result(n)) })
+
+    const read = await readBack(full)
+    expect(read.snapshot).toEqual(full)
+    const merged = mergeTransfer({ settings: {}, game: null, results: [] }, read.snapshot!)
+    expect(merged).toEqual({ settings: full.settings, game: full.game, results: full.results })
+  })
+
+  it('adds no result twice when the same code is merged twice', () => {
+    const incoming = snapshot({ results: [result(1), result(2)] })
+    const once = mergeTransfer({ settings: {}, game: null, results: [result(3)] }, incoming)
+
+    expect(mergeTransfer(once, incoming).results).toEqual(once.results)
+    expect(once.results.map((r) => r.id)).toEqual(['r1', 'r2', 'r3'])
+  })
+
+  it('keeps the newest results across both sides', () => {
+    const current = Array.from({ length: MAX_RESULTS }, (_, n) => result(n * 2))
+    const incoming = snapshot({ results: Array.from({ length: MAX_RESULTS }, (_, n) => result(n * 2 + 1, { id: `in${n}` })) })
+
+    const merged = mergeTransfer({ settings: {}, game: null, results: current }, incoming).results
+    expect(merged).toHaveLength(MAX_RESULTS)
+    expect(merged.at(-1)!.id).toBe(`in${MAX_RESULTS - 1}`)
+    expect(merged[0].endedAt).toBe(result(MAX_RESULTS).endedAt)
+  })
+
+  it('replaces the current settings and game with the incoming ones', () => {
+    const merged = mergeTransfer({ settings: { theme: 'light' }, game: game('easy'), results: [] }, snapshot())
+
+    expect(merged.settings).toEqual({ theme: 'dark', language: 'fr' })
+    expect(merged.game).toEqual(game('hard'))
+  })
+
+  it('leaves the current game alone when the code carries none', () => {
+    const merged = mergeTransfer({ settings: {}, game: game('easy'), results: [] }, snapshot({ game: null }))
+
+    expect(merged.game).toEqual(game('easy'))
+  })
+
+  it('keeps an older schema’s settings and drops its game and results', async () => {
+    const read = await readBack(snapshot({ schema: SCHEMA - 1 }))
+
+    expect(read.snapshot).toEqual({ schema: SCHEMA - 1, settings: { theme: 'dark', language: 'fr' }, game: null, results: [] })
+  })
+
+  it('refuses a code from a newer schema or a newer format', async () => {
+    expect((await readBack(snapshot({ schema: SCHEMA + 1 }))).failure).toBe('newer')
+
+    const code = await createTransferCode(snapshot())
+    expect((await readTransferCode(code.replace(':1:', ':2:'), SCHEMA)).failure).toBe('newer')
+  })
+
+  it('refuses text that is not a transfer code', async () => {
+    const code = await createTransferCode(snapshot({ results: Array.from({ length: 50 }, (_, n) => result(n)) }))
+
+    for (const text of ['', '   ', 'hello', 'https://pepogrid.adrienmg.eu', code.slice(0, code.length / 2), code.slice(0, -4), code.replace(/.$/, '!'), 'pepogrid-transfer:1:']) {
+      expect((await readTransferCode(text, SCHEMA)).failure, text.slice(0, 40)).toBe('not-a-code')
+    }
+  })
+
+  it('reads a code with whitespace around it, as a clipboard may add', async () => {
+    const code = await createTransferCode(snapshot())
+
+    expect((await readTransferCode(`\n ${code} \n`, SCHEMA)).snapshot).toEqual(snapshot())
   })
 })

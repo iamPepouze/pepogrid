@@ -134,6 +134,11 @@ A unit whose nine cells all hold the digits the solution has there; a full unit 
 _Avoid_: Finished unit, solved unit
 _French_: Unité complète · _German_: Vollständige Einheit
 
+**Transfer code**:
+The text a player copies on PepoGrid's old address and pastes on its new one to bring over their settings, game in progress and results; results already on the new address are kept.
+_Avoid_: Backup, export, save file
+_French_: Code de transfert · _German_: Übertragungscode
+
 ## Difficulty
 
 **Difficulty**:

@@ -2,9 +2,11 @@
 import { Monitor, Moon, Settings, Sun } from '@lucide/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from '../composables/useI18n'
+import { isPagesBuild } from '../composables/useTransfer'
 import { LANGUAGES, resolveLanguage, type LanguageSetting } from '../lib/language'
 import { LANGUAGE_NAMES } from '../locales'
 import { THEME_MODES, useSettingsStore, type ThemeMode } from '../stores/settings'
+import PasteTransferDialog from './PasteTransferDialog.vue'
 
 const settings = useSettingsStore()
 const { t } = useI18n()
@@ -73,7 +75,23 @@ function onDocumentPointerDown(e: PointerEvent) {
   if (open.value && !root.value?.contains(e.target as Node)) close()
 }
 
+/** Whether the Paste transfer code dialog is open, and the entry that opened it: focus returns there when it closes. */
+const pasteOpen = ref(false)
+const pasteEntry = ref<HTMLButtonElement | null>(null)
+/** The old address has no use for pasting: it is where the transfer code comes from. */
+const canPaste = !isPagesBuild()
+
+/** Closes the dialog; when the brought-over language differs, reloads into it, as picking a language does. */
+async function closePaste(languageChanged: boolean) {
+  pasteOpen.value = false
+  await nextTick()
+  if (languageChanged) window.location.reload()
+  else pasteEntry.value?.focus()
+}
+
 function onKeydown(e: KeyboardEvent) {
+  // The dialog handles its own Escape.
+  if (pasteOpen.value) return
   if (e.key === 'Escape' && open.value) {
     e.stopPropagation()
     close(true)
@@ -122,11 +140,13 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocumentPoin
           <input v-model="settings.highlightMatching" type="checkbox" role="switch" class="switch" />
         </label>
       </fieldset>
+      <button v-if="canPaste" ref="pasteEntry" type="button" class="paste-entry" @click="pasteOpen = true">{{ t.transfer.paste.entry }}</button>
       <p class="credit">
         © 2026 Pepouze ·
         <a :href="LICENSE_URL" target="_blank" rel="noopener">{{ t.settings.license }}</a>
       </p>
     </div>
+    <PasteTransferDialog v-if="pasteOpen" @close="closePaste" />
   </div>
 </template>
 
@@ -173,6 +193,34 @@ fieldset + fieldset {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--button-border);
+}
+
+.paste-entry {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 10px;
+  padding: 0 10px;
+  border: 0;
+  border-top: 1px solid var(--button-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.paste-entry:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .paste-entry:hover {
+    background: var(--peer);
+  }
 }
 
 .credit {

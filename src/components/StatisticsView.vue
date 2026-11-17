@@ -8,7 +8,8 @@ import { MAX_RESULTS, capReached, countsOf, formatDuration, statisticsOf, type C
 import { useResultsStore } from '../stores/results'
 import StatFigures, { type Figure } from './StatFigures.vue'
 
-const props = defineProps<{ current: Difficulty }>()
+/** `readonly`: no Reset statistics, for the old address's move screen, which must not let a player wipe a history they are about to move. */
+const props = defineProps<{ current: Difficulty; readonly?: boolean }>()
 const emit = defineEmits<{ back: []; reset: [trigger: HTMLButtonElement | null] }>()
 
 const results = useResultsStore()
@@ -175,6 +176,7 @@ async function onTabKeydown(e: KeyboardEvent) {
     </div>
 
     <button
+      v-if="!readonly"
       ref="resetButton"
       type="button"
       class="reset surface"
