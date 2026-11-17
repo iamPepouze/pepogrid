@@ -66,6 +66,11 @@ Each claim carries a label:
 
 - Documented: `navigator.vibrate` isn't supported in Safari or in any iOS browser ([MDN BCD, Navigator.vibrate](https://github.com/mdn/browser-compat-data/blob/main/api/Navigator.json); [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate)).
 
+## Clipboard (transfer code)
+
+- Observed, on the owner's iPhone after #137 deployed: in the installed app on the old address, *Copy transfer code* put a working transfer code on the clipboard. The write is a `ClipboardItem` given a promise of the text, started inside the tap while the code is still being compressed ([useTransfer.ts](../src/composables/useTransfer.ts)). In the installed app on the new address, *Paste transfer code* read it and brought the history over.
+- Not yet checked on a device: VoiceOver reading out the Paste summary and the Copy status, and whether a tap that dismisses iOS's Paste callout also closes the dialog.
+
 ## What can be checked off-device
 
 - The drive-app skill's browser is Chromium-based. Chromium doesn't support `-webkit-touch-callout`, so an iOS-only rule never applies there.
