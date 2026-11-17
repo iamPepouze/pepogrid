@@ -8,3 +8,4 @@ tools/
 
 # Per-branch specs and review state for agents (see CLAUDE.md)
 .scratch/
+.claude/worktrees/

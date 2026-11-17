@@ -227,3 +227,18 @@ Chains that follow both outcomes of a choice to a contradiction or agreement, in
 
 **Cycles**:
 Bidirectional cycles and Turbot Fish: closed loops of strong and weak links. Not to be confused with the rotation's Cycle.
+
+**Pivot**:
+The cell of a Wing that sees both of its arms.
+_French_: Pivot · _German_: Pivot
+
+**Wing arm**:
+Each of the two cells of a Wing that the pivot sees.
+_French_: Pince · _German_: Flügel
+
+**Chain end**:
+The first or last cell of a chain.
+_French_: Extrémité · _German_: Ende
+
+**Lesson phrasing**:
+Wordings the lessons repeat. The first mention of Pointing in French is glossed "Pointing (le pointage)", while Claiming is not glossed, and German glosses neither. A digit used as a noun takes the plural *3en* in German ("die beiden 6en"). "In any order" is *dans un ordre quelconque* in French and *in beliebiger Reihenfolge* in German.

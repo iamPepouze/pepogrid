@@ -14,7 +14,7 @@ const DIGIT_SHIFT = {
 const BROWSER_GLOBALS = ['window', 'document', 'navigator', 'localStorage', 'sessionStorage', 'location', 'HTMLElement']
 
 export default defineConfig(
-  { ignores: ['dist/', 'dev-dist/', 'tools/'] },
+  { ignores: ['dist/', 'dev-dist/', 'tools/', '.claude/worktrees/'] },
   tseslint.configs.recommended,
   pluginVue.configs['flat/essential'],
   // <script setup lang="ts"> blocks need the TypeScript parser inside vue-eslint-parser.
