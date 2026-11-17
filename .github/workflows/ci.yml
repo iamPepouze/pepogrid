@@ -54,7 +54,10 @@ jobs:
       - name: Rerun changed tests under fixed seeds
         if: github.event_name == 'pull_request'
         run: scripts/test-seeds.sh origin/main
+      # Only the build the Pages deploy uploads is the old address's: it shows the move screen (src/composables/useTransfer.ts).
       - run: npm run build
+        env:
+          VITE_PEPOGRID_PAGES: ${{ inputs.upload-pages && 'true' || '' }}
       - if: inputs.upload-pages
         uses: actions/upload-pages-artifact@v5
         with:

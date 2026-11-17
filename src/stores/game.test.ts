@@ -649,3 +649,101 @@ describe('results store', () => {
     expect(results.results[999].mistakes).toBe(1004)
   })
 })
+
+describe('moving a game between addresses', () => {
+  beforeEach(() => {
+    storage.clear()
+    reload()
+  })
+
+  it('hands over a game in progress as plain data another game store takes over whole', async () => {
+    const from = useGameStore()
+    await from.newGame('hard')
+    fill(from, nonGivensOf(from, [...from.puzzle.keys()]).slice(0, 3))
+    const sent = from.inProgress()!
+
+    reload()
+    const to = useGameStore()
+    expect(to.adopt(JSON.parse(JSON.stringify(sent)))).toBe(true)
+
+    expect(to.inProgress()).toEqual(sent)
+    expect(to.values).toEqual(from.values)
+  })
+
+  it('has no game in progress to hand over before one is dealt or once it is solved', async () => {
+    const game = useGameStore()
+    expect(game.inProgress()).toBeNull()
+
+    await game.newGame('easy')
+    solve(game)
+
+    expect(game.inProgress()).toBeNull()
+  })
+
+  it('keeps the current game, unrecorded, when the incoming one is not a game it can resume', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    fill(game, [firstNonGiven(game)])
+    const before = JSON.stringify(game.inProgress())
+
+    expect(game.canAdopt({ ...game.inProgress(), mistakes: 'many' })).toBe(false)
+    expect(game.adopt({ ...game.inProgress(), mistakes: 'many' })).toBe(false)
+
+    expect(JSON.stringify(game.inProgress())).toBe(before)
+    expect(useResultsStore().results).toHaveLength(0)
+  })
+
+  it('records the game it replaces as abandoned when that game has a placed digit', async () => {
+    const from = useGameStore()
+    await from.newGame('hard')
+    fill(from, [firstNonGiven(from)])
+    const sent = from.inProgress()!
+    reload()
+    const to = useGameStore()
+    await to.newGame('easy')
+    fill(to, [firstNonGiven(to)])
+
+    to.adopt(sent)
+
+    expect(useResultsStore().results.map((r) => [r.difficulty, r.outcome])).toEqual([['easy', 'abandoned']])
+  })
+
+  it('has no game in progress to hand over while nothing is placed on a dealt one', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    expect(game.inProgress()).toBeNull()
+
+    game.select(firstNonGiven(game))
+    game.toggleNote(1)
+
+    expect(game.inProgress()).not.toBeNull()
+  })
+
+  it('abandons only a game with a placed digit, and retire empties the game after recording it', async () => {
+    const game = useGameStore()
+    const results = useResultsStore()
+    await game.newGame('easy')
+    game.select(firstNonGiven(game))
+    game.toggleNote(1)
+    game.abandon()
+    expect(results.results).toHaveLength(0)
+
+    fill(game, [firstNonGiven(game)])
+    game.retire()
+
+    expect(results.results.map((r) => r.outcome)).toEqual(['abandoned'])
+    expect(game.isValid()).toBe(false)
+    expect(game.hasProgress).toBe(false)
+  })
+
+  it('records nothing when a solved game is retired', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    solve(game)
+    const recorded = useResultsStore().results.length
+
+    game.retire()
+
+    expect(useResultsStore().results).toHaveLength(recorded)
+  })
+})

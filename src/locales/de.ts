@@ -143,4 +143,39 @@ export const de: Messages = {
     highlightMatching: 'Gleiche Ziffern hervorheben',
     license: 'Lizenz',
   },
+  transfer: {
+    move: {
+      title: 'PepoGrid ist umgezogen',
+      copy: 'Übertragungscode kopieren',
+      copying: 'Wird kopiert …',
+      copied: 'Kopiert. Füge ihn jetzt auf der neuen Adresse ein (Schritt 3).',
+      copyFailed: 'Der Übertragungscode konnte nicht kopiert werden. Tippe erneut auf Kopieren.',
+      openBefore: 'Öffne',
+      openAfter: 'Wenn du vom Home-Bildschirm aus spielst, füge sie dort hinzu und öffne sie über das neue Symbol.',
+      pasteStep: 'Tippe in den Einstellungen auf Übertragungscode einfügen.',
+    },
+    paste: {
+      entry: 'Übertragungscode einfügen',
+      title: 'Übertragungscode einfügen',
+      ready: 'Kopiere zuerst den Übertragungscode auf der alten Adresse, tippe dann auf Einfügen.',
+      paste: 'Einfügen',
+      reading: 'Übertragungscode wird gelesen …',
+      summaryTitle: 'Das übernehmen?',
+      summaryIntro: 'Das steckt im Übertragungscode:',
+      results: (n) => `${n} ${n === 1 ? 'Ergebnis' : 'Ergebnisse'}`,
+      game: (difficulty) => (difficulty ? `Laufendes Spiel: ${difficulty}` : 'Kein laufendes Spiel'),
+      settings: (language, theme, highlight) => `Einstellungen: ${language}, Design „${theme}“, gleiche Ziffern ${highlight ? 'hervorgehoben' : 'nicht hervorgehoben'}`,
+      abandonWarning: (difficulty) => `Dein laufendes Spiel (${difficulty}) wird als abgebrochen gespeichert.`,
+      bringOver: 'Übernehmen',
+      doneTitle: 'Übernommen',
+      done: (n, total, difficulty) =>
+        (n
+          ? `${n} ${n === 1 ? 'neues Ergebnis' : 'neue Ergebnisse'} und deine Einstellungen wurden übernommen.`
+          : `Deine Einstellungen wurden übernommen.${total ? ` ${total === 1 ? 'Das Ergebnis war' : `Die ${total} Ergebnisse waren`} schon da.` : ''}`) +
+        (difficulty ? ` Dein Spiel (${difficulty}) liegt auf dem Gitter.` : ''),
+      notCode: 'Das ist kein Übertragungscode. Kopiere ihn erneut auf der alten Adresse und tippe dann auf Einfügen.',
+      newer: 'Dieser Übertragungscode stammt von einer neueren Version von PepoGrid. Aktualisiere die App und tippe dann erneut auf Einfügen.',
+      unreadable: 'PepoGrid konnte die Zwischenablage nicht lesen. Kopiere den Übertragungscode erneut auf der alten Adresse und tippe dann auf Einfügen.',
+    },
+  },
 }

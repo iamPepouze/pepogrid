@@ -5,6 +5,7 @@ import AppDialog, { type DialogContent } from './components/AppDialog.vue'
 import DifficultyMenu from './components/DifficultyMenu.vue'
 import GameControls from './components/GameControls.vue'
 import KeyTechniqueView, { type KeyTechniqueTab } from './components/KeyTechniqueView.vue'
+import MoveScreen from './components/MoveScreen.vue'
 import NumberPad from './components/NumberPad.vue'
 import SettingsMenu from './components/SettingsMenu.vue'
 import StatisticsView from './components/StatisticsView.vue'
@@ -12,6 +13,7 @@ import SudokuBoard from './components/SudokuBoard.vue'
 import { useInstall } from './composables/useInstall'
 import { useDocumentLanguage, useI18n } from './composables/useI18n'
 import { useTheme } from './composables/useTheme'
+import { isPagesBuild } from './composables/useTransfer'
 import { useUpdate } from './composables/useUpdate'
 import { HODOKU_LABELS, TIERS, type Difficulty } from './lib/difficulty'
 import type { NextTechnique } from './lib/rater'
@@ -21,8 +23,13 @@ import { useResultsStore } from './stores/results'
 
 const game = useGameStore()
 const results = useResultsStore()
-// First visit, or a save that's missing or corrupt: start a game.
-if (!game.isValid()) loadGame('easy', { recordAbandoned: false })
+/** The old address's build deals no more games: it shows the move screen once no game is in progress. */
+const pagesBuild = isPagesBuild()
+// First visit, or a save that's missing or corrupt: start a game, except on the old address, which has moved.
+if (!game.isValid() && !pagesBuild) loadGame('easy', { recordAbandoned: false })
+
+/** True once the old address has no game in progress: at launch with none (a solved game isn't one), then after Solved or New game. */
+const moved = ref(pagesBuild && (!game.isValid() || !game.hasProgress || game.completed))
 
 useTheme()
 useDocumentLanguage()
@@ -34,13 +41,35 @@ const { canUpdate, update } = useUpdate()
 const shownRating = computed(() => (TIERS[game.difficulty].showRating ? game.rating : null))
 
 /** The view standing in for the game, null while the game is on screen: the timer and the board keys pause meanwhile. */
-const view = ref<'statistics' | 'keyTechnique' | null>(null)
+const view = ref<'moved' | 'statistics' | 'keyTechnique' | null>(moved.value ? 'moved' : null)
 const statisticsButton = ref<HTMLButtonElement | null>(null)
+const moveScreen = ref<InstanceType<typeof MoveScreen> | null>(null)
 
-/** Opens Statistics, or goes back to the game; focus lands on the Statistics button either way. */
+/** True while Statistics was opened from the move screen's own button, which Back then gives focus back to. */
+let statisticsFromMoveScreen = false
+
+/** Opens Statistics, or goes back to what stands behind it, the game or the move screen; focus lands on the header's Statistics button either way. */
 function toggleStatistics() {
-  view.value = view.value === 'statistics' ? null : 'statistics'
+  statisticsFromMoveScreen = false
+  view.value = view.value === 'statistics' ? (moved.value ? 'moved' : null) : 'statistics'
   statisticsButton.value?.focus()
+}
+
+/** Opens Statistics from the move screen, whose button goes with it: focus moves to Back. */
+async function openStatisticsFromMoveScreen() {
+  statisticsFromMoveScreen = true
+  view.value = 'statistics'
+  await nextTick()
+  statisticsView.value?.focusBack()
+}
+
+/** Statistics' Back: returns to the move screen's Statistics button when that opened it, else as the header's button does. */
+async function backFromStatistics() {
+  if (!statisticsFromMoveScreen) return toggleStatistics()
+  statisticsFromMoveScreen = false
+  view.value = 'moved'
+  await nextTick()
+  moveScreen.value?.focusStatistics()
 }
 
 const keyTechniqueView = ref<InstanceType<typeof KeyTechniqueView> | null>(null)
@@ -160,6 +189,15 @@ async function startGame(difficulty: Difficulty, from: EventTarget | null) {
       opener?.focus()
       return
     }
+  }
+  if (pagesBuild) {
+    // The old address deals no more games: the finished or abandoned one makes way for the move screen.
+    game.retire()
+    moved.value = true
+    view.value = 'moved'
+    await nextTick()
+    moveScreen.value?.focusCopy()
+    return
   }
   // A fresh game starts on the board; after a failed load, the player is back where they tried from.
   if (await loadGame(difficulty)) board.value?.focus()
@@ -309,12 +347,15 @@ onBeforeUnmount(() => {
       </template>
     </header>
 
+    <MoveScreen v-if="view === 'moved'" ref="moveScreen" class="view-area" @statistics="openStatisticsFromMoveScreen" />
+
     <StatisticsView
       v-if="view === 'statistics'"
       ref="statisticsView"
       class="view-area"
       :current="game.difficulty"
-      @back="toggleStatistics"
+      :readonly="moved"
+      @back="backFromStatistics"
       @reset="resetStatistics"
     />
 

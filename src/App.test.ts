@@ -5,6 +5,7 @@ import type { RegisterSWOptions } from 'virtual:pwa-register'
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import App from './App.vue'
 import { useGameStore } from './stores/game'
+import { useResultsStore } from './stores/results'
 import { useSettingsStore } from './stores/settings'
 import { fill, nonGivensOf, seedResult } from './stores/testing'
 
@@ -564,5 +565,125 @@ describe('App', () => {
     await flushPromises()
     await updateButton()!.trigger('click')
     expect(sw.update).toHaveBeenCalledOnce()
+  })
+
+  describe('the move screen', () => {
+    afterEach(() => vi.unstubAllEnvs())
+
+    const moveScreen = '.move'
+    const pagesBuild = () => vi.stubEnv('VITE_PEPOGRID_PAGES', 'true')
+
+    /** Mounts without dealing a game first: the old address deals none itself. */
+    async function mountBare() {
+      const app = mount(App, { global: { plugins: [pinia] }, attachTo: document.body })
+      await flushPromises()
+      return app
+    }
+
+    it('replaces the game on a Pages build with no game in progress, with no way past it', async () => {
+      pagesBuild()
+      const app = await mountBare()
+
+      expect(app.find(moveScreen).exists()).toBe(true)
+      expect(app.find('.game').isVisible()).toBe(false)
+      expect(app.find(newGameButton).exists()).toBe(false)
+      expect(useGameStore().isValid()).toBe(false)
+    })
+
+    it('shows the move screen on a relaunch with only a solved game, which is not in progress', async () => {
+      pagesBuild()
+      const game = useGameStore()
+      await game.newGame('easy')
+      fill(game, nonGivensOf(game, [...game.puzzle.keys()]))
+      expect(game.completed).toBe(true)
+
+      const app = await mountBare()
+
+      expect(app.find(moveScreen).exists()).toBe(true)
+    })
+
+    it('shows the game when a note or a digit is placed, and leaves it playable', async () => {
+      pagesBuild()
+      const game = useGameStore()
+      await game.newGame('easy')
+      const [cell] = nonGivensOf(game, [...game.puzzle.keys()])
+      game.select(cell)
+      game.toggleNote(1)
+
+      const app = await mountBare()
+
+      expect(app.find(moveScreen).exists()).toBe(false)
+      expect(app.find('.game').isVisible()).toBe(true)
+    })
+
+    it('takes the next game’s place after Solved', async () => {
+      pagesBuild()
+      const game = useGameStore()
+      await game.newGame('easy')
+      makeProgress()
+      const app = await mountBare()
+
+      fill(game, nonGivensOf(game, [...game.puzzle.keys()]))
+      await flushPromises()
+      expect(app.find('.win').exists()).toBe(true)
+      expect(app.find(moveScreen).exists()).toBe(false)
+
+      await app.find('.win button').trigger('click')
+      await flushPromises()
+      expect(app.find(moveScreen).exists()).toBe(true)
+      expect(game.isValid()).toBe(false)
+    })
+
+    it('asks first on New game, records Abandoned for a placed digit, then shows the move screen', async () => {
+      pagesBuild()
+      const game = useGameStore()
+      await game.newGame('easy')
+      makeProgress()
+      const app = await mountBare()
+
+      await app.find(newGameButton).trigger('click')
+      expect(app.find('dialog').text()).toContain('Start a new Easy game?')
+      await dialogButton(app, 'New game').trigger('click')
+      await flushPromises()
+
+      expect(app.find(moveScreen).exists()).toBe(true)
+      expect(useResultsStore().results.map((r) => r.outcome)).toEqual(['abandoned'])
+      expect(game.isValid()).toBe(false)
+      expect(document.activeElement).toBe(app.find('button.copy').element)
+    })
+
+    it('opens Statistics read-only from the move screen, and Back returns to it', async () => {
+      pagesBuild()
+      seedResult('easy', 'completed')
+      const app = await mountBare()
+
+      await app.find('button.statistics').trigger('click')
+      await flushPromises()
+      expect(app.find('#statistics-title').exists()).toBe(true)
+      expect(app.findAll('button').map((b) => b.text())).not.toContain('Reset statistics')
+      expect(document.activeElement).toBe(app.find('.back-button').element)
+
+      await app.find('.back-button').trigger('click')
+      await flushPromises()
+      expect(app.find(moveScreen).exists()).toBe(true)
+      expect(document.activeElement).toBe(app.find('button.statistics').element)
+    })
+
+    it('keeps Reset statistics in Statistics on the new address', async () => {
+      seedResult('easy', 'completed')
+      const app = await mountApp()
+
+      await app.find('.topbar button[aria-label="Statistics"]').trigger('click')
+
+      expect(app.findAll('button').map((b) => b.text())).toContain('Reset statistics')
+    })
+
+    it('never shows on a Server build', async () => {
+      const app = await mountBare()
+      await settle()
+
+      expect(app.find(moveScreen).exists()).toBe(false)
+      expect(useGameStore().isValid()).toBe(true)
+    })
   })
 })

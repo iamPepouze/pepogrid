@@ -12,6 +12,10 @@ export interface DialogContent {
   message: string
   confirmLabel: string
   cancelLabel?: string
+  /** For a dialog whose message changes while it stays open: a screen reader announces each new one. */
+  live?: boolean
+  /** While true, the confirm button is disabled: the dialog is working on the last press. Cancel stays, as a way out. */
+  busy?: boolean
 }
 
 defineProps<DialogContent>()
@@ -28,6 +32,13 @@ onMounted(() => {
   dialog.value?.showModal()
   // Focus Cancel when there is one, so a stray Enter is harmless.
   ;(cancelButton.value ?? confirmButton.value)?.focus()
+})
+
+defineExpose({
+  /** Focuses the dialog's main button, for a caller that changes the buttons under the player's focus. */
+  focusPrimary: () => (cancelButton.value ?? confirmButton.value)?.focus(),
+  /** Focuses the confirm button, for a step whose obvious next move is to press it again. */
+  focusConfirm: () => confirmButton.value?.focus(),
 })
 
 /** A click on the dialog element itself, not its content, landed on the backdrop. */
@@ -47,12 +58,14 @@ function onCancel(e: Event) {
   <dialog ref="dialog" class="dialog" :aria-label="plain(title)" data-own-keys @click="onClick" @cancel="onCancel">
     <div class="content">
       <h2 id="dialog-title">{{ title }}</h2>
-      <p>{{ message }}</p>
+      <p :role="live ? 'status' : undefined">{{ message }}</p>
+      <!-- Extra content for a dialog that has more to say than a message, such as what a transfer code holds. -->
+      <slot />
       <div class="actions">
         <button v-if="cancelLabel" type="button" ref="cancelButton" class="button" :aria-label="plain(cancelLabel)" @click="emit('close', false)">
           {{ cancelLabel }}
         </button>
-        <button type="button" ref="confirmButton" class="button primary" :aria-label="plain(confirmLabel)" @click="emit('close', true)">
+        <button type="button" ref="confirmButton" class="button primary" :aria-label="plain(confirmLabel)" :disabled="busy" @click="emit('close', true)">
           {{ confirmLabel }}
         </button>
       </div>
@@ -116,6 +129,11 @@ p {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .button.primary {

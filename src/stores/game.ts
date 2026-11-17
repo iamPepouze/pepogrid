@@ -39,7 +39,24 @@ const isGrid = (value: unknown): value is number[] =>
 const isRating = (r: Rating | null): r is Rating =>
   !!r && typeof r.se === 'number' && typeof r.hodokuScore === 'number' && HODOKU_LEVELS.includes(r.hodokuLevel) && typeof r.hardest === 'string'
 
-const emptyBankUsage = (): Record<Difficulty, number[]> => ({ easy: [], medium: [], hard: [], expert: [], master: [] })
+/** True when a game's persisted state, from the store or from a transfer code, is complete and consistent. */
+function isValidState(s: Record<string, unknown>) {
+  const selected = s.selected
+  return (
+    DIFFICULTIES.includes(s.difficulty as Difficulty) &&
+    [s.puzzle, s.solution, s.values, s.notes].every(isGrid) &&
+    Number.isInteger(s.mistakes) &&
+    Number.isInteger(s.elapsed) &&
+    typeof s.completed === 'boolean' &&
+    typeof s.keyTechniqueRevealed === 'boolean' &&
+    Number.isInteger(s.nextStepsShown) &&
+    Array.isArray(s.history) &&
+    isRating(s.rating as Rating | null) &&
+    (selected === null || (Number.isInteger(selected) && (selected as number) >= 0 && (selected as number) < 81))
+  )
+}
+
+const emptyBankUsage = ():Record<Difficulty, number[]> => ({ easy: [], medium: [], hard: [], expert: [], master: [] })
 const emptyFamilyPlays = (): Record<Difficulty, Record<string, number>> => ({ easy: {}, medium: {}, hard: {}, expert: {}, master: {} })
 
 /**
@@ -131,6 +148,9 @@ export const useGameStore = defineStore(
     /** True once the player has placed a digit or written a note: what a new game would throw away. */
     const hasProgress = computed(() => hasPlacedDigit.value || notes.value.some((n) => n !== 0))
 
+    /** True when replacing the game now would record it as abandoned: it is unsolved and has a placed digit. */
+    const wouldAbandon = computed(() => isValid() && !completed.value && hasPlacedDigit.value)
+
     function recordResult(outcome: Outcome) {
       const empties = puzzle.value.filter((v) => v === 0).length
       const correct = values.value.filter((v, i) => puzzle.value[i] === 0 && v === solution.value[i]).length
@@ -160,7 +180,7 @@ export const useGameStore = defineStore(
       loading.value = true
       try {
         const pick = await pickFromBank(level, bankUsed.value[level] ?? [], familyPlayed.value[level] ?? {})
-        if (recordAbandoned && isValid() && !completed.value && hasPlacedDigit.value) recordResult('abandoned')
+        if (recordAbandoned) abandon()
         bankUsed.value[level] = pick.restarted ? [pick.index] : [...(bankUsed.value[level] ?? []), pick.index]
         // Strictly increasing, so two games in the same millisecond still order correctly.
         const plays = familyPlayed.value[level] ?? {}
@@ -308,20 +328,76 @@ export const useGameStore = defineStore(
       if (!completed.value) elapsed.value++
     }
 
+    /** Every persisted ref by name: what a transfer code carries, and what `adopt` takes back. */
+    const persisted = {
+      difficulty, puzzle, solution, values, notes, mistakes, elapsed, startedAt, completed, history, selected,
+      notesMode, keyTechniqueRevealed, nextStepsShown, rating, bankUsed, familyPlayed,
+    }
+
+    /**
+     * The game as a plain copy of what is persisted, or null when no game is in progress: none dealt yet, solved,
+     * or dealt with no digit or note placed yet.
+     */
+    function inProgress(): Record<string, unknown> | null {
+      if (!isValid() || completed.value || !hasProgress.value) return null
+      return Object.fromEntries(Object.entries(persisted).map(([key, ref]) => [key, JSON.parse(JSON.stringify(ref.value))]))
+    }
+
+    /** Every persisted ref's value by name, as `isValidState` checks it. */
+    const currentState = () => Object.fromEntries(Object.entries(persisted).map(([key, ref]) => [key, ref.value]))
+
+    function assign(state: Record<string, unknown>) {
+      for (const [key, ref] of Object.entries(persisted)) if (key in state) (ref as { value: unknown }).value = state[key]
+    }
+
+    /** True when `adopt` would take over `incoming`: with the current game's fields filling any it lacks, it is a game the app can resume. */
+    function canAdopt(incoming: Record<string, unknown>) {
+      return isValidState({ ...currentState(), ...incoming })
+    }
+
+    /**
+     * Takes over a game from `inProgress`, recording the current one as abandoned when it has a placed digit. When
+     * `canAdopt` says no, nothing changes, nothing is recorded, and it returns false.
+     */
+    function adopt(incoming: Record<string, unknown>) {
+      if (!canAdopt(incoming)) return false
+      abandon()
+      assign(incoming)
+      newlyComplete.value = null
+      return true
+    }
+
+    /** Records the game as abandoned when replacing it would (`wouldAbandon`). */
+    function abandon() {
+      if (wouldAbandon.value) recordResult('abandoned')
+    }
+
+    /**
+     * Leaves the game as a fresh install has it, with nothing to resume, after recording it as abandoned when
+     * that applies. The dealing-order history is kept. For the old address, which deals no more games.
+     */
+    function retire() {
+      abandon()
+      puzzle.value = []
+      solution.value = []
+      values.value = []
+      notes.value = []
+      mistakes.value = 0
+      elapsed.value = 0
+      startedAt.value = ''
+      completed.value = false
+      history.value = []
+      selected.value = null
+      notesMode.value = false
+      keyTechniqueRevealed.value = false
+      nextStepsShown.value = 0
+      rating.value = null
+      newlyComplete.value = null
+    }
+
     /** True when hydrated state is complete and consistent. */
     function isValid() {
-      return (
-        DIFFICULTIES.includes(difficulty.value) &&
-        [puzzle.value, solution.value, values.value, notes.value].every(isGrid) &&
-        Number.isInteger(mistakes.value) &&
-        Number.isInteger(elapsed.value) &&
-        typeof completed.value === 'boolean' &&
-        typeof keyTechniqueRevealed.value === 'boolean' &&
-        Number.isInteger(nextStepsShown.value) &&
-        Array.isArray(history.value) &&
-        isRating(rating.value) &&
-        (selected.value === null || (Number.isInteger(selected.value) && selected.value >= 0 && selected.value < 81))
-      )
+      return isValidState(currentState())
     }
 
     return {
@@ -365,6 +441,12 @@ export const useGameStore = defineStore(
       showNextStep,
       tick,
       isValid,
+      wouldAbandon,
+      inProgress,
+      canAdopt,
+      adopt,
+      abandon,
+      retire,
     }
   },
   { persist: { omit: ['loading', 'newlyComplete'] } },

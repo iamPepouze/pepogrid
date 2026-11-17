@@ -2,13 +2,8 @@ import { createPinia } from 'pinia'
 import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { createApp } from 'vue'
 import App from './App.vue'
+import { SCHEMA_VERSION } from './lib/schema'
 import './style.css'
-
-/**
- * Bump when saved games or results change meaning; older data is dropped once.
- * 2: five rated difficulty tiers (results gained SE/HoDoKu ratings).
- */
-const SCHEMA_VERSION = 2
 
 try {
   // Saves from before the Pinia stores used a different format.
