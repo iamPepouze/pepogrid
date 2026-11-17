@@ -1,7 +1,7 @@
-/// <reference types="vitest/config" />
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
+import { configDefaults } from 'vitest/config'
 
 // Two hosts, two bases (docs/adr/0006-github-pages-project-site.md): GitHub Pages serves a project site at
 // /pepogrid/, and the container image (Dockerfile) sets PEPOGRID_BASE=/ to serve the app at the root.
@@ -42,5 +42,7 @@ export default defineConfig({
   ],
   test: {
     setupFiles: ['src/test-setup.ts'],
+    // Agents' git worktrees hold whole copies of the repo, tests included.
+    exclude: [...configDefaults.exclude, '.claude/worktrees/**'],
   },
 })

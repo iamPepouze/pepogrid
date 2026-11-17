@@ -227,3 +227,23 @@ Chains that follow both outcomes of a choice to a contradiction or agreement, in
 
 **Cycles**:
 Bidirectional cycles and Turbot Fish: closed loops of strong and weak links. Not to be confused with the rotation's Cycle.
+
+## Lessons
+
+Words the lessons use for the parts of a pattern, and wordings they repeat.
+
+**Pivot**:
+The cell at the bend of a Wing (XY-Wing, XYZ-Wing), a peer of both wing arms.
+_French_: Pivot · _German_: Pivot
+
+**Wing arm**:
+Each of the two peers of a Wing's pivot with two candidates, the two sharing one digit.
+_French_: Pince · _German_: Flügel
+
+**Chain end**:
+The first or last cell of a chain.
+_French_: Extrémité · _German_: Ende
+
+**Lesson phrasing**:
+Wordings the lessons repeat: the first mention of Pointing, a digit used as a plural noun ("the two 6s"), and "in any order".
+_French_: "Pointing (le pointage)" on first mention, Claiming unglossed; "les deux 6"; *dans un ordre quelconque* · _German_: Pointing and Claiming unglossed; *3en*, as in "die beiden 6en"; *in beliebiger Reihenfolge*
