@@ -680,14 +680,42 @@ describe('moving a game between addresses', () => {
     expect(game.inProgress()).toBeNull()
   })
 
-  it('keeps the current game when the incoming one is not a game it can resume', async () => {
+  it('keeps the current game, unrecorded, when the incoming one is not a game it can resume', async () => {
     const game = useGameStore()
     await game.newGame('easy')
+    fill(game, [firstNonGiven(game)])
     const before = JSON.stringify(game.inProgress())
 
-    expect(game.adopt({ puzzle: [1, 2, 3] })).toBe(false)
+    expect(game.adopt({ ...game.inProgress(), mistakes: 'many' })).toBe(false)
 
     expect(JSON.stringify(game.inProgress())).toBe(before)
+    expect(useResultsStore().results).toHaveLength(0)
+  })
+
+  it('records the game it replaces as abandoned when that game has a placed digit', async () => {
+    const from = useGameStore()
+    await from.newGame('hard')
+    fill(from, [firstNonGiven(from)])
+    const sent = from.inProgress()!
+    reload()
+    const to = useGameStore()
+    await to.newGame('easy')
+    fill(to, [firstNonGiven(to)])
+
+    to.adopt(sent)
+
+    expect(useResultsStore().results.map((r) => [r.difficulty, r.outcome])).toEqual([['easy', 'abandoned']])
+  })
+
+  it('has no game in progress to hand over while nothing is placed on a dealt one', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    expect(game.inProgress()).toBeNull()
+
+    game.select(firstNonGiven(game))
+    game.toggleNote(1)
+
+    expect(game.inProgress()).not.toBeNull()
   })
 
   it('abandons only a game with a placed digit, and retire empties the game after recording it', async () => {

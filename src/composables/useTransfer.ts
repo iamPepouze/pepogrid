@@ -3,6 +3,7 @@
  * it to the clipboard, reading one back and bringing it over. The code's format is src/lib/transfer.ts's;
  * this wraps the clipboard and the stores for the components.
  */
+import type { Difficulty } from '../lib/difficulty'
 import { SCHEMA_VERSION } from '../lib/schema'
 import { createTransferCode, mergeTransfer, readTransferCode, type TransferFailure, type TransferSnapshot } from '../lib/transfer'
 import { useGameStore } from '../stores/game'
@@ -58,32 +59,47 @@ export async function pasteTransferCode(): Promise<{ snapshot: TransferSnapshot<
   return readTransferCode<GameResult>(text, SCHEMA_VERSION)
 }
 
-/** What bringing a snapshot over would do, for the dialog to say before and after. */
+/** The difficulty of the game a snapshot carries, or null; the transfer code has checked it is one. */
+const difficultyOf = (snapshot: TransferSnapshot<GameResult>) => (snapshot.game as { difficulty: Difficulty } | null)?.difficulty ?? null
+
+/** What bringing a snapshot over would do, for the dialog to list before anything changes. */
 export function summaryOf(snapshot: TransferSnapshot<GameResult>) {
   const game = useGameStore()
   return {
     results: snapshot.results.length,
-    gameDifficulty: (snapshot.game as { difficulty: GameResult['difficulty'] } | null)?.difficulty ?? null,
-    /** The difficulty of the game on the board when bringing a game over records it as abandoned (it has a placed digit), otherwise null. */
-    abandonedDifficulty: snapshot.game !== null && game.isValid() && !game.completed && game.hasPlacedDigit ? game.difficulty : null,
-    settings: snapshot.settings as Record<string, unknown>,
+    gameDifficulty: difficultyOf(snapshot),
+    /** The difficulty of the game on the board when the incoming game replaces it and it is recorded as abandoned, otherwise null. */
+    abandonedDifficulty: snapshot.game !== null && game.wouldAbandon ? game.difficulty : null,
+    /** The preferences the player ends up with. */
+    settings: useSettingsStore().adopted(snapshot.settings as Record<string, unknown>),
   }
 }
 
+/** What came over, for the dialog to say afterwards. */
+export interface BroughtOver {
+  /** Results that weren't already here. */
+  newResults: number
+  /** The difficulty of the game now on the board, null when the code brought none or one the app can't resume. */
+  gameDifficulty: Difficulty | null
+  languageChanged: boolean
+}
+
 /**
- * Brings a snapshot over: records the game on the board as abandoned when the incoming game replaces it, merges
- * the results (which keeps that record), then takes over the settings and the game. Returns whether the language changed.
+ * Brings a snapshot over: takes over its game, which records the game on the board as abandoned when it has a placed
+ * digit, then merges the results (keeping that record) and takes over the settings.
  */
-export function bringOver(snapshot: TransferSnapshot<GameResult>) {
+export function bringOver(snapshot: TransferSnapshot<GameResult>): BroughtOver {
   const game = useGameStore()
   const settings = useSettingsStore()
   const results = useResultsStore()
   const language = settings.language
-  const incoming = snapshot.game as Record<string, unknown> | null
-  if (incoming) game.abandon()
-  const merged = mergeTransfer({ settings: settings.snapshot(), game: null, results: results.results }, snapshot)
-  results.results = merged.results
-  settings.adopt(merged.settings as Record<string, unknown>)
-  if (incoming) game.adopt(incoming)
-  return settings.language !== language
+  const adopted = snapshot.game !== null && game.adopt(snapshot.game as Record<string, unknown>)
+  const known = new Set(results.results.map((r) => r.id))
+  results.results = mergeTransfer({ settings: {}, game: null, results: results.results }, snapshot).results
+  settings.adopt(snapshot.settings as Record<string, unknown>)
+  return {
+    newResults: snapshot.results.filter((r) => !known.has(r.id)).length,
+    gameDifficulty: adopted ? difficultyOf(snapshot) : null,
+    languageChanged: settings.language !== language,
+  }
 }

@@ -45,10 +45,31 @@ const view = ref<'moved' | 'statistics' | 'keyTechnique' | null>(moved.value ? '
 const statisticsButton = ref<HTMLButtonElement | null>(null)
 const moveScreen = ref<InstanceType<typeof MoveScreen> | null>(null)
 
-/** Opens Statistics, or goes back to what stands behind it, the game or the move screen; focus lands on the Statistics button either way. */
+/** True while Statistics was opened from the move screen's own button, which Back then gives focus back to. */
+let statisticsFromMoveScreen = false
+
+/** Opens Statistics, or goes back to what stands behind it, the game or the move screen; focus lands on the header's Statistics button either way. */
 function toggleStatistics() {
+  statisticsFromMoveScreen = false
   view.value = view.value === 'statistics' ? (moved.value ? 'moved' : null) : 'statistics'
   statisticsButton.value?.focus()
+}
+
+/** Opens Statistics from the move screen, whose button goes with it: focus moves to Back. */
+async function openStatisticsFromMoveScreen() {
+  statisticsFromMoveScreen = true
+  view.value = 'statistics'
+  await nextTick()
+  statisticsView.value?.focusBack()
+}
+
+/** Statistics' Back: returns to the move screen's Statistics button when that opened it, else as the header's button does. */
+async function backFromStatistics() {
+  if (!statisticsFromMoveScreen) return toggleStatistics()
+  statisticsFromMoveScreen = false
+  view.value = 'moved'
+  await nextTick()
+  moveScreen.value?.focusStatistics()
 }
 
 const keyTechniqueView = ref<InstanceType<typeof KeyTechniqueView> | null>(null)
@@ -326,7 +347,7 @@ onBeforeUnmount(() => {
       </template>
     </header>
 
-    <MoveScreen v-if="view === 'moved'" ref="moveScreen" class="view-area" @statistics="toggleStatistics" />
+    <MoveScreen v-if="view === 'moved'" ref="moveScreen" class="view-area" @statistics="openStatisticsFromMoveScreen" />
 
     <StatisticsView
       v-if="view === 'statistics'"
@@ -334,7 +355,7 @@ onBeforeUnmount(() => {
       class="view-area"
       :current="game.difficulty"
       :readonly="moved"
-      @back="toggleStatistics"
+      @back="backFromStatistics"
       @reset="resetStatistics"
     />
 

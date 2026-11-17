@@ -14,6 +14,8 @@ export interface DialogContent {
   cancelLabel?: string
   /** For a dialog whose message changes while it stays open: a screen reader announces each new one. */
   live?: boolean
+  /** While true, both buttons are disabled: the dialog is working on the last one pressed. */
+  busy?: boolean
 }
 
 defineProps<DialogContent>()
@@ -35,6 +37,8 @@ onMounted(() => {
 defineExpose({
   /** Focuses the dialog's main button, for a caller that changes the buttons under the player's focus. */
   focusPrimary: () => (cancelButton.value ?? confirmButton.value)?.focus(),
+  /** Focuses the confirm button, for a step whose obvious next move is to press it again. */
+  focusConfirm: () => confirmButton.value?.focus(),
 })
 
 /** A click on the dialog element itself, not its content, landed on the backdrop. */
@@ -58,10 +62,10 @@ function onCancel(e: Event) {
       <!-- Extra content for a dialog that has more to say than a message, such as what a transfer code holds. -->
       <slot />
       <div class="actions">
-        <button v-if="cancelLabel" type="button" ref="cancelButton" class="button" :aria-label="plain(cancelLabel)" @click="emit('close', false)">
+        <button v-if="cancelLabel" type="button" ref="cancelButton" class="button" :aria-label="plain(cancelLabel)" :disabled="busy" @click="emit('close', false)">
           {{ cancelLabel }}
         </button>
-        <button type="button" ref="confirmButton" class="button primary" :aria-label="plain(confirmLabel)" @click="emit('close', true)">
+        <button type="button" ref="confirmButton" class="button primary" :aria-label="plain(confirmLabel)" :disabled="busy" @click="emit('close', true)">
           {{ confirmLabel }}
         </button>
       </div>
@@ -125,6 +129,11 @@ p {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .button.primary {

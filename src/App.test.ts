@@ -658,11 +658,15 @@ describe('App', () => {
       const app = await mountBare()
 
       await app.find('button.statistics').trigger('click')
+      await flushPromises()
       expect(app.find('#statistics-title').exists()).toBe(true)
       expect(app.findAll('button').map((b) => b.text())).not.toContain('Reset statistics')
+      expect(document.activeElement).toBe(app.find('.back-button').element)
 
       await app.find('.back-button').trigger('click')
+      await flushPromises()
       expect(app.find(moveScreen).exists()).toBe(true)
+      expect(document.activeElement).toBe(app.find('button.statistics').element)
     })
 
     it('keeps Reset statistics in Statistics on the new address', async () => {

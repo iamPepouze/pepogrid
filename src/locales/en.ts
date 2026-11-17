@@ -176,14 +176,15 @@ export const en = {
       results: (n: number) => `${n} ${n === 1 ? 'result' : 'results'}`,
       /** The game in progress, by its difficulty's name, or none. */
       game: (difficulty: string | null) => (difficulty ? `Game in progress: ${difficulty}` : 'No game in progress'),
-      /** The settings it carries, by the names the Settings menu shows. */
-      settings: (language: string, theme: string) => `Settings: ${language}, ${theme} theme`,
+      /** The settings it carries, by the names the Settings menu shows; `highlight` is the matching-number highlight. */
+      settings: (language: string, theme: string, highlight: boolean) => `Settings: ${language}, ${theme} theme, matching numbers ${highlight ? 'highlighted' : 'not highlighted'}`,
       /** The game on the board has a placed digit, so it is replaced as a result. */
       abandonWarning: (difficulty: string) => `Your current ${difficulty} game will be recorded as Abandoned.`,
       bringOver: 'Bring over',
       doneTitle: 'Brought over',
-      /** What came over: `n` results, and the difficulty of the game now on the board if one came. */
-      done: (n: number, difficulty: string | null) => `${n} ${n === 1 ? 'result' : 'results'} came over${difficulty ? `, and your ${difficulty} game is on the board` : ''}.`,
+      /** What came over: `n` results that weren't here yet, the settings, and the difficulty of the game now on the grid if one came. */
+      done: (n: number, difficulty: string | null) =>
+        `${n} new ${n === 1 ? 'result' : 'results'} and your settings came over${difficulty ? `, and your ${difficulty} game is on the grid` : ''}.`,
       notCode: 'That isn’t a transfer code. Copy it again on the old address, then tap Paste.',
       newer: 'This transfer code is from a newer version of PepoGrid. Update the app, then tap Paste again.',
       unreadable: 'PepoGrid couldn’t read the clipboard. Copy the transfer code again on the old address, then tap Paste.',

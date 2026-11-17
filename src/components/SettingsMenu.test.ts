@@ -201,6 +201,20 @@ describe('SettingsMenu', () => {
       await vi.waitFor(() => expect(menu.find('dialog').text()).not.toContain('Reading'))
     }
 
+    it('disables its buttons while the clipboard is being read', async () => {
+      let answer: (text: string) => void = () => {}
+      Object.defineProperty(navigator, 'clipboard', { value: { readText: () => new Promise<string>((resolve) => (answer = resolve)) }, configurable: true })
+      const menu = await open()
+      await entry(menu).trigger('click')
+
+      await dialogButton(menu, 'Paste').trigger('click')
+
+      expect(menu.find('dialog').text()).toContain('Reading the transfer code…')
+      expect(menu.findAll('dialog button').every((b) => b.attributes('disabled') !== undefined)).toBe(true)
+      answer('hello')
+      await vi.waitFor(() => expect(menu.find('dialog').text()).toContain('That isn’t a transfer code.'))
+    })
+
     it('is an entry in the menu that opens a dialog with a Paste button and Cancel', async () => {
       const menu = await open()
 
@@ -218,8 +232,10 @@ describe('SettingsMenu', () => {
 
       expect(menu.find('dialog').text()).toContain('2 results')
       expect(menu.find('dialog').text()).toContain('Game in progress: Hard')
-      expect(menu.find('dialog').text()).toContain('Settings: System (English), Dark theme')
+      expect(menu.find('dialog').text()).toContain('Settings: System (English), Dark theme, matching numbers highlighted')
       expect(menu.findAll('dialog button').map((b) => b.text())).toEqual(['Cancel', 'Bring over'])
+      // On Cancel, so a second Enter after Paste can't bring it over unread.
+      expect(document.activeElement).toBe(dialogButton(menu, 'Cancel').element)
       expect(useResultsStore().results).toHaveLength(0)
       expect(useGameStore().isValid()).toBe(false)
     })
@@ -236,20 +252,23 @@ describe('SettingsMenu', () => {
       expect(useSettingsStore().theme).toBe('dark')
       expect(useGameStore().difficulty).toBe('hard')
       expect(useGameStore().isValid()).toBe(true)
-      expect(menu.find('dialog').text()).toContain('2 results came over, and your Hard game is on the board.')
+      expect(menu.find('dialog').text()).toContain('2 new results and your settings came over, and your Hard game is on the grid.')
       expect(menu.findAll('dialog button').map((b) => b.text())).toEqual(['OK'])
     })
 
     it('adds no result twice when the same code is brought over twice', async () => {
       clipboardHolds(await hardGameCode())
       const menu = await open()
+      const said: string[] = []
       for (let n = 0; n < 2; n++) {
         await paste(menu)
         await dialogButton(menu, 'Bring over').trigger('click')
+        said.push(menu.find('dialog p').text())
         await dialogButton(menu, 'OK').trigger('click')
         await menu.vm.$nextTick()
       }
 
+      expect(said[1]).toBe('0 new results and your settings came over, and your Hard game is on the grid.')
       // The second time, the game the first brought over has a placed digit, so it is recorded as Abandoned, once.
       const outcomes = useResultsStore().results.map((r) => r.outcome)
       expect(outcomes.filter((o) => o === 'completed')).toHaveLength(2)
@@ -296,6 +315,7 @@ describe('SettingsMenu', () => {
 
       expect(menu.find('dialog').text()).toContain(message)
       expect(menu.findAll('dialog button').map((b) => b.text())).toEqual(['Cancel', 'Paste'])
+      expect(document.activeElement).toBe(dialogButton(menu, 'Paste').element)
     })
 
     it.each([
@@ -325,7 +345,7 @@ describe('SettingsMenu', () => {
       await dialogButton(menu, 'Bring over').trigger('click')
 
       expect(reload).not.toHaveBeenCalled()
-      expect(menu.find('dialog').text()).toContain('1 Ergebnis übernommen')
+      expect(menu.find('dialog').text()).toContain('1 neues Ergebnis und deine Einstellungen übernommen')
       await dialogButton(menu, 'OK').trigger('click')
       await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce())
     })

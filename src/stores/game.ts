@@ -131,6 +131,9 @@ export const useGameStore = defineStore(
     /** True once the player has placed a digit or written a note: what a new game would throw away. */
     const hasProgress = computed(() => hasPlacedDigit.value || notes.value.some((n) => n !== 0))
 
+    /** True when replacing the game now would record it as abandoned: it is unsolved and has a placed digit. */
+    const wouldAbandon = computed(() => isValid() && !completed.value && hasPlacedDigit.value)
+
     function recordResult(outcome: Outcome) {
       const empties = puzzle.value.filter((v) => v === 0).length
       const correct = values.value.filter((v, i) => puzzle.value[i] === 0 && v === solution.value[i]).length
@@ -160,7 +163,7 @@ export const useGameStore = defineStore(
       loading.value = true
       try {
         const pick = await pickFromBank(level, bankUsed.value[level] ?? [], familyPlayed.value[level] ?? {})
-        if (recordAbandoned && isValid() && !completed.value && hasPlacedDigit.value) recordResult('abandoned')
+        if (recordAbandoned) abandon()
         bankUsed.value[level] = pick.restarted ? [pick.index] : [...(bankUsed.value[level] ?? []), pick.index]
         // Strictly increasing, so two games in the same millisecond still order correctly.
         const plays = familyPlayed.value[level] ?? {}
@@ -314,27 +317,38 @@ export const useGameStore = defineStore(
       notesMode, keyTechniqueRevealed, nextStepsShown, rating, bankUsed, familyPlayed,
     }
 
-    /** The game as a plain copy of what is persisted, or null when there is no game in progress: none dealt yet, or solved. */
+    /**
+     * The game as a plain copy of what is persisted, or null when no game is in progress: none dealt yet, solved,
+     * or dealt with no digit or note placed yet.
+     */
     function inProgress(): Record<string, unknown> | null {
-      if (!isValid() || completed.value) return null
+      if (!isValid() || completed.value || !hasProgress.value) return null
       return Object.fromEntries(Object.entries(persisted).map(([key, ref]) => [key, JSON.parse(JSON.stringify(ref.value))]))
     }
 
-    /** Takes over a game from `inProgress`, keeping the current one and returning false when it isn't a game the app can resume. */
+    function assign(state: Record<string, unknown>) {
+      for (const [key, ref] of Object.entries(persisted)) if (key in state) (ref as { value: unknown }).value = state[key]
+    }
+
+    /**
+     * Takes over a game from `inProgress`. The current game is recorded as abandoned only once the incoming one
+     * proves to be a game the app can resume; otherwise nothing changes and it returns false.
+     */
     function adopt(incoming: Record<string, unknown>) {
-      const before = Object.entries(persisted).map(([key, ref]) => [key, ref.value] as const)
-      for (const [key, ref] of Object.entries(persisted)) if (key in incoming) (ref as { value: unknown }).value = incoming[key]
-      if (!isValid()) {
-        for (const [key, value] of before) (persisted[key as keyof typeof persisted] as { value: unknown }).value = value
-        return false
-      }
+      const before = Object.fromEntries(Object.entries(persisted).map(([key, ref]) => [key, ref.value]))
+      assign(incoming)
+      const valid = isValid()
+      assign(before)
+      if (!valid) return false
+      abandon()
+      assign(incoming)
       newlyComplete.value = null
       return true
     }
 
-    /** Records the game as abandoned when it has a placed digit and isn't solved: the same record `newGame` makes. */
+    /** Records the game as abandoned when replacing it would (`wouldAbandon`). */
     function abandon() {
-      if (isValid() && !completed.value && hasPlacedDigit.value) recordResult('abandoned')
+      if (wouldAbandon.value) recordResult('abandoned')
     }
 
     /**
@@ -417,7 +431,7 @@ export const useGameStore = defineStore(
       showNextStep,
       tick,
       isValid,
-      hasPlacedDigit,
+      wouldAbandon,
       inProgress,
       adopt,
       abandon,
