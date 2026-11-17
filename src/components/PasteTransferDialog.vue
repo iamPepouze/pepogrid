@@ -23,7 +23,7 @@ type Step =
   | { kind: 'ready' }
   | { kind: 'reading' }
   | { kind: 'summary'; snapshot: TransferSnapshot<GameResult> }
-  | ({ kind: 'done' } & BroughtOver)
+  | ({ kind: 'done'; total: number } & BroughtOver)
   | { kind: 'error'; failure: PasteFailure }
 
 /**
@@ -69,7 +69,7 @@ const content = computed(() => {
   if (s.kind === 'summary') return { title: paste.value.summaryTitle, message: paste.value.summaryIntro, confirmLabel: paste.value.bringOver, cancelLabel: cancel }
   if (s.kind === 'done') {
     const difficulty = s.gameDifficulty && t.value.difficulty[s.gameDifficulty]
-    return { title: paste.value.doneTitle, message: paste.value.done(s.newResults, difficulty), confirmLabel: t.value.common.ok }
+    return { title: paste.value.doneTitle, message: paste.value.done(s.newResults, s.total, difficulty), confirmLabel: t.value.common.ok }
   }
   const message = s.kind === 'ready' ? paste.value.ready : s.kind === 'reading' ? paste.value.reading : paste.value[FAILURE_MESSAGES[s.failure]]
   return { title: paste.value.title, message, confirmLabel: paste.value.paste, cancelLabel: cancel, busy: s.kind === 'reading' }
@@ -78,7 +78,11 @@ const content = computed(() => {
 /** Reads the clipboard, then puts focus where the next move is: Cancel on the summary, so a second Enter can't bring it over unread; Paste after an error. */
 async function read() {
   goTo({ kind: 'reading' })
-  const result = await pasteTransferCode()
+  const reading = pasteTransferCode()
+  // Paste is disabled while it reads, which would drop focus from it: Cancel, the way out, takes it.
+  await nextTick()
+  dialog.value?.focusPrimary()
+  const result = await reading
   // Cancelled while the clipboard was read: the dialog is gone.
   if (closed) return
   goTo(result.snapshot ? { kind: 'summary', snapshot: result.snapshot } : { kind: 'error', failure: result.failure })
@@ -93,7 +97,7 @@ async function onClose(confirmed: boolean) {
   if (s.kind === 'done') return close(s.languageChanged)
   if (!confirmed) return close(false)
   if (s.kind === 'summary') {
-    goTo({ kind: 'done', ...bringOver(s.snapshot) })
+    goTo({ kind: 'done', total: s.snapshot.results.length, ...bringOver(s.snapshot) })
     // The Cancel button is gone, and focus with it.
     await nextTick()
     dialog.value?.focusPrimary()

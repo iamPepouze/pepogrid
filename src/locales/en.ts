@@ -183,9 +183,15 @@ export const en = {
       abandonWarning: (difficulty: string) => `Your current ${difficulty} game will be recorded as Abandoned.`,
       bringOver: 'Bring over',
       doneTitle: 'Brought over',
-      /** What came over: `n` results that weren't here yet, the settings, and the difficulty of the game now on the grid if one came. */
-      done: (n: number, difficulty: string | null) =>
-        `Your settings came over, with ${n ? `${n} new ${n === 1 ? 'result' : 'results'}` : 'no new results'}.${difficulty ? ` Your ${difficulty} game is on the grid.` : ''}`,
+      /**
+       * What came over: `n` results that weren't here yet, out of the code's `total`, the settings, and the difficulty
+       * of the game now on the grid if one came. With none new, it says the code's results were already here.
+       */
+      done: (n: number, total: number, difficulty: string | null) =>
+        (n
+          ? `${n} new ${n === 1 ? 'result' : 'results'} and your settings came over.`
+          : `Your settings came over.${total ? ` ${total === 1 ? 'The result was' : `The ${total} results were`} already here.` : ''}`) +
+        (difficulty ? ` Your ${difficulty} game is on the grid.` : ''),
       notCode: 'That isn’t a transfer code. Copy it again on the old address, then tap Paste.',
       newer: 'This transfer code is from a newer version of PepoGrid. Update the app, then tap Paste again.',
       unreadable: 'PepoGrid couldn’t read the clipboard. Copy the transfer code again on the old address, then tap Paste.',

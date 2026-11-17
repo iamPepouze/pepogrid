@@ -168,8 +168,11 @@ export const de: Messages = {
       abandonWarning: (difficulty) => `Dein laufendes Spiel (${difficulty}) wird als abgebrochen gespeichert.`,
       bringOver: 'Übernehmen',
       doneTitle: 'Übernommen',
-      done: (n, difficulty) =>
-        `Deine Einstellungen wurden übernommen, mit ${n ? `${n} ${n === 1 ? 'neuen Ergebnis' : 'neuen Ergebnissen'}` : 'keinen neuen Ergebnissen'}.${difficulty ? ` Dein Spiel (${difficulty}) liegt auf dem Gitter.` : ''}`,
+      done: (n, total, difficulty) =>
+        (n
+          ? `${n} ${n === 1 ? 'neues Ergebnis' : 'neue Ergebnisse'} und deine Einstellungen wurden übernommen.`
+          : `Deine Einstellungen wurden übernommen.${total ? ` ${total === 1 ? 'Das Ergebnis war' : `Die ${total} Ergebnisse waren`} schon da.` : ''}`) +
+        (difficulty ? ` Dein Spiel (${difficulty}) liegt auf dem Gitter.` : ''),
       notCode: 'Das ist kein Übertragungscode. Kopiere ihn erneut auf der alten Adresse und tippe dann auf Einfügen.',
       newer: 'Dieser Übertragungscode stammt von einer neueren Version von PepoGrid. Aktualisiere die App und tippe dann erneut auf Einfügen.',
       unreadable: 'PepoGrid konnte die Zwischenablage nicht lesen. Kopiere den Übertragungscode erneut auf der alten Adresse und tippe dann auf Einfügen.',

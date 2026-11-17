@@ -227,6 +227,9 @@ describe('SettingsMenu', () => {
       expect(menu.find('dialog').text()).toContain('Reading the transfer code…')
       expect(dialogButton(menu, 'Paste').attributes('disabled')).toBeDefined()
       expect(dialogButton(menu, 'Cancel').attributes('disabled')).toBeUndefined()
+      // Paste, now disabled, can't keep focus: Cancel takes it.
+      await flushPromises()
+      expect(document.activeElement).toBe(dialogButton(menu, 'Cancel').element)
       answer('hello')
       await vi.waitFor(() => expect(menu.find('dialog').text()).toContain('That isn’t a transfer code.'))
     })
@@ -253,7 +256,7 @@ describe('SettingsMenu', () => {
       clock.mockReturnValue(5_000_000)
 
       await dialogButton(menu, 'Bring over').trigger('click')
-      expect(menu.find('dialog').text()).toContain('Your settings came over')
+      expect(menu.find('dialog').text()).toContain('your settings came over')
       await dialogButton(menu, 'OK').trigger('click')
 
       expect(menu.find('dialog').exists()).toBe(true)
@@ -314,7 +317,7 @@ describe('SettingsMenu', () => {
       expect(useSettingsStore().theme).toBe('dark')
       expect(useGameStore().difficulty).toBe('hard')
       expect(useGameStore().isValid()).toBe(true)
-      expect(menu.find('dialog').text()).toContain('Your settings came over, with 2 new results. Your Hard game is on the grid.')
+      expect(menu.find('dialog').text()).toContain('2 new results and your settings came over. Your Hard game is on the grid.')
       expect(menu.findAll('dialog button').map((b) => b.text())).toEqual(['OK'])
     })
 
@@ -330,7 +333,7 @@ describe('SettingsMenu', () => {
         await menu.vm.$nextTick()
       }
 
-      expect(said[1]).toBe('Your settings came over, with no new results. Your Hard game is on the grid.')
+      expect(said[1]).toBe('Your settings came over. The 2 results were already here. Your Hard game is on the grid.')
       // The second time, the game the first brought over has a placed digit, so it is recorded as Abandoned, once.
       const outcomes = useResultsStore().results.map((r) => r.outcome)
       expect(outcomes.filter((o) => o === 'completed')).toHaveLength(2)
@@ -407,7 +410,7 @@ describe('SettingsMenu', () => {
       await dialogButton(menu, 'Bring over').trigger('click')
 
       expect(reload).not.toHaveBeenCalled()
-      expect(menu.find('dialog').text()).toContain('Deine Einstellungen wurden übernommen, mit 1 neuen Ergebnis.')
+      expect(menu.find('dialog').text()).toContain('1 neues Ergebnis und deine Einstellungen wurden übernommen.')
       await dialogButton(menu, 'OK').trigger('click')
       await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce())
     })

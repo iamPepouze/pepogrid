@@ -56,7 +56,7 @@ function isValidState(s: Record<string, unknown>) {
   )
 }
 
-const emptyBankUsage =(): Record<Difficulty, number[]> => ({ easy: [], medium: [], hard: [], expert: [], master: [] })
+const emptyBankUsage = ():Record<Difficulty, number[]> => ({ easy: [], medium: [], hard: [], expert: [], master: [] })
 const emptyFamilyPlays = (): Record<Difficulty, Record<string, number>> => ({ easy: {}, medium: {}, hard: {}, expert: {}, master: {} })
 
 /**
@@ -343,14 +343,16 @@ export const useGameStore = defineStore(
       return Object.fromEntries(Object.entries(persisted).map(([key, ref]) => [key, JSON.parse(JSON.stringify(ref.value))]))
     }
 
+    /** Every persisted ref's value by name, as `isValidState` checks it. */
+    const currentState = () => Object.fromEntries(Object.entries(persisted).map(([key, ref]) => [key, ref.value]))
+
     function assign(state: Record<string, unknown>) {
       for (const [key, ref] of Object.entries(persisted)) if (key in state) (ref as { value: unknown }).value = state[key]
     }
 
     /** True when `adopt` would take over `incoming`: with the current game's fields filling any it lacks, it is a game the app can resume. */
     function canAdopt(incoming: Record<string, unknown>) {
-      const current = Object.fromEntries(Object.entries(persisted).map(([key, ref]) => [key, ref.value]))
-      return isValidState({ ...current, ...incoming })
+      return isValidState({ ...currentState(), ...incoming })
     }
 
     /**
@@ -395,11 +397,7 @@ export const useGameStore = defineStore(
 
     /** True when hydrated state is complete and consistent. */
     function isValid() {
-      return isValidState({
-        difficulty: difficulty.value, puzzle: puzzle.value, solution: solution.value, values: values.value, notes: notes.value,
-        mistakes: mistakes.value, elapsed: elapsed.value, completed: completed.value, keyTechniqueRevealed: keyTechniqueRevealed.value,
-        nextStepsShown: nextStepsShown.value, history: history.value, rating: rating.value, selected: selected.value,
-      })
+      return isValidState(currentState())
     }
 
     return {
