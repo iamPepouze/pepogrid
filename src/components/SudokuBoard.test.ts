@@ -2,6 +2,7 @@
 import { enableAutoUnmount, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { bit } from '../lib/grid'
 import { colOf, rowOf } from '../lib/sudoku'
 import { useGameStore } from '../stores/game'
 import { useSettingsStore } from '../stores/settings'
@@ -216,12 +217,14 @@ describe('SudokuBoard', () => {
     await game.newGame('easy')
     const given = game.puzzle.findIndex((v) => v !== 0)
     const d = game.puzzle[given]
-    const empty = game.puzzle.findIndex((v) => v === 0)
-    game.notes[empty] = (1 << (d - 1)) | (1 << (d % 9))
+    const [empty, without] = game.puzzle.flatMap((v, i) => (v === 0 ? [i] : []))
+    game.notes[empty] = bit(d) | bit((d % 9) + 1)
+    game.notes[without] = bit((d % 9) + 1)
     game.select(given)
     const board = mountBoard()
-    const marked = () => board.findAll('.cell')[empty].findAll('.note.match').map((n) => n.text())
+    const marked = () => board.findAll('.note-match').map((n) => n.text())
 
+    // Only the note that is written is marked: a cell without it shows no square in its spot.
     expect(marked()).toEqual([String(d)])
 
     useSettingsStore().highlightMatching = false

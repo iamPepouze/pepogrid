@@ -37,7 +37,7 @@ function labelOf(cell: LessonCell, i: number) {
         <span
           v-for="d in 9"
           :key="d"
-          :class="{ marked: cell.marked & bit(d), struck: cell.struck & bit(d) }"
+          :class="{ 'note-match': cell.marked & bit(d), struck: cell.struck & bit(d) }"
         >{{ cell.candidates & bit(d) ? d : '' }}</span>
       </span>
     </div>
@@ -90,15 +90,6 @@ function labelOf(cell: LessonCell, i: number) {
   line-height: 1;
   text-align: center;
   align-items: center;
-}
-
-/* The same square as a matching note on the board (SudokuBoard.vue). */
-.candidates .marked {
-  margin: 1px;
-  border-radius: 2px;
-  background: var(--note-match);
-  color: var(--on-note-match);
-  font-weight: 700;
 }
 
 .candidates .struck {

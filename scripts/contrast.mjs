@@ -54,8 +54,6 @@ const PAIRS = [
   ['--on-note-match', '--note-match', TEXT, 'a matching note'],
   // A faded lesson cell draws in --muted. It is never highlighted (sudoku.test.ts), so --selected isn't its background.
   ['--muted', '--cell', TEXT, 'a faded lesson cell'],
-  ['--accent-text', '--cell', TEXT, "a lesson's marked candidate"],
-  ['--accent-text', '--selected', TEXT, "a lesson's marked candidate"],
   // Chrome text.
   ['--text', '--page', TEXT, 'body text'],
   ['--text', '--button-bg', TEXT, 'a button or card'],

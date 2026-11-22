@@ -231,6 +231,10 @@ describe('key technique lessons', () => {
             for (const i of step.highlight ?? []) expect(step.focus, `${at}: highlighted cell ${i} is drawn faded`).toContain(i)
             // A faded cell's marked candidates and placed digit would keep full colour, so the pattern wouldn't recede.
             for (const [i] of [...(step.marks ?? []), ...(step.placement ? [step.placement] : [])]) expect(step.focus, `${at}: cell ${i} is marked or placed but drawn faded`).toContain(i)
+            // A marked candidate's square is only checked for contrast on --selected (and --cell), so its cell is highlighted.
+            for (const [i] of step.marks ?? []) expect(grid[i].highlighted, `${at}: marked cell ${i} isn't highlighted`).toBe(true)
+            // A struck candidate's red would sit on a marked one's square.
+            for (const [i, d] of step.marks ?? []) expect(step.eliminations ?? [], `${at}: ${d} at ${i} is both marked and struck`).not.toContainEqual([i, d])
             for (const [i, d] of step.eliminations ?? []) expect(d, `${at}: eliminates the solution at ${i}`).not.toBe(solution[i])
             if (step.placement) expect(step.placement[1], `${at}: places a wrong digit`).toBe(solution[step.placement[0]])
           })

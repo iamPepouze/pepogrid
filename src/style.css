@@ -182,6 +182,22 @@ button.surface:disabled {
   border-bottom: 0;
 }
 
+/*
+ * A note of the selected digit on the board, or a lesson's marked candidate: a square filling the note's
+ * spot, so shape and weight say it as well as colour (U13). The note's grid sets the plain note colour.
+ */
+.note-match {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  margin: 1px;
+  border-radius: 2px;
+  background: var(--note-match);
+  color: var(--on-note-match);
+  font-weight: 700;
+}
+
 /* A view that stands in for the game (Statistics, the key technique): a column under a heading. */
 .view {
   display: flex;
