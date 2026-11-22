@@ -61,7 +61,7 @@ describe('SudokuBoard', () => {
     const given = game.puzzle.findIndex((v) => v !== 0)
     const empty = game.puzzle.findIndex((v) => v === 0)
     // A different cell: the right digit can complete a unit and lock its cell.
-    const right = game.puzzle.findLastIndex((v) => v === 0)
+    const right = game.puzzle.lastIndexOf(0)
 
     game.select(right)
     game.input(game.solution[right])
