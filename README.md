@@ -105,7 +105,7 @@ npm run preview    # serve the production build to test the PWA locally
 
 Each test draws its random puzzles from a fresh seed. A failing test's error ends with `Replay this test with TEST_SEED=<n>`; replay it with the same puzzles by running `TEST_SEED=<n> npm test` in Bash, or `$env:TEST_SEED=<n>; npm test` in PowerShell. A test that passes only for some puzzles is caught by [scripts/test-seeds.sh](scripts/test-seeds.sh), which reruns the tests related to files changed since `origin/main` under seeds 1–20 (`bash scripts/test-seeds.sh`, about 40 seconds).
 
-`git config core.hooksPath .githooks` (once per clone) turns on [.githooks/pre-push](.githooks/pre-push), which runs `npm run typecheck` and `scripts/test-seeds.sh` before a push, unless the branch changes only Markdown, `docs/` and `.claude/`.
+`git config core.hooksPath .githooks` (once per clone) turns on [.githooks/pre-push](.githooks/pre-push), which runs `npm run typecheck` and `scripts/test-seeds.sh` before a push (its header says when it skips).
 
 If a script fails because `vitest`, `vue-tsc` or `eslint` is "not recognized" or "not found", `node_modules` is likely incomplete: run `npm ci` to reinstall it from the lockfile.
 

@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# Runs CI's typecheck and fixed-seed test rerun before a push, so a red `check` shows here instead
-# of a CI round later. Enabled per clone with `git config core.hooksPath .githooks`.
-# Skipped when the branch changes only Markdown, docs/ and .claude/, which neither check reads.
+# Runs the typecheck `npm run build` starts with and the fixed-seed test rerun, the parts of CI's
+# `check` a local `npm test` leaves out, so a red `check` shows here instead of a CI round later.
+# Enabled per clone with `git config core.hooksPath .githooks`. It checks the checked-out branch,
+# whatever is pushed, and skips a branch whose changes since origin/main are all Markdown.
 set -euo pipefail
 
 base=origin/main
-if ! git diff --name-only "$base...HEAD" | grep -qvE '(\.md$|^docs/|^\.claude/)'; then
+changed=$(git diff --name-only "$base...HEAD")
+if [ -z "$(grep -v '\.md$' <<<"$changed")" ]; then
   exit 0
 fi
 
