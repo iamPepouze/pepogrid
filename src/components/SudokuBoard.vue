@@ -227,7 +227,8 @@ function cellLabel(i: number) {
   left: 50%;
   width: 0.6em;
   height: max(2px, 0.08em);
-  margin: 0.1em 0 0 -0.3em;
+  margin-top: 0.1em;
+  transform: translateX(-50%);
   background: var(--wrong-digit);
 }
 

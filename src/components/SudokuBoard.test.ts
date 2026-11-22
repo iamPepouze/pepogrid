@@ -67,7 +67,16 @@ describe('SudokuBoard', () => {
     expect(cell(given).classes()).not.toContain('wrong')
     expect(cell(empty).classes()).not.toContain('wrong')
 
+    // The next digit round from the solution's is never the solution's.
     game.input(game.solution[empty] % 9 + 1)
+    await board.vm.$nextTick()
+    expect(cell(empty).classes()).toContain('wrong')
+
+    game.erase()
+    await board.vm.$nextTick()
+    expect(cell(empty).classes()).not.toContain('wrong')
+
+    game.undo()
     await board.vm.$nextTick()
     expect(cell(empty).classes()).toContain('wrong')
 
