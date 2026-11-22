@@ -62,7 +62,8 @@ If the spec is missing, skip the Spec sub-agent and note this in the final repor
 - The diff command and commit list.
 - The path or fetched contents of the spec, if there is one.
 - The absolute paths of [UX_STANDARDS.md](../../../UX_STANDARDS.md) and of the [ux](../ux/SKILL.md) skill.
-- The brief: "Follow the ux skill's **Review** mode."
+- The brief: "Follow the ux skill's **Review** mode.", as written: which states to screenshot is that mode's call.
+- On a re-review, the previous UX report's driving script and sheet paths, so it re-runs only the opens the fix touches, with `--only`.
 
 It runs when the diff touches what players see: `src/` (except tests), `index.html`, `public/` or `icons/`. Add it for any other change players would notice (wording in `GLOSSARY.md`, say); never drop it when those paths changed. Otherwise skip it.
 

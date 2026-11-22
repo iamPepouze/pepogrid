@@ -26,6 +26,8 @@ export function only(label) {
 
 /** Characters of a focused element's name that `focused()` keeps. */
 const FOCUS_TEXT_MAX = 40
+/** How long `lesson()` waits for the key technique's first-look dialog, which a later open skips. */
+const FIRST_LOOK_WAIT_MS = 1000
 
 let resultCount = 0
 
@@ -158,6 +160,40 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
     cell: (i) => page.locator('.cell').nth(i),
     /** Number pad button for digit `d` (1-9). */
     pad: (d) => page.locator('.pad .digit').nth(d - 1),
+    /** Selects the first cell holding digit `d`, so its matching numbers and notes show; throws when none does. */
+    select: async (d) => {
+      const i = (await readSave(page)).values.indexOf(d)
+      if (i < 0) throw new Error(`no cell holds ${d}`)
+      await page.locator('.cell').nth(i).click()
+    },
+    /**
+     * From the game, opens the key technique on its Next step tab, confirming the first look, and returns the
+     * opened section's first lesson example: `example` (its locator, to screenshot), `grid` (its lesson grid)
+     * and `step(n)`, which steps forward to step `n` (from 1) and waits for its counter. Call `position(name)`
+     * first to pick the lesson; the example is the lesson's own, not drawn on that position. Throws when the
+     * next technique has no lesson (`unique-rectangle-1`).
+     */
+    lesson: async () => {
+      await page.locator('.controls .technique').click()
+      const confirm = page.locator('dialog[open] .button.primary')
+      if (await confirm.waitFor({ timeout: FIRST_LOOK_WAIT_MS }).then(() => true, () => false)) await confirm.click()
+      await page.locator('.key-technique').waitFor()
+      const example = page.locator('.lesson-example').first()
+      if (!(await example.count())) throw new Error('the next technique has no lesson example')
+      const next = example.locator('.stepper button').last()
+      const counter = example.locator('.stepper .counter')
+      return {
+        example,
+        grid: example.locator('.lesson-grid'),
+        step: async (n) => {
+          for (let s = Number((await counter.textContent()).match(/\d+/)[0]); s < n; s++) {
+            if (await next.isDisabled()) throw new Error(`the example has no step ${n}`)
+            await next.click()
+            await page.waitForFunction(([el, want]) => el.textContent.match(/\d+/)[0] === String(want), [await counter.elementHandle(), s + 1])
+          }
+        },
+      }
+    },
     /**
      * The focused element by its aria-label, or its text when the label is missing or blank (aria-labelledby is not followed):
      * `button "Back"`, `button[role=tab] "Hardest"`, `div[role=grid] "Sudoku board"`, or `body` (focus lost). The name is cut at FOCUS_TEXT_MAX.
@@ -173,7 +209,9 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
     /**
      * Text cut off or spilling: every button whose content is wider than it or that passes the viewport's
      * edge, and every other element holding its own text that is wider than its own box (it spills into
-     * its neighbour) or runs past its card (`.card`, `.surface`) or the viewport.
+     * its neighbour) or runs past its card (`.card`, `.surface`) or the viewport. Inside a lesson grid's cell
+     * (`.grid-cell`; the board's cells are buttons, checked only for width), text taller than its box, or past
+     * the cell's bottom, counts too: it spills into the cell below.
      */
     clipped: () =>
       page.evaluate(() => {
@@ -186,9 +224,12 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
         const text = [...document.querySelectorAll('body *:not(button, button *)')].filter((el) => {
           if (!el.checkVisibility() || ![...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim())) return false
           // An inline element has no box width of its own to spill out of.
-          const spills = getComputedStyle(el).display !== 'inline' && el.scrollWidth > el.clientWidth + 1
+          const boxed = getComputedStyle(el).display !== 'inline'
+          const spills = boxed && el.scrollWidth > el.clientWidth + 1
           const card = el.closest('.card, .surface')
-          return spills || past(el, card ? card.getBoundingClientRect() : viewport)
+          const cell = el.closest('.grid-cell')
+          const below = cell && ((boxed && el.scrollHeight > el.clientHeight + 1) || el.getBoundingClientRect().bottom > cell.getBoundingClientRect().bottom + 0.5)
+          return spills || below || past(el, card ? card.getBoundingClientRect() : viewport)
         })
         return [...buttons, ...text].map((el) => el.textContent.trim())
       }),
