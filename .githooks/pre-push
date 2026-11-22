@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Runs the typecheck `npm run build` starts with and the fixed-seed test rerun, the parts of CI's
-# `check` a local `npm test` leaves out, so a red `check` shows here instead of a CI round later.
+# Runs two parts of CI's `check` that a local `npm test` leaves out, the typecheck `npm run build`
+# starts with and the fixed-seed test rerun, so they go red here instead of a CI round later.
 # Enabled per clone with `git config core.hooksPath .githooks`. It checks the checked-out branch,
 # whatever is pushed, and skips a branch whose changes since origin/main are all Markdown.
 set -euo pipefail

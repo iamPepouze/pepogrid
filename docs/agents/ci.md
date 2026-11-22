@@ -20,7 +20,7 @@ How changes reach `main`, and how to wait on CI from this machine.
 
 ## Before a push
 
-[.githooks/pre-push](../../.githooks/pre-push) runs `npm run typecheck` and `scripts/test-seeds.sh`, the parts of `check` a local `npm test` leaves out (its header says when it skips). It needs `git config core.hooksPath .githooks` once per clone.
+[.githooks/pre-push](../../.githooks/pre-push) runs `npm run typecheck` and `scripts/test-seeds.sh`, two parts of `check` that a local `npm test` leaves out (its header says when it skips). It needs `git config core.hooksPath .githooks` once per clone.
 
 ## Waiting on a run
 
