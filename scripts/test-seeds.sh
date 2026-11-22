@@ -9,6 +9,12 @@ SEEDS=20
 
 base=${1:-origin/main}
 
+# Git Bash on Windows hands Node a lowercase drive letter (c:\...), and Vitest then fails every file
+# with "failed to find the runner". Its Windows path (C:\...) works.
+if command -v cygpath >/dev/null; then
+  cd "$(cygpath -w "$PWD")"
+fi
+
 for seed in $(seq "$SEEDS"); do
   if ! out=$(TEST_SEED=$seed npx vitest run --changed "$base" --passWithNoTests 2>&1); then
     echo "$out"

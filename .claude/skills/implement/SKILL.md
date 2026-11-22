@@ -11,7 +11,7 @@ If the user passes a ticket reference, fetch it from the issue tracker and state
 
 Call the Skill tool with "tdd" where possible, at pre-agreed seams.
 
-Run typechecking regularly, single test files regularly, and the full test suite once at the end.
+Run `npm run typecheck` and single test files regularly. At the end, after the last code change, run `npm run typecheck`, `npm test` and `scripts/test-seeds.sh`.
 
 Once done, call the Skill tool with "code-review" to review the work.
 
