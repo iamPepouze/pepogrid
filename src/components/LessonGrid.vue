@@ -92,8 +92,12 @@ function labelOf(cell: LessonCell, i: number) {
   align-items: center;
 }
 
+/* The same square as a matching note on the board (SudokuBoard.vue). */
 .candidates .marked {
-  color: var(--accent-text);
+  margin: 1px;
+  border-radius: 2px;
+  background: var(--note-match);
+  color: var(--on-note-match);
   font-weight: 700;
 }
 

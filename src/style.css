@@ -9,6 +9,8 @@
   --user-digit: #135cb2;
   --wrong-digit: #b32626;
   --note: #5d5d5d;
+  --note-match: #135cb2;
+  --on-note-match: #ffffff;
   --selected: #bbdefb;
   --peer: #e8f1fb;
   --same-digit: #d3e6f8;
@@ -48,6 +50,8 @@
     --user-digit: #76bef8;
     --wrong-digit: #ff9a9a;
     --note: #b8b8b8;
+    --note-match: #76bef8;
+    --on-note-match: #1e1e1e;
     --selected: #1f4a73;
     --peer: #26303b;
     --same-digit: #233c55;
@@ -76,6 +80,8 @@
   --user-digit: #76bef8;
   --wrong-digit: #ff9a9a;
   --note: #b8b8b8;
+  --note-match: #76bef8;
+  --on-note-match: #1e1e1e;
   --selected: #1f4a73;
   --peer: #26303b;
   --same-digit: #233c55;

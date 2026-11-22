@@ -210,4 +210,22 @@ describe('SudokuBoard', () => {
       vi.useRealTimers()
     }
   })
+
+  it('marks the notes of the selected digit, unless matching numbers are not highlighted', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const given = game.puzzle.findIndex((v) => v !== 0)
+    const d = game.puzzle[given]
+    const empty = game.puzzle.findIndex((v) => v === 0)
+    game.notes[empty] = (1 << (d - 1)) | (1 << (d % 9))
+    game.select(given)
+    const board = mountBoard()
+    const marked = () => board.findAll('.cell')[empty].findAll('.note.match').map((n) => n.text())
+
+    expect(marked()).toEqual([String(d)])
+
+    useSettingsStore().highlightMatching = false
+    await board.vm.$nextTick()
+    expect(marked()).toEqual([])
+  })
 })

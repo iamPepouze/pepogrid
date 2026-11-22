@@ -121,7 +121,7 @@ _Avoid_: Guide, tutorial
 _French_: Leçon · _German_: Lektion
 
 **Matching-number highlight**:
-An optional tint on every cell holding the digit of the selected cell.
+An optional mark on every cell holding the digit of the selected cell, and on every note of that digit.
 _French_: Surligner les chiffres identiques · _German_: Gleiche Ziffern hervorheben
 
 **Complete digit**:

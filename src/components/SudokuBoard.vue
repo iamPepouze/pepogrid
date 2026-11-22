@@ -314,8 +314,12 @@ function cellLabel(i: number) {
   font-size: calc(var(--size) / 9 * 0.26);
   line-height: 1;
 }
+/* A note of the selected digit sits on a square: shape and weight say it, not colour alone (U13). */
 .note.match {
-  color: var(--user-digit);
+  margin: 1px;
+  border-radius: 2px;
+  background: var(--note-match);
+  color: var(--on-note-match);
   font-weight: 700;
 }
 </style>

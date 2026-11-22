@@ -49,6 +49,9 @@ const PAIRS = [
   ]),
   // Notes sit only in empty cells, which are never tinted as the same digit or as a clash.
   ...['--cell', '--peer', '--selected'].map((bg) => ['--note', bg, TEXT, 'a note']),
+  // A note of the selected digit sits on a square (--note-match) in an empty cell, or in a lesson's highlighted cell.
+  ...['--cell', '--peer', '--selected'].map((bg) => ['--note-match', bg, UI, 'the square behind a matching note']),
+  ['--on-note-match', '--note-match', TEXT, 'a matching note'],
   // A faded lesson cell draws in --muted. It is never highlighted (sudoku.test.ts), so --selected isn't its background.
   ['--muted', '--cell', TEXT, 'a faded lesson cell'],
   ['--accent-text', '--cell', TEXT, "a lesson's marked candidate"],
