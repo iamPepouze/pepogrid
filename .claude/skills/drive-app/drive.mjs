@@ -26,6 +26,8 @@ export function only(label) {
 
 /** Characters of a focused element's name that `focused()` keeps. */
 const FOCUS_TEXT_MAX = 40
+/** How long `lesson()` waits for the key technique's first-look dialog, which a later open skips. */
+const FIRST_LOOK_WAIT_MS = 1000
 
 let resultCount = 0
 
@@ -165,16 +167,19 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
       await page.locator('.cell').nth(i).click()
     },
     /**
-     * Opens the key technique on its Next step tab, confirming the first look, and returns its first lesson
-     * example: `example` (its locator, to screenshot), `grid` (its lesson grid) and `step(n)`, which steps
-     * forward to step `n` (from 1) and waits for its counter. Call `position(name)` first to pick the lesson.
+     * From the game, opens the key technique on its Next step tab, confirming the first look, and returns the
+     * opened section's first lesson example: `example` (its locator, to screenshot), `grid` (its lesson grid)
+     * and `step(n)`, which steps forward to step `n` (from 1) and waits for its counter. Call `position(name)`
+     * first to pick the lesson; the example is the lesson's own, not drawn on that position. Throws when the
+     * next technique has no lesson (`unique-rectangle-1`).
      */
     lesson: async () => {
       await page.locator('.controls .technique').click()
       const confirm = page.locator('dialog[open] .button.primary')
-      if (await confirm.isVisible({ timeout: 1000 }).catch(() => false)) await confirm.click()
+      if (await confirm.waitFor({ timeout: FIRST_LOOK_WAIT_MS }).then(() => true, () => false)) await confirm.click()
+      await page.locator('.key-technique').waitFor()
       const example = page.locator('.lesson-example').first()
-      await example.waitFor()
+      if (!(await example.count())) throw new Error('the next technique has no lesson example')
       const next = example.locator('.stepper button').last()
       const counter = example.locator('.stepper .counter')
       return {
@@ -204,8 +209,9 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
     /**
      * Text cut off or spilling: every button whose content is wider than it or that passes the viewport's
      * edge, and every other element holding its own text that is wider than its own box (it spills into
-     * its neighbour) or runs past its card (`.card`, `.surface`) or the viewport. Inside a grid cell
-     * (`.grid-cell`), text taller than its box, or past the cell's bottom, counts too: it spills into the cell below.
+     * its neighbour) or runs past its card (`.card`, `.surface`) or the viewport. Inside a lesson grid's cell
+     * (`.grid-cell`; the board's cells are buttons, checked only for width), text taller than its box, or past
+     * the cell's bottom, counts too: it spills into the cell below.
      */
     clipped: () =>
       page.evaluate(() => {
