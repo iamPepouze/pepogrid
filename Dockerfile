@@ -3,7 +3,7 @@
 # A push to main publishes it as main-<ts>-<sha>; the Server's bump poller rolls it out in about 5 minutes
 # (traquenard-server docs/operators/pipelines.md, Image bumps).
 
-FROM node:24-alpine3.24 AS build
+FROM node:26-alpine3.24 AS build
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci
