@@ -18,6 +18,10 @@ How changes reach `main`, and how to wait on CI from this machine.
 - TypeScript major bumps are ignored while [ADR 0005](../adr/0005-typescript-pinned-to-6.md) holds. TypeScript minor and patch bumps get a PR of their own, apart from the other npm updates, because typescript-eslint's peer range can fail them.
 - Every entry sets `commit-message` to the `chore` prefix, so its PRs are titled `chore: bump …` like other PR titles. Its branch names (`dependabot/…`) stay outside the branch-name rule.
 
+## Before a push
+
+[.githooks/pre-push](../../.githooks/pre-push) runs `npm run typecheck` and `scripts/test-seeds.sh`, the two `check` steps a local `npm test` misses, unless the branch changes only Markdown, `docs/` and `.claude/`. It needs `git config core.hooksPath .githooks` once per clone.
+
 ## Waiting on a run
 
 After a push, run [scripts/ci-wait.sh](../../scripts/ci-wait.sh) in the background (`run_in_background`). It takes a commit (default `HEAD`), waits for that commit's run to appear and finish, prints each job's result, and exits non-zero unless the run passed.

@@ -39,7 +39,7 @@ jobs:
       - name: Lint workflows
         run: docker compose -f .github/lint/compose.yml run --rm actionlint -color
       - name: Lint shell scripts
-        run: docker compose -f .github/lint/compose.yml run --rm shellcheck scripts/*.sh
+        run: docker compose -f .github/lint/compose.yml run --rm shellcheck scripts/*.sh .githooks/pre-push
       - name: Validate dependabot.yml
         run: docker compose -f .github/lint/compose.yml run --rm dependabot-schema
       - uses: actions/setup-node@v7
