@@ -15,6 +15,7 @@ How changes reach `main`, and how to wait on CI from this machine.
 - Ecosystems: npm, GitHub Actions, the base images in the [Dockerfile](../../Dockerfile), the linter images CI runs, and pip for the `check-jsonschema` pin in [.github/lint/requirements.txt](../../.github/lint/requirements.txt), which validates this file in CI. Those images are pinned in [.github/lint/compose.yml](../../.github/lint/compose.yml), because Dependabot can't read tags inside `docker run` or `docker://` steps. Bump them there, not in `ci.yml`.
 - Version updates run weekly and wait 7 days after a release. Minor and patch bumps share one PR per ecosystem; each major bump gets its own.
 - Security updates are neither delayed nor grouped: one PR per vulnerable dependency.
+- A security alert that updates can't fix, on a development-only dependency whose attack needs input from someone else, is dismissed as `tolerable_risk`. The dismissal comment names the package that blocks the fix. The fix then arrives when a dependency listed in `package.json` releases with it, or through `npm update`.
 - TypeScript major bumps are ignored while [ADR 0005](../adr/0005-typescript-pinned-to-6.md) holds. TypeScript minor and patch bumps get a PR of their own, apart from the other npm updates, because typescript-eslint's peer range can fail them.
 - Every entry sets `commit-message` to the `chore` prefix, so its PRs are titled `chore: bump …` like other PR titles. Its branch names (`dependabot/…`) stay outside the branch-name rule.
 
