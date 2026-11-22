@@ -60,13 +60,16 @@ describe('SudokuBoard', () => {
     const cell = (i: number) => board.findAll('.cell')[i]
     const given = game.puzzle.findIndex((v) => v !== 0)
     const empty = game.puzzle.findIndex((v) => v === 0)
+    // A different cell: the right digit can complete a unit and lock its cell.
+    const right = game.puzzle.findLastIndex((v) => v === 0)
 
-    game.select(empty)
-    game.input(game.solution[empty])
+    game.select(right)
+    game.input(game.solution[right])
     await board.vm.$nextTick()
     expect(cell(given).classes()).not.toContain('wrong')
-    expect(cell(empty).classes()).not.toContain('wrong')
+    expect(cell(right).classes()).not.toContain('wrong')
 
+    game.select(empty)
     // The next digit round from the solution's is never the solution's.
     game.input(game.solution[empty] % 9 + 1)
     await board.vm.$nextTick()
