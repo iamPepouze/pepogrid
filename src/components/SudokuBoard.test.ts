@@ -53,6 +53,29 @@ describe('SudokuBoard', () => {
     expect(cell(empty).attributes('aria-label')).toMatch(/: \d, falsch$/)
   })
 
+  it('marks only wrong digits, and drops the mark when the digit stops being wrong', async () => {
+    const game = useGameStore()
+    await game.newGame('easy')
+    const board = mountBoard()
+    const cell = (i: number) => board.findAll('.cell')[i]
+    const given = game.puzzle.findIndex((v) => v !== 0)
+    const empty = game.puzzle.findIndex((v) => v === 0)
+
+    game.select(empty)
+    game.input(game.solution[empty])
+    await board.vm.$nextTick()
+    expect(cell(given).classes()).not.toContain('wrong')
+    expect(cell(empty).classes()).not.toContain('wrong')
+
+    game.input(game.solution[empty] % 9 + 1)
+    await board.vm.$nextTick()
+    expect(cell(empty).classes()).toContain('wrong')
+
+    game.undo()
+    await board.vm.$nextTick()
+    expect(cell(empty).classes()).not.toContain('wrong')
+  })
+
   it('exposes nine rows of nine gridcells', async () => {
     await useGameStore().newGame('easy')
     const board = mountBoard()

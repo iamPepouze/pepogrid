@@ -219,6 +219,18 @@ function cellLabel(i: number) {
   color: var(--wrong-digit);
 }
 
+/* A short bar under a wrong digit, so a mistake shows by shape as well as colour (WCAG 1.4.1). A bar, not a strikethrough: lesson grids strike out ruled-out candidates. It sits below the digit's box and inside the selected cell's ring. */
+.cell.wrong .value::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 0.6em;
+  height: max(2px, 0.08em);
+  margin: 0.1em 0 0 -0.3em;
+  background: var(--wrong-digit);
+}
+
 .cell.glow::before {
   content: '';
   position: absolute;
