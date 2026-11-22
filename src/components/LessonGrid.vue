@@ -83,6 +83,8 @@ function labelOf(cell: LessonCell, i: number) {
 .candidates {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  /* Equal rows, as on the board, so a marked candidate's square is the same shape in every spot. */
+  grid-template-rows: repeat(3, 1fr);
   width: 100%;
   height: 100%;
   color: var(--note);
