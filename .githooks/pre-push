@@ -7,7 +7,7 @@ set -euo pipefail
 
 base=origin/main
 changed=$(git diff --name-only "$base...HEAD")
-if [ -z "$(grep -v '\.md$' <<<"$changed")" ]; then
+if [ -z "$changed" ] || ! grep -qv '\.md$' <<<"$changed"; then
   exit 0
 fi
 
