@@ -37,7 +37,7 @@ function labelOf(cell: LessonCell, i: number) {
         <span
           v-for="d in 9"
           :key="d"
-          :class="{ marked: cell.marked & bit(d), struck: cell.struck & bit(d) }"
+          :class="{ 'note-match': cell.marked & bit(d), struck: cell.struck & bit(d) }"
         >{{ cell.candidates & bit(d) ? d : '' }}</span>
       </span>
     </div>
@@ -83,6 +83,8 @@ function labelOf(cell: LessonCell, i: number) {
 .candidates {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  /* Equal rows, as on the board, so a marked candidate's square is the same shape in every spot. */
+  grid-template-rows: repeat(3, 1fr);
   width: 100%;
   height: 100%;
   color: var(--note);
@@ -90,11 +92,6 @@ function labelOf(cell: LessonCell, i: number) {
   line-height: 1;
   text-align: center;
   align-items: center;
-}
-
-.candidates .marked {
-  color: var(--accent-text);
-  font-weight: 700;
 }
 
 .candidates .struck {

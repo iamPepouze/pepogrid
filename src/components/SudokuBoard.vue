@@ -147,7 +147,7 @@ function cellLabel(i: number) {
       >
         <span v-if="game.values[i]" class="value">{{ game.values[i] }}</span>
         <span v-else-if="game.notes[i]" class="notes" aria-hidden="true">
-          <span v-for="d in 9" :key="d" class="note" :class="{ match: d === matchDigit }">{{ game.notes[i] & bit(d) ? d : '' }}</span>
+          <span v-for="d in 9" :key="d" class="note" :class="{ 'note-match': d === matchDigit && (game.notes[i] & bit(d)) !== 0 }">{{ game.notes[i] & bit(d) ? d : '' }}</span>
         </span>
       </button>
     </div>
@@ -304,18 +304,15 @@ function cellLabel(i: number) {
   width: 100%;
   height: 100%;
   padding: 2px;
+  /* On the grid rather than each note, so a matching note's shared colour (.note-match) wins. */
+  color: var(--note);
 }
 
 .note {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--note);
   font-size: calc(var(--size) / 9 * 0.26);
   line-height: 1;
-}
-.note.match {
-  color: var(--user-digit);
-  font-weight: 700;
 }
 </style>

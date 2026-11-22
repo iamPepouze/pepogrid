@@ -9,6 +9,8 @@
   --user-digit: #135cb2;
   --wrong-digit: #b32626;
   --note: #5d5d5d;
+  --note-match: #135cb2;
+  --on-note-match: #ffffff;
   --selected: #bbdefb;
   --peer: #e8f1fb;
   --same-digit: #d3e6f8;
@@ -48,6 +50,8 @@
     --user-digit: #76bef8;
     --wrong-digit: #ff9a9a;
     --note: #b8b8b8;
+    --note-match: #76bef8;
+    --on-note-match: #1e1e1e;
     --selected: #1f4a73;
     --peer: #26303b;
     --same-digit: #233c55;
@@ -76,6 +80,8 @@
   --user-digit: #76bef8;
   --wrong-digit: #ff9a9a;
   --note: #b8b8b8;
+  --note-match: #76bef8;
+  --on-note-match: #1e1e1e;
   --selected: #1f4a73;
   --peer: #26303b;
   --same-digit: #233c55;
@@ -174,6 +180,22 @@ button.surface:disabled {
 
 .grid-row:nth-child(9) > .grid-cell {
   border-bottom: 0;
+}
+
+/*
+ * A note of the selected digit on the board, or a lesson's marked candidate: a square filling the note's
+ * spot, so shape and weight say it as well as colour (U13). The note's grid sets the plain note colour.
+ */
+.note-match {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  margin: 1px;
+  border-radius: 2px;
+  background: var(--note-match);
+  color: var(--on-note-match);
+  font-weight: 700;
 }
 
 /* A view that stands in for the game (Statistics, the key technique): a column under a heading. */
