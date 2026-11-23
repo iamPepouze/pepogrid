@@ -212,7 +212,7 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
      * its neighbour) or runs past its card (`.card`, `.surface`) or the viewport. Inside a lesson grid's cell
      * (`.grid-cell`; the board's cells are buttons, checked only for width), text taller than its box, or past
      * the cell's bottom, counts too: it spills into the cell below. A page wider than the viewport the
-     * script asked for is reported too (`page wider than viewport: 343px > 320px`): under touch emulation the
+     * script last set (on open or with `setViewportSize`) is reported too (`page wider than viewport: 343px > 320px`): under touch emulation the
      * browser widens its viewport to fit the content, so the checks above see nothing wrong there.
      */
     clipped: () =>
@@ -235,7 +235,7 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
         })
         const widened = document.documentElement.scrollWidth > requested ? [`page wider than viewport: ${document.documentElement.scrollWidth}px > ${requested}px`] : []
         return [...widened, ...[...buttons, ...text].map((el) => el.textContent.trim())]
-      }, viewport.width),
+      }, page.viewportSize().width),
     /** Closes the browser and prints every screenshot this page saved. */
     close: async () => {
       if (shots.length) console.log(`Screenshots to look at:\n${shots.map((p) => `  ${p}`).join('\n')}`)

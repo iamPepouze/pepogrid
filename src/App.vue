@@ -282,15 +282,14 @@ function fitBoard() {
   const area = boardAreaEl.value
   // A hidden game measures as empty, so keep the size it had until it shows again.
   if (!app || !header || !main || !area || view.value) return
-  const root = document.documentElement
-  if (SIDE_BY_SIDE.matches) {
-    app.style.removeProperty('--board-size')
-    padPinned.value = false
-    root.style.removeProperty('scroll-padding-bottom')
-    return
-  }
   // Start from the unsized column, so the result depends on the page and not on the size it had before.
   app.style.removeProperty('--board-size')
+  const root = document.documentElement
+  if (SIDE_BY_SIDE.matches) {
+    padPinned.value = false
+    void nextTick(reservePadSpace)
+    return
+  }
   const cs = getComputedStyle(app)
   const textScale = parseFloat(getComputedStyle(root).fontSize) / 16
   const width = app.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
@@ -304,7 +303,13 @@ function fitBoard() {
   }
   // Pinning doesn't change the page's height (the pad's margin cancels its padding), so this can't flip back and forth.
   padPinned.value = root.scrollHeight > root.clientHeight
-  // Keeps a control scrolled into view for focus clear of the pinned pad.
+  // The pad's height is known only once Vue has applied its pinned style.
+  void nextTick(reservePadSpace)
+}
+
+/** Keeps a control scrolled into view for focus clear of the pinned pad (WCAG 2.4.11). */
+function reservePadSpace() {
+  const root = document.documentElement
   const pad = padComponent.value?.$el as HTMLElement | undefined
   if (padPinned.value && pad) root.style.scrollPaddingBottom = `${pad.offsetHeight}px`
   else root.style.removeProperty('scroll-padding-bottom')
