@@ -101,6 +101,7 @@ export const fr: Messages = {
     mistake: 'Ta grille contient une erreur',
     mistakeNote: 'Vérifie tes chiffres et tes notes : quelque chose y rend la solution impossible.',
     beyond: 'Ta prochaine étape demande une technique au-delà du XY-Wing',
+    beyondNote: 'L’onglet La plus dure montre la technique dont cette grille dépend.',
     leadNext: 'Ta prochaine étape demande',
     leadHardest: 'La technique la plus dure de cette grille est',
     comingSoon: 'Une leçon sur cette technique arrive bientôt.',

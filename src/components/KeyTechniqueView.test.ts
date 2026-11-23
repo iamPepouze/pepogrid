@@ -45,8 +45,36 @@ describe('KeyTechniqueView', () => {
 
   it('says when the next step needs a technique beyond XY-Wing', () => {
     const view = mountView('Unique Rectangle type 1', { tab: 'next', nextStep: { kind: 'beyond' } })
-    expect(view.find('[role="tabpanel"]').text()).toBe('Your next step needs a technique beyond XY-Wing')
+    expect(view.findAll('[role="tabpanel"] p').map((p) => p.text())).toEqual([
+      'Your next step needs a technique beyond XY-Wing',
+      'The Hardest tab shows the technique this puzzle hinges on.',
+    ])
     expect(view.find('.lesson-grid').exists()).toBe(false)
+  })
+
+  describe('announcement', () => {
+    const status = (view: ReturnType<typeof mountView>) => view.find('[role="status"]')
+
+    it('is empty at first, then says the next technique once mounted', async () => {
+      const view = mountView('XY-Wing', { tab: 'next', nextStep: { kind: 'technique', technique: 'Naked Triplet' } })
+      await view.vm.$nextTick()
+      expect(status(view).text()).toBe('Your next step needs Naked Triplet')
+    })
+
+    it('says a mistake and a technique beyond XY-Wing with their notes', async () => {
+      const mistake = mountView('XY-Wing', { tab: 'next', nextStep: { kind: 'mistake' } })
+      await mistake.vm.$nextTick()
+      expect(status(mistake).text()).toBe('Your grid has a mistake. Check your digits and notes: something there rules out the solution.')
+      const beyond = mountView('XY-Wing', { tab: 'next', nextStep: { kind: 'beyond' } })
+      await beyond.vm.$nextTick()
+      expect(status(beyond).text()).toBe('Your next step needs a technique beyond XY-Wing. The Hardest tab shows the technique this puzzle hinges on.')
+    })
+
+    it('follows the tab shown', async () => {
+      const view = mountView('XY-Wing', { tab: 'next' })
+      await view.setProps({ tab: 'hardest' })
+      expect(status(view).text()).toBe('This puzzle’s hardest technique is XY-Wing')
+    })
   })
 
   it('says the grid has a mistake, with no technique and no lesson', () => {

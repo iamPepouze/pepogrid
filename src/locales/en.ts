@@ -107,6 +107,7 @@ export const en = {
     mistake: 'Your grid has a mistake',
     mistakeNote: 'Check your digits and notes: something there rules out the solution.',
     beyond: 'Your next step needs a technique beyond XY-Wing',
+    beyondNote: 'The Hardest tab shows the technique this puzzle hinges on.',
     leadNext: 'Your next step needs',
     leadHardest: 'This puzzle’s hardest technique is',
     comingSoon: 'A lesson on this technique is coming.',

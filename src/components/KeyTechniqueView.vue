@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeft } from '@lucide/vue'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { tabKeyTarget } from '../composables/tabKeys'
 import { useI18n } from '../composables/useI18n'
 import { lessonFor } from '../lib/lessons'
@@ -56,6 +56,25 @@ const technique = computed(() => {
   return props.nextStep.kind === 'technique' ? props.nextStep.technique : null
 })
 
+/** What a screen reader hears for the shown tab: its answer, without the lesson under it. */
+const spoken = computed(() => {
+  if (answer.value === 'mistake') return `${m.value.mistake}. ${m.value.mistakeNote}`
+  if (answer.value === 'beyond') return `${m.value.beyond}. ${m.value.beyondNote}`
+  return `${props.tab === 'next' ? m.value.leadNext : m.value.leadHardest} ${techniqueName(technique.value!)}`
+})
+
+/**
+ * The live region starts empty and is filled once mounted: a region that already has text when it
+ * appears isn't announced. Opening the view moves focus to Back, which would otherwise be all heard.
+ */
+const announcement = ref('')
+onMounted(() => {
+  announcement.value = spoken.value
+})
+watch(spoken, (text) => {
+  announcement.value = text
+})
+
 /** The lesson and section teaching the technique, or null while it has none. */
 const found = computed(() => (technique.value ? lessonFor(technique.value, lessonLanguage.value) : null))
 
@@ -93,6 +112,8 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
       </button>
     </div>
 
+    <p class="announcement" role="status">{{ announcement }}</p>
+
     <div id="key-technique-panel" class="panel" role="tabpanel" :aria-labelledby="`key-technique-tab-${tab}`">
       <div v-if="answer === 'mistake'" class="card surface">
         <p class="headline">{{ m.mistake }}</p>
@@ -101,6 +122,7 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
 
       <div v-else-if="answer === 'beyond'" class="card surface">
         <p class="headline">{{ m.beyond }}</p>
+        <p class="note">{{ m.beyondNote }}</p>
       </div>
 
       <template v-else>
@@ -127,6 +149,18 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
 </template>
 
 <style scoped>
+/* Read out, never seen: the panel shows the same answer. */
+.announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* The panel's cards keep the view's spacing between them. */
 .panel {
   display: flex;
