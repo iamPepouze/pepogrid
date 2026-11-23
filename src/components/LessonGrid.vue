@@ -52,6 +52,8 @@ function labelOf(cell: LessonCell, i: number) {
   width: min(100%, 420px);
   align-self: center;
   aspect-ratio: 1;
+  /* Digits and candidates are sized from the grid, not from rem, so enlarged text can't push them out of their cell (U19). */
+  container-type: inline-size;
   border: 2px solid var(--line-thick);
   background: var(--cell);
   user-select: none;
@@ -72,7 +74,7 @@ function labelOf(cell: LessonCell, i: number) {
 }
 
 .digit {
-  font-size: clamp(0.9rem, 5vw, 1.4rem);
+  font-size: calc(100cqi / 9 * 0.5);
 }
 
 .cell.placed .digit {
@@ -88,7 +90,7 @@ function labelOf(cell: LessonCell, i: number) {
   width: 100%;
   height: 100%;
   color: var(--note);
-  font-size: clamp(0.45rem, 2.2vw, 0.65rem);
+  font-size: calc(100cqi / 9 * 0.23);
   line-height: 1;
   text-align: center;
   align-items: center;
