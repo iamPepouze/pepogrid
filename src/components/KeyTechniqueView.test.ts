@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
-import { afterEach, beforeEach, describe, expect, it, onTestFinished } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { LESSON_LANGUAGES } from '../locales'
 import { useSettingsStore } from '../stores/settings'
 import type { NextTechnique } from '../lib/rater'
@@ -43,15 +43,83 @@ describe('KeyTechniqueView', () => {
     expect(view.text()).not.toContain('XY-Wing')
   })
 
-  it('says when the next step needs a technique beyond XY-Wing', () => {
+  it('says when the next step needs a technique beyond XY-Wing, and points to Hardest', async () => {
     const view = mountView('Unique Rectangle type 1', { tab: 'next', nextStep: { kind: 'beyond' } })
-    expect(view.find('[role="tabpanel"]').text()).toBe('Your next step needs a technique beyond XY-Wing')
+    expect(view.findAll('.card p').map((p) => p.text())).toEqual([
+      'Your next step needs a technique beyond XY-Wing',
+      'The Hardest tab names the technique this puzzle hinges on.',
+    ])
     expect(view.find('.lesson-grid').exists()).toBe(false)
+    await button(view, 'Show Hardest').trigger('click')
+    expect(view.emitted('select')).toEqual([['hardest', 'showHardest']])
+  })
+
+  it.each<[string, KeyTechniqueTab, NextTechnique]>([
+    ['Next step names a technique', 'next', { kind: 'technique', technique: 'Naked Triplet' }],
+    ['the grid has a mistake', 'next', { kind: 'mistake' }],
+    ['Hardest shows, after a beyond next step', 'hardest', { kind: 'beyond' }],
+  ])('neither points to Hardest nor offers Show Hardest when %s', (_, tab, nextStep) => {
+    const view = mountView('XY-Wing', { tab, nextStep })
+    expect(view.text()).not.toContain('The Hardest tab names')
+    expect(button(view, 'Show Hardest')).toBeUndefined()
+  })
+
+  it('focuses Show Hardest when asked, for a cancelled confirmation', () => {
+    const view = mountView('XY-Wing', { tab: 'next', nextStep: { kind: 'beyond' } })
+    ;(view.vm as unknown as { focusShowHardest: () => void }).focusShowHardest()
+    expect(document.activeElement).toBe(button(view, 'Show Hardest').element)
+  })
+
+  describe('announcement', () => {
+    const status = (view: ReturnType<typeof mountView>) => view.find('[role="tabpanel"] [role="status"]')
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    })
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('is empty when the view opens, then says the next technique after it renders', async () => {
+      const view = mountView('XY-Wing', { tab: 'next', nextStep: { kind: 'technique', technique: 'Naked Triplet' } })
+      await view.vm.$nextTick()
+      expect(status(view).text()).toBe('')
+      vi.runAllTimers()
+      await view.vm.$nextTick()
+      expect(status(view).text()).toBe('Your next step needs Naked Triplet')
+    })
+
+    it.each<[string, NextTechnique, string]>([
+      ['a mistake', { kind: 'mistake' }, 'Your grid has a mistake. Check your digits and notes: something there rules out the solution.'],
+      ['a technique beyond XY-Wing', { kind: 'beyond' }, 'Your next step needs a technique beyond XY-Wing. The Hardest tab names the technique this puzzle hinges on.'],
+    ])('says %s with its note', async (_, nextStep, text) => {
+      const view = mountView('XY-Wing', { tab: 'next', nextStep })
+      vi.runAllTimers()
+      await view.vm.$nextTick()
+      expect(status(view).text()).toBe(text)
+    })
+
+    it('follows the tab shown, to Hardest and back to Next step', async () => {
+      const view = mountView('XY-Wing', { tab: 'next' })
+      vi.runAllTimers()
+      await view.setProps({ tab: 'hardest' })
+      expect(status(view).text()).toBe('This puzzle’s hardest technique is XY-Wing')
+      await view.setProps({ tab: 'next' })
+      expect(status(view).text()).toBe('Your next step needs Hidden Single')
+    })
+
+    it('is the only copy of the answer a screen reader reads', async () => {
+      const view = mountView('XY-Wing', { tab: 'next', nextStep: { kind: 'beyond' } })
+      for (const p of view.findAll('.card p')) expect(p.attributes('aria-hidden')).toBe('true')
+      await view.setProps({ tab: 'hardest' })
+      expect(view.find('.lead').attributes('aria-hidden')).toBe('true')
+      expect(view.find('.technique').attributes('aria-hidden')).toBe('true')
+    })
   })
 
   it('says the grid has a mistake, with no technique and no lesson', () => {
     const view = mountView('XY-Wing', { tab: 'next', nextStep: { kind: 'mistake' } })
-    expect(view.findAll('[role="tabpanel"] p').map((p) => p.text())).toEqual([
+    expect(view.findAll('.card p').map((p) => p.text())).toEqual([
       'Your grid has a mistake',
       'Check your digits and notes: something there rules out the solution.',
     ])
@@ -64,7 +132,7 @@ describe('KeyTechniqueView', () => {
     const view = mountView('XY-Wing', { tab: 'next' })
     await tabs(view)[1].trigger('click')
     await tabs(view)[0].trigger('click')
-    expect(view.emitted('select')).toEqual([['hardest'], ['next']])
+    expect(view.emitted('select')).toEqual([['hardest', 'tab'], ['next', 'tab']])
     expect(tabs(view)[0].attributes('aria-selected')).toBe('true')
   })
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeft } from '@lucide/vue'
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { tabKeyTarget } from '../composables/tabKeys'
 import { useI18n } from '../composables/useI18n'
 import { lessonFor } from '../lib/lessons'
@@ -16,7 +16,10 @@ const props = defineProps<{
   /** The puzzle's hardest technique, by its SE name. */
   hardest: string
 }>()
-const emit = defineEmits<{ back: []; select: [tab: KeyTechniqueTab] }>()
+/** Where a tab was asked for from: one of the tabs, or the beyond answer's Show Hardest button. */
+export type KeyTechniqueSource = 'tab' | 'showHardest'
+
+const emit = defineEmits<{ back: []; select: [tab: KeyTechniqueTab, source: KeyTechniqueSource] }>()
 
 const { lessonLanguage, t: messages, techniqueName } = useI18n()
 const m = computed(() => messages.value.keyTechnique)
@@ -28,12 +31,15 @@ const TABS = computed<{ id: KeyTechniqueTab; label: string }[]>(() => [
 
 const backButton = ref<HTMLButtonElement | null>(null)
 const tabs = ref<HTMLButtonElement[]>([])
+const showHardestButton = ref<HTMLButtonElement | null>(null)
 
 defineExpose({
   /** Focuses Back: the Technique button that opened the view is hidden behind it. */
   focusBack: () => backButton.value?.focus(),
-  /** Focuses a tab, for when a confirmation that the tab asked for closes. */
+  /** Focuses a tab, for when a confirmation that the tab asked for closes, or Show Hardest's card goes. */
   focusTab: (tab: KeyTechniqueTab) => tabs.value[TABS.value.findIndex((t) => t.id === tab)]?.focus(),
+  /** Focuses Show Hardest, for when the confirmation it asked for is cancelled and it is still shown. */
+  focusShowHardest: () => showHardestButton.value?.focus(),
 })
 
 /**
@@ -54,6 +60,38 @@ const answer = computed(() => (props.tab === 'next' && props.nextStep.kind !== '
 const technique = computed(() => {
   if (props.tab === 'hardest') return props.hardest
   return props.nextStep.kind === 'technique' ? props.nextStep.technique : null
+})
+
+/**
+ * What a screen reader hears for the shown tab: its answer, without the lesson under it. The card's
+ * own copy of these words is hidden from screen readers, so this is the only one they read.
+ */
+const spoken = computed(() => {
+  if (answer.value === 'mistake') return `${m.value.mistake}. ${m.value.mistakeNote}`
+  if (answer.value === 'beyond') return `${m.value.beyond}. ${m.value.beyondNote}`
+  return `${props.tab === 'next' ? m.value.leadNext : m.value.leadHardest} ${techniqueName(technique.value!)}`
+})
+
+/**
+ * How long the live region stays empty after the view opens. Vue applies an update made in
+ * `onMounted` in the same task as the first render, so the browser would see the region arrive
+ * already filled, which screen readers don't announce. Waiting a moment past the render makes the
+ * text a change to a region already there, heard after "Back, button".
+ */
+const ANNOUNCE_DELAY_MS = 100
+
+const announcement = ref('')
+let announceTimer: ReturnType<typeof setTimeout> | undefined
+onMounted(() => {
+  announceTimer = setTimeout(() => {
+    announcement.value = spoken.value
+  }, ANNOUNCE_DELAY_MS)
+})
+onBeforeUnmount(() => clearTimeout(announceTimer))
+// A tab change that changes the answer is announced straight away: the region is already on screen.
+watch(spoken, (text) => {
+  clearTimeout(announceTimer)
+  announcement.value = text
 })
 
 /** The lesson and section teaching the technique, or null while it has none. */
@@ -87,26 +125,33 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
         aria-controls="key-technique-panel"
         :aria-selected="t.id === tab"
         :tabindex="t.id === tab ? 0 : -1"
-        @click="emit('select', t.id)"
+        @click="emit('select', t.id, 'tab')"
       >
         {{ t.label }}
       </button>
     </div>
 
     <div id="key-technique-panel" class="panel" role="tabpanel" :aria-labelledby="`key-technique-tab-${tab}`">
+      <!-- The answer as screen readers get it, first in the panel; the card's copy is hidden from them. -->
+      <p class="announcement" role="status">{{ announcement }}</p>
+
       <div v-if="answer === 'mistake'" class="card surface">
-        <p class="headline">{{ m.mistake }}</p>
-        <p class="note">{{ m.mistakeNote }}</p>
+        <p class="headline" aria-hidden="true">{{ m.mistake }}</p>
+        <p class="note" aria-hidden="true">{{ m.mistakeNote }}</p>
       </div>
 
       <div v-else-if="answer === 'beyond'" class="card surface">
-        <p class="headline">{{ m.beyond }}</p>
+        <p class="headline" aria-hidden="true">{{ m.beyond }}</p>
+        <p class="note" aria-hidden="true">{{ m.beyondNote }}</p>
+        <button ref="showHardestButton" type="button" class="show-hardest surface" @click="emit('select', 'hardest', 'showHardest')">
+          {{ m.showHardest }}
+        </button>
       </div>
 
       <template v-else>
         <div class="card surface">
-          <p class="lead">{{ tab === 'next' ? m.leadNext : m.leadHardest }}</p>
-          <p class="technique">{{ techniqueName(technique!) }}</p>
+          <p class="lead" aria-hidden="true">{{ tab === 'next' ? m.leadNext : m.leadHardest }}</p>
+          <p class="technique" aria-hidden="true">{{ techniqueName(technique!) }}</p>
           <p v-if="found?.fallback" class="note">{{ m.englishOnly }}</p>
           <p v-if="found" class="note" :lang="lessonLang">{{ found.lesson.text }}</p>
           <p v-else class="note">{{ m.comingSoon }}</p>
@@ -127,6 +172,18 @@ const others = computed(() => found.value?.lesson.sections.filter((s) => s !== f
 </template>
 
 <style scoped>
+/* Read out, never seen: the panel shows the same answer. */
+.announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* The panel's cards keep the view's spacing between them. */
 .panel {
   display: flex;
@@ -185,5 +242,13 @@ details[open] summary {
 
 .headline + .note {
   margin-top: 8px;
+}
+
+.show-hardest {
+  margin-top: 12px;
+  padding: 6px 16px;
+  /* At 200% text, German's „Schwierigste“ is wider than a phone's card: it breaks rather than spill. */
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 </style>

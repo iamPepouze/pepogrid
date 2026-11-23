@@ -4,7 +4,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import AppDialog, { type DialogContent } from './components/AppDialog.vue'
 import DifficultyMenu from './components/DifficultyMenu.vue'
 import GameControls from './components/GameControls.vue'
-import KeyTechniqueView, { type KeyTechniqueTab } from './components/KeyTechniqueView.vue'
+import KeyTechniqueView, { type KeyTechniqueSource, type KeyTechniqueTab } from './components/KeyTechniqueView.vue'
 import MoveScreen from './components/MoveScreen.vue'
 import NumberPad from './components/NumberPad.vue'
 import SettingsMenu from './components/SettingsMenu.vue'
@@ -101,14 +101,25 @@ async function openKeyTechnique(trigger: HTMLButtonElement) {
   keyTechniqueView.value?.focusBack()
 }
 
-/** Shows a tab. Hardest asks first the first time in a game; focus returns to the tab once the dialog closes. */
-async function selectKeyTechniqueTab(tab: KeyTechniqueTab) {
+/**
+ * Shows a tab, asked for from a tab or from Show Hardest. Hardest asks first the first time in a game.
+ * Once the dialog closes, focus returns to what asked when it is cancelled, and goes to the tab shown
+ * when it is confirmed. Show Hardest always hands focus to the Hardest tab, since its card goes.
+ */
+async function selectKeyTechniqueTab(tab: KeyTechniqueTab, source: KeyTechniqueSource) {
   const first = tab === 'hardest' && !game.keyTechniqueRevealed
   const confirmed = await confirmFirstLook(first, t.value.keyTechnique.revealTitle, t.value.keyTechnique.revealMessage, t.value.keyTechnique.revealConfirm)
-  if (first) keyTechniqueView.value?.focusTab(tab)
-  if (!confirmed) return
+  if (!confirmed) {
+    if (source === 'showHardest') keyTechniqueView.value?.focusShowHardest()
+    else keyTechniqueView.value?.focusTab(tab)
+    return
+  }
   if (tab === 'hardest') game.revealKeyTechnique()
   keyTechniqueTab.value = tab
+  if (first || source === 'showHardest') {
+    await nextTick()
+    keyTechniqueView.value?.focusTab(tab)
+  }
 }
 
 async function closeKeyTechnique() {

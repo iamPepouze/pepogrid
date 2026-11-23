@@ -509,7 +509,67 @@ describe('App', () => {
       expect(game.keyTechniqueRevealed).toBe(true)
       expect(selectedTab(app)).toBe('Hardest')
       expect(app.find('.key-technique .technique').text()).toBe(game.rating!.hardest)
+      expect(app.find('.key-technique [role="status"]').text()).toBe(`This puzzle’s hardest technique is ${game.rating!.hardest}`)
       expect(document.activeElement).toBe(tab(app, 'Hardest').element)
+    })
+
+    it('announces the next step on open, and Cancel on Hardest’s confirmation leaves the announcement as it was', async () => {
+      const app = await mountApp()
+      await openView(app)
+      const status = () => app.find('.key-technique [role="status"]').text()
+      await vi.waitFor(() => expect(status()).toBe('Your next step needs Hidden Single'))
+      expect(document.activeElement?.textContent?.trim()).toBe('Back')
+
+      await tab(app, 'Hardest').trigger('click')
+      await dialogButton(app, 'Cancel').trigger('click')
+      await flushPromises()
+      expect(status()).toBe('Your next step needs Hidden Single')
+    })
+
+    describe('Show Hardest', () => {
+      /** Opens the view on a next step beyond XY-Wing, which offers Show Hardest. */
+      async function openBeyond(app: App) {
+        vi.spyOn(useGameStore(), 'showNextStep').mockReturnValue({ kind: 'beyond' })
+        await openView(app)
+        return app.findAll<HTMLButtonElement>('.key-technique button').find((b) => b.text() === 'Show Hardest')!
+      }
+
+      it('asks the Hardest confirmation the first time, and confirming shows Hardest with focus on its tab', async () => {
+        const app = await mountApp()
+        const game = useGameStore()
+        await (await openBeyond(app)).trigger('click')
+        expect(app.find('dialog').text()).toContain('Reveal the key technique?')
+        await dialogButton(app, 'Reveal').trigger('click')
+        await flushPromises()
+
+        expect(game.keyTechniqueRevealed).toBe(true)
+        expect(selectedTab(app)).toBe('Hardest')
+        expect(document.activeElement).toBe(tab(app, 'Hardest').element)
+      })
+
+      it('keeps Next step on Cancel, records nothing and gives focus back to the button', async () => {
+        const app = await mountApp()
+        const game = useGameStore()
+        const button = await openBeyond(app)
+        await button.trigger('click')
+        await dialogButton(app, 'Cancel').trigger('click')
+        await flushPromises()
+
+        expect(game.keyTechniqueRevealed).toBe(false)
+        expect(selectedTab(app)).toBe('Next step')
+        expect(document.activeElement).toBe(button.element)
+      })
+
+      it('switches to Hardest without asking once revealed, with focus on its tab', async () => {
+        const app = await mountApp()
+        useGameStore().revealKeyTechnique()
+        await (await openBeyond(app)).trigger('click')
+        await flushPromises()
+
+        expect(app.find('dialog').exists()).toBe(false)
+        expect(selectedTab(app)).toBe('Hardest')
+        expect(document.activeElement).toBe(tab(app, 'Hardest').element)
+      })
     })
 
     it('opens Hardest straight away once revealed, and Back returns to the game with focus on Technique', async () => {
