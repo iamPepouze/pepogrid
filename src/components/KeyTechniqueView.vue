@@ -247,5 +247,8 @@ details[open] summary {
 .show-hardest {
   margin-top: 12px;
   padding: 6px 16px;
+  /* At 200% text, German's „Schwierigste“ is wider than a phone's card: it breaks rather than spill. */
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 </style>
