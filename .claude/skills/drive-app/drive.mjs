@@ -211,10 +211,12 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
      * edge, and every other element holding its own text that is wider than its own box (it spills into
      * its neighbour) or runs past its card (`.card`, `.surface`) or the viewport. Inside a lesson grid's cell
      * (`.grid-cell`; the board's cells are buttons, checked only for width), text taller than its box, or past
-     * the cell's bottom, counts too: it spills into the cell below.
+     * the cell's bottom, counts too: it spills into the cell below. A page wider than the viewport the
+     * script last set (on open or with `setViewportSize`) is reported too (`page wider than viewport: 343px > 320px`): under touch emulation the
+     * browser widens its viewport to fit the content, so the checks above see nothing wrong there.
      */
     clipped: () =>
-      page.evaluate(() => {
+      page.evaluate((requested) => {
         const past = (el, edge) => {
           const { left, right } = el.getBoundingClientRect()
           return left < edge.left - 0.5 || right > edge.right + 0.5
@@ -231,8 +233,9 @@ export async function openGame({ reducedMotion = 'no-preference', viewport = { w
           const below = cell && ((boxed && el.scrollHeight > el.clientHeight + 1) || el.getBoundingClientRect().bottom > cell.getBoundingClientRect().bottom + 0.5)
           return spills || below || past(el, card ? card.getBoundingClientRect() : viewport)
         })
-        return [...buttons, ...text].map((el) => el.textContent.trim())
-      }),
+        const widened = document.documentElement.scrollWidth > requested ? [`page wider than viewport: ${document.documentElement.scrollWidth}px > ${requested}px`] : []
+        return [...widened, ...[...buttons, ...text].map((el) => el.textContent.trim())]
+      }, page.viewportSize().width),
     /** Closes the browser and prints every screenshot this page saved. */
     close: async () => {
       if (shots.length) console.log(`Screenshots to look at:\n${shots.map((p) => `  ${p}`).join('\n')}`)
