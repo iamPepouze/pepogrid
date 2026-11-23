@@ -30,6 +30,8 @@ function cancelPress() {
 
 function onClick(d: number) {
   cancelPress()
+  // A tap in the gap beside a complete digit lands on its slot, not its disabled button.
+  if (game.completeDigits.has(d)) return
   if (longPressed) {
     longPressed = false
     return
@@ -42,12 +44,11 @@ onBeforeUnmount(cancelPress)
 
 <template>
   <div class="pad" :class="{ notes: game.notesMode }" role="group" :aria-label="t.numberPad">
-    <button
+    <!-- The slot spreads each digit's tap area over half the gap beside it, so a tap between digits lands on the nearer one. -->
+    <div
       v-for="d in 9"
       :key="d"
-      type="button"
-      class="digit"
-      :disabled="game.completeDigits.has(d)"
+      class="slot"
       @pointerdown="startPress(d)"
       @pointerup="cancelPress"
       @pointerleave="cancelPress"
@@ -55,8 +56,8 @@ onBeforeUnmount(cancelPress)
       @contextmenu.prevent
       @click="onClick(d)"
     >
-      {{ d }}
-    </button>
+      <button type="button" class="digit" :disabled="game.completeDigits.has(d)">{{ d }}</button>
+    </div>
   </div>
 </template>
 
@@ -68,7 +69,26 @@ onBeforeUnmount(cancelPress)
   gap: 6px 4px;
 }
 
+/* Each slot grows over half the gap on each side (margin) and pads its digit back to its own cell, so the digit keeps its size and the slots meet mid-gap. The pad's outer edges stay put. */
+.slot {
+  margin: 0 -2px;
+  padding: 0 2px;
+}
+
+.slot:first-child {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.slot:last-child {
+  margin-right: 0;
+  padding-right: 0;
+}
+
 .digit {
+  width: 100%;
+  /* Block, so the slot has no line box to grow taller than its digit. */
+  display: block;
   height: clamp(44px, 7.5dvh, 60px);
   padding: 0;
   border: 1px solid var(--button-border);
@@ -85,6 +105,15 @@ onBeforeUnmount(cancelPress)
     color 0.8s ease;
 }
 
+/* The gap beside a digit is clickable too, so it shows the same cursor. */
+.slot {
+  cursor: pointer;
+}
+
+.slot:has(.digit:disabled) {
+  cursor: default;
+}
+
 /* A complete digit: every cell that needs it holds it. */
 .digit:disabled {
   opacity: 0.35;
@@ -92,7 +121,7 @@ onBeforeUnmount(cancelPress)
   cursor: default;
 }
 
-.digit:active:not(:disabled) {
+.slot:active .digit:not(:disabled) {
   background: var(--selected);
 }
 
@@ -102,7 +131,7 @@ onBeforeUnmount(cancelPress)
 }
 
 @media (hover: hover) {
-  .digit:hover:not(:disabled) {
+  .slot:hover .digit:not(:disabled) {
     background: var(--peer);
   }
 }
@@ -117,6 +146,32 @@ onBeforeUnmount(cancelPress)
   .pad {
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
+  }
+
+  /* 8px between digits in both directions: 4px of reach each side. */
+  .slot {
+    margin: -4px;
+    padding: 4px;
+  }
+
+  .slot:nth-child(3n + 1) {
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  .slot:nth-child(3n) {
+    margin-right: 0;
+    padding-right: 0;
+  }
+
+  .slot:nth-child(-n + 3) {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .slot:nth-child(n + 7) {
+    margin-bottom: 0;
+    padding-bottom: 0;
   }
 
   .digit {
