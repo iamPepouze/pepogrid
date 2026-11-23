@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # The Server is PepoGrid's home; GitHub Pages is frozen on the move build
 
 PepoGrid lives at https://pepogrid.adrienmg.eu, served by the Server from the container image that `image.yml` publishes. This replaces [ADR 0006](0006-github-pages-project-site.md), which made GitHub Pages the home.
@@ -12,4 +16,4 @@ PepoGrid lives at https://pepogrid.adrienmg.eu, served by the Server from the co
 
 The old address and the Server are separate origins, each with its own `localStorage` and install; the transfer code is the only bridge. The move build can't change, because nothing builds it again. A change to the transfer code's format would need the Pages deploy brought back for one run.
 
-Pages is not deleted yet: an install that hasn't opened the move build only gets it by visiting the old address while it is online.
+Pages is not deleted yet (when to delete it is #134): an install that hasn't opened the move build only gets it by visiting the old address while it is online.

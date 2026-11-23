@@ -1,6 +1,10 @@
+---
+status: superseded by ADR-0010
+---
+
 # Hosted as a GitHub Pages project site at /pepogrid/
 
-**Superseded by [ADR 0010](0010-server-is-home-pages-frozen.md):** the Server is PepoGrid's home and Pages is frozen on the move build. What follows is kept as the record of why Pages was used and of the two-bases arrangement that still builds the image.
+Superseded by [ADR 0010](0010-server-is-home-pages-frozen.md): the Server is PepoGrid's home and Pages is frozen on the move build. What follows is kept as the record of why Pages was used and of the two-bases arrangement that still builds the image.
 
 PepoGrid is served from https://iampepouze.github.io/pepogrid/, built and deployed by a GitHub Actions workflow on every push to `main`, because it is free, needs no domain or DNS, and keeps built output out of the repo (no `gh-pages` branch). The app therefore runs under base `/pepogrid/` everywhere, including `npm run dev`, so path bugs show up locally.
 
