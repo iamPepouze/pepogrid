@@ -509,6 +509,7 @@ describe('App', () => {
       expect(game.keyTechniqueRevealed).toBe(true)
       expect(selectedTab(app)).toBe('Hardest')
       expect(app.find('.key-technique .technique').text()).toBe(game.rating!.hardest)
+      expect(app.find('.key-technique [role="status"]').text()).toBe(`This puzzle’s hardest technique is ${game.rating!.hardest}`)
       expect(document.activeElement).toBe(tab(app, 'Hardest').element)
     })
 
