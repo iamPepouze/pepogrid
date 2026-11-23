@@ -87,6 +87,8 @@ onBeforeUnmount(cancelPress)
 
 .digit {
   width: 100%;
+  /* Block, so the slot has no line box to grow taller than its digit. */
+  display: block;
   height: clamp(44px, 7.5dvh, 60px);
   padding: 0;
   border: 1px solid var(--button-border);
@@ -101,6 +103,15 @@ onBeforeUnmount(cancelPress)
   transition:
     opacity 0.8s ease,
     color 0.8s ease;
+}
+
+/* The gap beside a digit is clickable too, so it shows the same cursor. */
+.slot {
+  cursor: pointer;
+}
+
+.slot:has(.digit:disabled) {
+  cursor: default;
 }
 
 /* A complete digit: every cell that needs it holds it. */
