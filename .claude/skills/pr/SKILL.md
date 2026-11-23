@@ -39,6 +39,8 @@ Skip all preambles and keep prose brief. Use the user's domain language from `GL
 
 ### Summary
 
+For a PR that implements a ticket, end the Summary with the `Closes #N` lines that CLAUDE.md's `/implement` rule asks for. Run **List sub-issues** from [docs/agents/issue-tracker.md](../../../docs/agents/issue-tracker.md) while writing the body: add `Closes #<spec>` only when the ticket has a parent and no other sub-issue of it is open.
+
 Pick the smallest view that makes the key point clear.
 
 - Show logic or an algorithm as pseudocode:
