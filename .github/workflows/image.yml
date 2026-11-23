@@ -34,7 +34,7 @@ env:
   IMAGE: ghcr.io/iampepouze/pepogrid
 
 jobs:
-  # The same checks a PR must pass. deploy.yml runs them too, so a failed Pages deploy never blocks the image.
+  # The same checks a PR must pass. It is the only run of them on main.
   check:
     # A PR already has its own check run.
     if: github.event_name == 'push'

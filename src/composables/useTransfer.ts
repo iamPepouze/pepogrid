@@ -11,7 +11,7 @@ import { useResultsStore, type GameResult } from '../stores/results'
 import { useSettingsStore } from '../stores/settings'
 
 /**
- * True on the build the Pages deploy uploads, the only one that sets VITE_PEPOGRID_PAGES (ci.yml). That build
+ * True on the build frozen on GitHub Pages, the only one made with VITE_PEPOGRID_PAGES=true (docs/adr/0010). That build
  * shows the move screen instead of dealing games; dev, tests and the Server image behave as the new address.
  */
 export const isPagesBuild = () => import.meta.env.VITE_PEPOGRID_PAGES === 'true'

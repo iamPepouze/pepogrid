@@ -3,18 +3,13 @@ name: CI
 on:
   pull_request:
     branches: [main]
-  # Called by deploy.yml so main is built with exactly the checks PRs must pass.
+  # Called by image.yml so main is built with exactly the checks PRs must pass.
   workflow_call:
-    inputs:
-      upload-pages:
-        description: Upload dist as the GitHub Pages artifact
-        type: boolean
-        default: false
 
 permissions:
   contents: read
 
-# A new push to a PR supersedes its running check; a deploy's check is never cancelled.
+# A new push to a PR supersedes its running check; the check image.yml runs on main is never cancelled.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -29,7 +24,7 @@ jobs:
         with:
           # Full history: test-seeds.sh diffs against the merge base with origin/main.
           fetch-depth: 0
-      # A deploy runs on main itself, which has no PR branch to name.
+      # A run on main itself has no PR branch to name.
       - name: Check branch name
         if: github.event_name == 'pull_request'
         env:
@@ -50,15 +45,8 @@ jobs:
       - run: npm run lint
       - run: npm run contrast
       - run: npm test
-      # Only a PR has changes against main to rerun; a deploy builds main itself.
+      # Only a PR has changes against main to rerun.
       - name: Rerun changed tests under fixed seeds
         if: github.event_name == 'pull_request'
         run: scripts/test-seeds.sh origin/main
-      # Only the build the Pages deploy uploads is the old address's: it shows the move screen (src/composables/useTransfer.ts).
       - run: npm run build
-        env:
-          VITE_PEPOGRID_PAGES: ${{ inputs.upload-pages && 'true' || '' }}
-      - if: inputs.upload-pages
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist
