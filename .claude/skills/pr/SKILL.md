@@ -37,9 +37,9 @@ Use this template for writing the PR body:
 
 Skip all preambles and keep prose brief. Use the user's domain language from `GLOSSARY.md`.
 
-End the Summary with the `Closes #N` lines that CLAUDE.md's `/implement` rule asks for. Run the tracker doc's **List sub-issues** command while writing the body, and add `Closes #<spec>` only when it shows no other open sub-issue.
-
 ### Summary
+
+For a PR that implements a ticket, end the Summary with the `Closes #N` lines that CLAUDE.md's `/implement` rule asks for. Run **List sub-issues** from [docs/agents/issue-tracker.md](../../../docs/agents/issue-tracker.md) while writing the body: add `Closes #<spec>` only when the ticket has a parent and no other sub-issue of it is open.
 
 Pick the smallest view that makes the key point clear.
 

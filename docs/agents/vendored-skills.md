@@ -10,7 +10,7 @@ Skills listed in `skills-lock.json` are vendored; the rest are this repo's own. 
 - `to-tickets`: place named tests by `CODING_STANDARDS.md`'s test-layout rules. An acceptance criterion goes to the ticket whose code exercises it, and a shape a later ticket reads is named in the earlier ticket's "What to build". A spec's UX decision goes the same way, under a **UX decisions** heading in both templates.
 - `triage`: `AGENT-BRIEF.md` gains a **Measured colours** principle: a brief that prescribes a colour token measures each pair in both themes, with `luminance` and `ratio` copied from `scripts/contrast.mjs`, and quotes it.
 - `implement`: name the checks: `npm run typecheck` regularly, and after the last code change `npm run typecheck`, `npm test` and `scripts/test-seeds.sh`.
-- `pr`: an **On device** bullet in Evidence, from the branch file's `device-check:` line. The Summary ends with the `Closes` lines, the spec's checked with **List sub-issues** while writing the body.
+- `pr`: an **On device** bullet in Evidence, from the branch file's `device-check:` line. For a ticket, the Summary ends with the `Closes` lines, the spec's checked with **List sub-issues** while writing the body.
 
 ## Models
 
