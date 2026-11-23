@@ -17,6 +17,7 @@ import { isPagesBuild } from './composables/useTransfer'
 import { useUpdate } from './composables/useUpdate'
 import { HODOKU_LABELS, TIERS, type Difficulty } from './lib/difficulty'
 import type { NextTechnique } from './lib/rater'
+import { boardSize } from './lib/layout'
 import { formatDuration } from './lib/statistics'
 import { useGameStore } from './stores/game'
 import { useResultsStore } from './stores/results'
@@ -259,17 +260,19 @@ function onKeydown(e: KeyboardEvent) {
 
 /* Must match the side-by-side media query in the styles below. */
 const SIDE_BY_SIDE = window.matchMedia('(orientation: landscape) and (min-width: 600px)')
-const MIN_BOARD = 200
 
 const appEl = ref<HTMLElement | null>(null)
 const headerEl = ref<HTMLElement | null>(null)
 const gameEl = ref<HTMLElement | null>(null)
 const boardAreaEl = ref<HTMLElement | null>(null)
 const board = ref<InstanceType<typeof SudokuBoard> | null>(null)
+const padComponent = ref<InstanceType<typeof NumberPad> | null>(null)
+/** True while the stacked page scrolls vertically: the number pad stays at the bottom of the screen meanwhile. */
+const padPinned = ref(false)
 
 /**
  * Stacked layout: sizes the board to the largest square that leaves room for
- * everything else, and exposes it as --board-size so the column matches it.
+ * everything else (see boardSize()), and exposes it as --board-size so the column matches it.
  * The side-by-side layout sizes the board in CSS instead.
  */
 function fitBoard() {
@@ -279,21 +282,32 @@ function fitBoard() {
   const area = boardAreaEl.value
   // A hidden game measures as empty, so keep the size it had until it shows again.
   if (!app || !header || !main || !area || view.value) return
+  const root = document.documentElement
   if (SIDE_BY_SIDE.matches) {
     app.style.removeProperty('--board-size')
+    padPinned.value = false
+    root.style.removeProperty('scroll-padding-bottom')
     return
   }
+  // Start from the unsized column, so the result depends on the page and not on the size it had before.
+  app.style.removeProperty('--board-size')
   const cs = getComputedStyle(app)
+  const textScale = parseFloat(getComputedStyle(root).fontSize) / 16
   const width = app.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
   const height = app.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
   // Other items can rewrap at the new width, so settle over a couple of passes.
   for (let pass = 0; pass < 3; pass++) {
     const others = header.offsetHeight + parseFloat(cs.rowGap) + main.offsetHeight - area.offsetHeight
-    const size = Math.floor(Math.max(MIN_BOARD, Math.min(width, height - others)))
-    const value = `${size}px`
+    const value = `${boardSize(width, height, others, textScale)}px`
     if (app.style.getPropertyValue('--board-size') === value) break
     app.style.setProperty('--board-size', value)
   }
+  // Pinning doesn't change the page's height (the pad's margin cancels its padding), so this can't flip back and forth.
+  padPinned.value = root.scrollHeight > root.clientHeight
+  // Keeps a control scrolled into view for focus clear of the pinned pad.
+  const pad = padComponent.value?.$el as HTMLElement | undefined
+  if (padPinned.value && pad) root.style.scrollPaddingBottom = `${pad.offsetHeight}px`
+  else root.style.removeProperty('scroll-padding-bottom')
 }
 
 let timer: number | undefined
@@ -317,6 +331,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
   window.clearInterval(timer)
   resizeObserver?.disconnect()
+  document.documentElement.style.removeProperty('scroll-padding-bottom')
   SIDE_BY_SIDE.removeEventListener('change', fitBoard)
 })
 </script>
@@ -406,7 +421,7 @@ onBeforeUnmount(() => {
       </div>
 
       <GameControls class="controls-area" @key-technique="openKeyTechnique" />
-      <NumberPad class="pad-area" />
+      <NumberPad ref="padComponent" class="pad-area" :class="{ pinned: padPinned }" />
 
       <p class="hints">
         <kbd>1</kbd>–<kbd>9</kbd> {{ t.hints.place }} · <kbd>{{ t.hints.shift }}</kbd>+{{ t.hints.digit }} {{ t.hints.note }} · <kbd>N</kbd> {{ t.hints.notesMode }} ·
@@ -520,6 +535,22 @@ onBeforeUnmount(() => {
 
 .pad-area {
   grid-area: pad;
+}
+
+/*
+ * While the page scrolls vertically, the pad stays at the bottom of the screen and the controls scroll under it.
+ * Its padding clears the home indicator; the negative margins cancel its padding, so pinning doesn't change the page's height.
+ * A dialog is in the top layer, over the pad.
+ */
+.pad-area.pinned {
+  --clearance: max(12px, env(safe-area-inset-bottom));
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding: 8px 0 var(--clearance);
+  margin: -8px 0 calc(-1 * var(--clearance));
+  background: var(--page);
+  box-shadow: 0 -1px 0 var(--button-border);
 }
 
 .status {
