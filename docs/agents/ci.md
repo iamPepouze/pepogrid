@@ -25,6 +25,6 @@ How changes reach `main`, and how to wait on CI from this machine.
 
 ## Waiting on a run
 
-After a push, run [scripts/ci-wait.sh](../../scripts/ci-wait.sh) in the background (`run_in_background`). It takes a commit (default `HEAD`), waits for that commit's run to appear and finish, prints each job's result, and exits non-zero unless the run passed.
+After a push, run [scripts/ci-wait.sh](../../scripts/ci-wait.sh) in the background (`run_in_background`). It takes a commit (default `HEAD`), waits for that commit's `ci.yml` run to appear and finish, prints each job's result, and exits non-zero unless the run passed. It ignores `image.yml`'s run, whose `check` is skipped on a PR yet ends as success. On `main` there is no `ci.yml` run to wait for.
 
 It exists because the obvious ways fail here. `gh run watch` and `gh pr checks --watch` return early in this repo's Git Bash on Windows. Right after a push, no run exists yet. And the branch's latest run may still be the previous commit's.
