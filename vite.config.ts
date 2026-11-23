@@ -3,8 +3,8 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { configDefaults } from 'vitest/config'
 
-// Two hosts, two bases (docs/adr/0006-github-pages-project-site.md): GitHub Pages serves a project site at
-// /pepogrid/, and the container image (Dockerfile) sets PEPOGRID_BASE=/ to serve the app at the root.
+// Two bases (docs/adr/0006-github-pages-project-site.md): the default /pepogrid/ is what GitHub Pages
+// serves its frozen move build at, and the container image (Dockerfile) sets PEPOGRID_BASE=/ to serve the app at the root.
 const base = loadEnv('production', '.', 'PEPOGRID_').PEPOGRID_BASE || '/pepogrid/'
 
 export default defineConfig({
