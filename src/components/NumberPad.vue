@@ -121,10 +121,6 @@ onBeforeUnmount(cancelPress)
   cursor: default;
 }
 
-.slot:active .digit:not(:disabled) {
-  background: var(--selected);
-}
-
 .pad.notes .digit {
   color: var(--note);
   font-size: 1.05rem;
@@ -134,6 +130,11 @@ onBeforeUnmount(cancelPress)
   .slot:hover .digit:not(:disabled) {
     background: var(--peer);
   }
+}
+
+/* After the hover rule, which is as specific: with a mouse, a pressed digit is still under the pointer, and must show the pressed tint. */
+.slot:active .digit:not(:disabled) {
+  background: var(--selected);
 }
 
 @media (prefers-reduced-motion: reduce) {
